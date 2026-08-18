@@ -8,9 +8,13 @@ describe('resume facts', () => {
     expect(resumeData.highlights).toContain('覆盖国内外 10w+ 水站');
   });
 
-  it('keeps the six Litree topics under one project', () => {
+  it('maintains balanced deep topics across all projects', () => {
     expect(resumeData.projects[0].name).toBe('Litree 智慧水务云平台');
-    expect(resumeData.projects[0].topics).toHaveLength(6);
+    expect(resumeData.projects[0].topics).toHaveLength(3);
+    expect(resumeData.projects[1].name).toBe('华为 WeLink');
+    expect(resumeData.projects[1].topics).toHaveLength(2);
+    expect(resumeData.projects[2].name).toBe('森格智慧水务平台 0-1 建设');
+    expect(resumeData.projects[2].topics).toHaveLength(2);
   });
 
   it('contains no forbidden unsupported metrics or former employer', () => {

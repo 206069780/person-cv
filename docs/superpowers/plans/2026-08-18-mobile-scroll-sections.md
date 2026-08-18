@@ -404,3 +404,96 @@ Expected: 所有命令退出码为 0。
 - [ ] **Step 7: Commit 边界**
 
 预期提交信息：`feat: add mobile resume scroll storytelling`。当前目录不是 Git 仓库，执行时跳过提交。
+
+### Task 5: 强化章节入场冲击与轻量视差
+
+**Files:**
+- Modify: `web/src/app/mobile-scroll.ts`
+- Modify: `web/src/app/mobile-scroll.test.ts`
+- Modify: `web/src/components/ScrollProgress.tsx`
+- Modify: `web/src/components/MobileResume.tsx`
+- Modify: `web/src/styles.css`
+
+**Interfaces:**
+- Produces: `calculateParallaxOffset(scrollTop: number): number`
+- Changes: `ScrollProgress({ markers?: number })`
+- Preserves: 唯一 passive scroll listener、一次性章节观察、所有简历正文与交互
+
+- [ ] **Step 1: 完成观察器构造失败的现有 RED/GREEN 循环**
+
+将观察器创建和 `observe()` 包裹在 `try/catch` 中；异常时调用 `onReveal()` 并返回空清理函数。运行：
+
+`npm test -- --run src/app/mobile-scroll.test.ts`
+
+Expected: 6 项测试 PASS。
+
+- [ ] **Step 2: 写视差范围和进度节点的失败测试**
+
+```ts
+import { ScrollProgress } from '../components/ScrollProgress';
+
+it('limits background parallax to twenty-four pixels', () => {
+  const calculate = (mobileScroll as unknown as Record<string, unknown>).calculateParallaxOffset;
+  expect(calculate).toBeTypeOf('function');
+  expect((calculate as (scrollTop: number) => number)(0)).toBe(0);
+  expect((calculate as (scrollTop: number) => number)(600)).toBe(12);
+  expect((calculate as (scrollTop: number) => number)(2400)).toBe(24);
+});
+
+it('renders one progress pulse node for every major section', () => {
+  const html = renderToStaticMarkup(createElement(ScrollProgress, { markers: 5 }));
+  expect(html.match(/scroll-progress__node/g)).toHaveLength(5);
+});
+```
+
+- [ ] **Step 3: 运行测试并确认缺少视差函数和节点**
+
+Run: `npm test -- --run src/app/mobile-scroll.test.ts`
+
+Expected: FAIL，`calculateParallaxOffset` 不是函数且节点数量为 0。
+
+- [ ] **Step 4: 实现视差计算和进度节点**
+
+```ts
+export function calculateParallaxOffset(scrollTop: number) {
+  return Math.min(24, Math.max(0, scrollTop * 0.02));
+}
+```
+
+`ScrollProgress` 接受 `markers = 0`，按数量渲染 `.scroll-progress__node`。现有唯一滚动更新函数同步写入 `--mobile-grid-offset`，并按 `(index + 1) / (markers + 1)` 设置每个节点的 `data-passed`。卸载时清理新增 CSS 变量。
+
+- [ ] **Step 5: 在主要章节加入冲击层和编号水印**
+
+- `ScrollProgress` 传入 `resumeData.projects.length + 2`，对应工程终端、工作经历与各项目。
+- Hero 增加裁切入场所需类，不增加说明文字。
+- 工程终端增加 `SYS` 水印和 `.mobile-module__impact`。
+- 工作经历增加 `01` 水印和 `.mobile-module__impact`。
+- 项目增加对应章节编号水印和 `.mobile-module__impact`。
+- 页尾只保留 `END` 水印，不播放强光带。
+- 所有新增文字水印标记 `aria-hidden="true"`。
+
+- [ ] **Step 6: 实现 600 至 800 毫秒的强化样式**
+
+- 背景网格使用 `--mobile-grid-offset` 更新 `background-position`，总位移不超过 24px。
+- Hero 姓名用 `clip-path` 遮罩切入，规模数字短促上升，状态点先点亮。
+- `.mobile-module__impact` 在章节揭示时播放强调色光幕横扫，时长 760ms。
+- `.mobile-module__watermark` 从 `scale(1.12)` 与反向位移回落到最终位置，时长 720ms。
+- `.section-heading h2` 从相反方向切入，正文仅保留现有 12px 纵向揭示。
+- 工程终端在外层扫描后依次点亮标题、模式栏和终端窗口，总时长不超过 800ms。
+- 进度节点经过时执行一次 520ms 脉冲，不改变 3px 进度条高度。
+
+- [ ] **Step 7: 完善减少动态效果降级**
+
+在 `prefers-reduced-motion: reduce` 中将 Hero 遮罩、水印缩放、光幕、网格视差和节点脉冲直接设置为最终静态状态；所有正文保持可见。
+
+- [ ] **Step 8: 自动和视觉验证**
+
+Run: `npm test -- --run && npm run check && npm run build`
+
+Expected: 全部退出码为 0。
+
+浏览器检查 375x812 和 430x932：章节入场在 800ms 内结束，水印与标题有反向景深，正文稳定，快速滚到底部无隐藏内容，`scrollWidth === clientWidth`，减少动态效果下无强化动画。
+
+- [ ] **Step 9: Commit 边界**
+
+预期提交信息：`feat: amplify mobile section transitions`。当前目录不是 Git 仓库，执行时跳过提交。

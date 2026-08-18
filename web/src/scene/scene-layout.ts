@@ -9,14 +9,13 @@ export interface ExhibitLayout {
 }
 
 export const EXHIBITS: readonly ExhibitLayout[] = [
-  { id: 'litree-overview', projectId: 'litree', label: '平台总览', shortLabel: 'CORE', position: [0, 0, -8], accent: 'signal', zone: 'core' },
-  { id: 'litree-device-data', projectId: 'litree', label: '设备与数据', shortLabel: 'DATA', position: [-7, 0, -3], accent: 'signal', zone: 'device' },
-  { id: 'litree-aiot', projectId: 'litree', label: 'AIoT 协议', shortLabel: 'AIoT', position: [7, 0, -3], accent: 'signal', zone: 'protocol' },
-  { id: 'litree-gis', projectId: 'litree', label: 'GIS / DMA', shortLabel: 'GIS', position: [-7, 0, 4], accent: 'signal', zone: 'gis' },
-  { id: 'litree-oa', projectId: 'litree', label: 'OA / HR', shortLabel: 'OA', position: [7, 0, 4], accent: 'safety', zone: 'oa' },
-  { id: 'litree-agent', projectId: 'litree', label: 'Agent 工程化', shortLabel: 'AGENT', position: [0, 0, 8], accent: 'cyber', zone: 'agent' },
-  { id: 'welink-search', projectId: 'welink', label: '华为 WeLink', shortLabel: 'WELINK', position: [-11, 0, 9], accent: 'safety', zone: 'search' },
-  { id: 'senge-platform', projectId: 'senge', label: '森格智慧水务', shortLabel: 'SENGE', position: [11, 0, 9], accent: 'safety', zone: 'plant' }
+  { id: 'litree-overview', projectId: 'litree', label: '微服务与数据底座', shortLabel: 'ARCH', position: [0, 0, -8], accent: 'signal', zone: 'core' },
+  { id: 'litree-aiot', projectId: 'litree', label: 'AIoT 与空间拓扑', shortLabel: 'AIoT', position: [-7, 0, -2], accent: 'signal', zone: 'protocol' },
+  { id: 'litree-agent', projectId: 'litree', label: 'OA 中台与 Agent', shortLabel: 'AGENT', position: [7, 0, -2], accent: 'cyber', zone: 'agent' },
+  { id: 'welink-search', projectId: 'welink', label: 'WeLink 统一搜索', shortLabel: 'SEARCH', position: [-8, 0, 6], accent: 'safety', zone: 'search' },
+  { id: 'welink-data', projectId: 'welink', label: 'WeLink 双路数据湖', shortLabel: 'LAKE', position: [-3, 0, 8], accent: 'safety', zone: 'search' },
+  { id: 'senge-gateway', projectId: 'senge', label: '森格实时通信网关', shortLabel: 'GATEWAY', position: [3, 0, 8], accent: 'safety', zone: 'plant' },
+  { id: 'senge-platform', projectId: 'senge', label: '森格 0-1 平台架构', shortLabel: 'SENGE', position: [8, 0, 6], accent: 'safety', zone: 'plant' }
 ] as const;
 
 export function getZoneFocus(activeId: string | null, zoneId: string) {

@@ -5,6 +5,6 @@ services:
       dockerfile: Dockerfile
     image: fu-daopin-resume:latest
     ports:
-      - "8080:80"
+      - "8090:80"
     restart: unless-stopped
 

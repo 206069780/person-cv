@@ -9,8 +9,10 @@ import { ScrollReveal } from './ScrollReveal';
 export function MobileResume() {
   return (
     <main className="mobile-resume" id="main-content">
-      <ScrollProgress />
+      <ScrollProgress markers={resumeData.projects.length + 2} />
       <header className="mobile-resume__hero mobile-module mobile-module--hero">
+        <div className="mobile-module__impact" aria-hidden="true" />
+        <span className="mobile-module__watermark mobile-module__watermark--hero" aria-hidden="true">00</span>
         <div className="mobile-module__rail" aria-hidden="true" />
         <div className="mobile-module__status" aria-hidden="true"><i /> PROFILE / 00</div>
         <p className="eyebrow">JAVA BACKEND / SMART WATER</p>
@@ -36,12 +38,16 @@ export function MobileResume() {
       </header>
 
       <ScrollReveal className="mobile-module mobile-module--terminal" variant="terminal">
+        <div className="mobile-module__impact" aria-hidden="true" />
+        <span className="mobile-module__watermark" aria-hidden="true">SYS</span>
         <div className="mobile-module__rail" aria-hidden="true" />
-        <EngineeringConsole variant="inline" motionEnabled={false} />
+        <EngineeringConsole variant="inline" motionEnabled />
       </ScrollReveal>
 
       <ScrollReveal className="mobile-module mobile-module--experience">
         <section className="mobile-resume__section" aria-labelledby="mobile-experience">
+          <div className="mobile-module__impact" aria-hidden="true" />
+          <span className="mobile-module__watermark" aria-hidden="true">01</span>
           <div className="mobile-module__rail" aria-hidden="true" />
           <div className="section-heading">
             <span>01</span>
@@ -74,12 +80,19 @@ export function MobileResume() {
         const accent = MOBILE_SECTION_ACCENTS[projectIndex % MOBILE_SECTION_ACCENTS.length];
 
         return (
-          <ScrollReveal className="mobile-module mobile-module--project" key={project.id}>
+          <ScrollReveal
+            className={`mobile-module mobile-module--project mobile-module--accent-${accent}`}
+            key={project.id}
+          >
             <section
               className="mobile-resume__section"
               data-accent={accent}
               aria-labelledby={`mobile-${project.id}`}
             >
+              <div className="mobile-module__impact" aria-hidden="true" />
+              <span className="mobile-module__watermark" aria-hidden="true">
+                {String(projectIndex + 2).padStart(2, '0')}
+              </span>
               <div className="mobile-module__rail" aria-hidden="true" />
               <div className="section-heading">
                 <span>{String(projectIndex + 2).padStart(2, '0')}</span>
@@ -90,4 +103,49 @@ export function MobileResume() {
                 <ScrollReveal variant="item">
                   <article><span>业务场景</span><p>{project.businessContext}</p></article>
                 </ScrollReveal>
-                <ScrollReveal delay={60} variant="ite
+                <ScrollReveal delay={60} variant="item">
+                  <article><span>现有痛点</span><ul>{project.painPoints.map((item) => <li key={item}>{item}</li>)}</ul></article>
+                </ScrollReveal>
+                <ScrollReveal delay={120} variant="item">
+                  <article><span>建设目标</span><ul>{project.buildGoals.map((item) => <li key={item}>{item}</li>)}</ul></article>
+                </ScrollReveal>
+              </div>
+              <div className="topic-list">
+                {project.topics.map((topic, topicIndex) => (
+                  <ScrollReveal
+                    key={topic.id}
+                    delay={Math.min(topicIndex * 80, 160)}
+                    variant="item"
+                  >
+                    <article className="topic-row">
+                      <p className="topic-row__index">{topic.id.toUpperCase()}</p>
+                      <h3>{topic.title}</h3>
+                      <p>{topic.role}</p>
+                      <p className="topic-row__flow"><strong>业务链路</strong>{topic.flow}</p>
+                      <p className="topic-row__flow"><strong>工程边界</strong>{topic.engineeringBoundary}</p>
+                      <ul>
+                        {topic.implementation.map((item) => <li key={item}>{item}</li>)}
+                      </ul>
+                      <p className="topic-row__outcome"><strong>落地结果</strong>{topic.outcome}</p>
+                      <div className="stack-line">{topic.stack.join(' / ')}</div>
+                    </article>
+                  </ScrollReveal>
+                ))}
+              </div>
+            </section>
+          </ScrollReveal>
+        );
+      })}
+
+      <ScrollReveal className="mobile-module mobile-module--footer" variant="footer">
+        <footer className="mobile-resume__footer">
+          <span className="mobile-module__watermark" aria-hidden="true">END</span>
+          <div className="mobile-module__rail" aria-hidden="true" />
+          <strong>{resumeData.profile.name}</strong>
+          <span>{resumeData.profile.phone}</span>
+          <span>{resumeData.profile.email}</span>
+        </footer>
+      </ScrollReveal>
+    </main>
+  );
+}

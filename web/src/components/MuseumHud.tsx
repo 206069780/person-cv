@@ -57,10 +57,18 @@ export function MuseumHud({
         </a>
       </div>
 
-      <div className="museum-hud__status" aria-hidden="true">
-        <span className="live-dot" />
-        CAREER EVIDENCE / STATIC DATA
-      </div>
+      {active ? (
+        <div className="museum-hud__3d-hint" aria-live="polite">
+          <span className="live-dot" />
+          <strong>3D 观察模式</strong>
+          <span>按住左键拖拽 360° 旋转 · 滚轮缩放 · ESC 复位</span>
+        </div>
+      ) : (
+        <div className="museum-hud__status" aria-hidden="true">
+          <span className="live-dot" />
+          CAREER EVIDENCE / STATIC DATA
+        </div>
+      )}
 
       {consoleVisible && (
         <EngineeringConsole

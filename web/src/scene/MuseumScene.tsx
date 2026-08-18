@@ -5,9 +5,10 @@ import * as THREE from 'three';
 import { ExhibitHotspots } from './ExhibitHotspots';
 import { IndustrialAssets } from './IndustrialAssets';
 import { IntroSequence } from './IntroSequence';
+import { NeonWalls } from './NeonWalls';
 import { EXHIBITS, getZoneFocus, SCENE_BOUNDS } from './scene-layout';
 
-// 共享几何体池与材质池（避免每次渲染重新分配与显存冗余绑定）
+// 共享几何体池与材质池
 const framePillarGeo = new THREE.BoxGeometry(0.26, 6.8, 0.32);
 const frameBeamGeo = new THREE.BoxGeometry(19.8, 0.25, 0.32);
 const frameLightStripGeo = new THREE.BoxGeometry(12, 0.035, 0.035);
@@ -48,7 +49,7 @@ interface MuseumSceneProps {
   onIntroComplete: () => void;
   onReady: () => void;
   onFallback: () => void;
-  onSelectExhibit: (id: string) => void;
+  onSelectExhibit: (id: string | null) => void;
 }
 
 interface BoundaryProps {
@@ -72,69 +73,231 @@ class SceneBoundary extends Component<BoundaryProps, { failed: boolean }> {
   }
 }
 
-function FreeWalkControls({ enabled }: { enabled: boolean }) {
+/**
+ * 全局统一无缝摄像机控制器
+ * - 自由漫游模式（activeExhibit === null）：WASD / 方向键位移 + 鼠标左键调整仰角与水平朝向
+ * - 3D 模型聚焦观察模式（activeExhibit !== null）：支持鼠标左键 360° 环绕旋转、滚轮自由缩放、右键平移、闲时自旋动效，绝不锁死！
+ */
+function IntegratedCameraController({
+  activeExhibit,
+  introActive,
+  motionEnabled,
+  onDeselect,
+}: {
+  activeExhibit: string | null;
+  introActive: boolean;
+  motionEnabled: boolean;
+  onDeselect: () => void;
+}) {
   const { camera, gl } = useThree();
+
+  // 漫游状态
   const keys = useRef(new Set<string>());
   const dragging = useRef(false);
+  const dragButton = useRef(0);
   const lastPointer = useRef({ x: 0, y: 0 });
-  const yaw = useRef(0);
-  const pitch = useRef(0);
+  const walkYaw = useRef(0);
+  const walkPitch = useRef(0);
 
+  // 聚焦环绕状态（球坐标系：半径、水平角 theta、仰角 phi、聚焦中心目标）
+  const orbitRadius = useRef({ current: 5.4, target: 5.4 });
+  const orbitTheta = useRef({ current: 0.2, target: 0.2 });
+  const orbitPhi = useRef({ current: 1.12, target: 1.12 });
+  const orbitCenter = useRef(new THREE.Vector3(0, 1.25, 0));
+  const targetCenter = useRef(new THREE.Vector3(0, 1.25, 0));
+  const panOffset = useRef(new THREE.Vector3(0, 0, 0));
+  const idleTime = useRef(0);
+  const lastActiveExhibit = useRef<string | null>(null);
+
+  // 当切换选中展品时，平滑重置观察中心与视角
   useEffect(() => {
-    if (!enabled) return;
+    if (activeExhibit) {
+      const exhibit = EXHIBITS.find((item) => item.id === activeExhibit);
+      if (exhibit) {
+        // 右侧抽屉占用约 48% 宽度，给观察中心右移偏置 +1.35，使 3D 模型完美居中在左侧视口
+        targetCenter.current.set(exhibit.position[0] + 1.35, 1.25, exhibit.position[2]);
+        panOffset.current.set(0, 0, 0);
+        orbitRadius.current.target = 5.2;
+        orbitPhi.current.target = 1.12;
+
+        if (lastActiveExhibit.current !== activeExhibit) {
+          // 初始朝向模型正面偏右角度
+          orbitTheta.current.target = 0.25;
+          idleTime.current = 0;
+        }
+      }
+    } else if (lastActiveExhibit.current !== null) {
+      // 从聚焦返回漫游时，无缝同步当前朝向
+      walkYaw.current = camera.rotation.y;
+      walkPitch.current = camera.rotation.x;
+    }
+    lastActiveExhibit.current = activeExhibit;
+  }, [activeExhibit, camera]);
+
+  // 事件监听：键盘、鼠标拖拽、滚轮缩放、触摸手势
+  useEffect(() => {
+    if (introActive) return;
     const element = gl.domElement;
 
-    const keyDown = (event: KeyboardEvent) => {
+    const onKeyDown = (event: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'BUTTON'].includes((event.target as HTMLElement)?.tagName)) return;
+      if (event.key === 'Escape' && activeExhibit) {
+        onDeselect();
+        return;
+      }
       keys.current.add(event.code);
     };
-    const keyUp = (event: KeyboardEvent) => keys.current.delete(event.code);
-    const pointerDown = (event: PointerEvent) => {
-      if (event.button !== 0) return;
-      dragging.current = true;
-      lastPointer.current = { x: event.clientX, y: event.clientY };
-    };
-    const pointerUp = () => { dragging.current = false; };
-    const pointerMove = (event: PointerEvent) => {
-      if (!dragging.current) return;
-      yaw.current -= (event.clientX - lastPointer.current.x) * 0.0025;
-      pitch.current = THREE.MathUtils.clamp(pitch.current - (event.clientY - lastPointer.current.y) * 0.0018, -0.5, 0.42);
-      lastPointer.current = { x: event.clientX, y: event.clientY };
+
+    const onKeyUp = (event: KeyboardEvent) => {
+      keys.current.delete(event.code);
     };
 
-    window.addEventListener('keydown', keyDown);
-    window.addEventListener('keyup', keyUp);
-    window.addEventListener('pointerup', pointerUp);
-    element.addEventListener('pointerdown', pointerDown);
-    element.addEventListener('pointermove', pointerMove);
+    const onPointerDown = (event: PointerEvent) => {
+      dragging.current = true;
+      dragButton.current = event.button;
+      lastPointer.current = { x: event.clientX, y: event.clientY };
+      idleTime.current = 0;
+      element.style.cursor = 'grabbing';
+    };
+
+    const onPointerUp = () => {
+      dragging.current = false;
+      element.style.cursor = activeExhibit ? 'grab' : 'default';
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (!dragging.current) return;
+      const dx = event.clientX - lastPointer.current.x;
+      const dy = event.clientY - lastPointer.current.y;
+      lastPointer.current = { x: event.clientX, y: event.clientY };
+      idleTime.current = 0;
+
+      if (activeExhibit) {
+        if (dragButton.current === 0) {
+          // 左键：360° 自由旋转模型环绕视角
+          orbitTheta.current.target -= dx * 0.0058;
+          orbitPhi.current.target = THREE.MathUtils.clamp(
+            orbitPhi.current.target - dy * 0.0048,
+            0.15,
+            Math.PI / 2 - 0.06
+          );
+        } else {
+          // 右键 / 中键：微调平移观察点
+          panOffset.current.x -= dx * 0.005;
+          panOffset.current.y += dy * 0.005;
+        }
+      } else {
+        // 自由漫游视角旋转
+        walkYaw.current -= dx * 0.0026;
+        walkPitch.current = THREE.MathUtils.clamp(walkPitch.current - dy * 0.0019, -0.55, 0.45);
+      }
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      idleTime.current = 0;
+      if (activeExhibit) {
+        // 聚焦状态下滚轮自由平滑缩放
+        event.preventDefault();
+        orbitRadius.current.target = THREE.MathUtils.clamp(
+          orbitRadius.current.target + event.deltaY * 0.006,
+          2.3,
+          10.5
+        );
+      }
+    };
+
+    const onContextMenu = (event: MouseEvent) => {
+      if (activeExhibit) event.preventDefault();
+    };
+
+    element.style.cursor = activeExhibit ? 'grab' : 'default';
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('pointerup', onPointerUp);
+    element.addEventListener('pointerdown', onPointerDown);
+    element.addEventListener('pointermove', onPointerMove);
+    element.addEventListener('wheel', onWheel, { passive: false });
+    element.addEventListener('contextmenu', onContextMenu);
 
     return () => {
       keys.current.clear();
-      window.removeEventListener('keydown', keyDown);
-      window.removeEventListener('keyup', keyUp);
-      window.removeEventListener('pointerup', pointerUp);
-      element.removeEventListener('pointerdown', pointerDown);
-      element.removeEventListener('pointermove', pointerMove);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('pointerup', onPointerUp);
+      element.removeEventListener('pointerdown', onPointerDown);
+      element.removeEventListener('pointermove', onPointerMove);
+      element.removeEventListener('wheel', onWheel);
+      element.removeEventListener('contextmenu', onContextMenu);
     };
-  }, [enabled, gl]);
+  }, [activeExhibit, gl, introActive, onDeselect]);
 
   useFrame((_, delta) => {
-    if (!enabled) return;
-    const movement = new THREE.Vector3();
-    const forward = new THREE.Vector3(-Math.sin(yaw.current), 0, -Math.cos(yaw.current));
-    const right = new THREE.Vector3(Math.cos(yaw.current), 0, -Math.sin(yaw.current));
-    const speed = Math.min(delta, 0.05) * 5.2;
+    if (introActive) return;
 
-    if (keys.current.has('KeyW') || keys.current.has('ArrowUp')) movement.add(forward);
-    if (keys.current.has('KeyS') || keys.current.has('ArrowDown')) movement.sub(forward);
-    if (keys.current.has('KeyD') || keys.current.has('ArrowRight')) movement.add(right);
-    if (keys.current.has('KeyA') || keys.current.has('ArrowLeft')) movement.sub(right);
-    if (movement.lengthSq() > 0) camera.position.add(movement.normalize().multiplyScalar(speed));
+    if (activeExhibit) {
+      // 聚焦 3D 模型模式：环绕动力学与平滑阻尼插值
+      const smoothFactor = motionEnabled ? 1 - Math.exp(-delta * 7.5) : 1;
 
-    camera.position.x = THREE.MathUtils.clamp(camera.position.x, SCENE_BOUNDS.minX, SCENE_BOUNDS.maxX);
-    camera.position.z = THREE.MathUtils.clamp(camera.position.z, SCENE_BOUNDS.minZ, SCENE_BOUNDS.maxZ);
-    camera.position.y = 2.45;
-    camera.rotation.set(pitch.current, yaw.current, 0, 'YXZ');
+      // 闲置自旋微动效果（用户未拖拽时提供生动的 3D 纵深感）
+      if (!dragging.current && motionEnabled) {
+        idleTime.current += delta;
+        if (idleTime.current > 1.2) {
+          orbitTheta.current.target += delta * 0.14;
+        }
+      }
+
+      // 平滑插值球坐标
+      orbitTheta.current.current = THREE.MathUtils.lerp(
+        orbitTheta.current.current,
+        orbitTheta.current.target,
+        smoothFactor
+      );
+      orbitPhi.current.current = THREE.MathUtils.lerp(
+        orbitPhi.current.current,
+        orbitPhi.current.target,
+        smoothFactor
+      );
+      orbitRadius.current.current = THREE.MathUtils.lerp(
+        orbitRadius.current.current,
+        orbitRadius.current.target,
+        smoothFactor
+      );
+
+      const finalTarget = targetCenter.current.clone().add(panOffset.current);
+      orbitCenter.current.lerp(finalTarget, smoothFactor);
+
+      // 计算球坐标对应的摄像机世界坐标
+      const r = orbitRadius.current.current;
+      const phi = orbitPhi.current.current;
+      const theta = orbitTheta.current.current;
+
+      const camX = orbitCenter.current.x + r * Math.sin(phi) * Math.sin(theta);
+      const camY = orbitCenter.current.y + r * Math.cos(phi);
+      const camZ = orbitCenter.current.z + r * Math.sin(phi) * Math.cos(theta);
+
+      camera.position.set(camX, camY, camZ);
+      camera.lookAt(orbitCenter.current.x, orbitCenter.current.y + 0.15, orbitCenter.current.z);
+    } else {
+      // 自由漫游模式：WASD 移动 + 视角阻尼
+      const movement = new THREE.Vector3();
+      const forward = new THREE.Vector3(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
+      const right = new THREE.Vector3(Math.cos(walkYaw.current), 0, -Math.sin(walkYaw.current));
+      const speed = Math.min(delta, 0.05) * 5.6;
+
+      if (keys.current.has('KeyW') || keys.current.has('ArrowUp')) movement.add(forward);
+      if (keys.current.has('KeyS') || keys.current.has('ArrowDown')) movement.sub(forward);
+      if (keys.current.has('KeyD') || keys.current.has('ArrowRight')) movement.add(right);
+      if (keys.current.has('KeyA') || keys.current.has('ArrowLeft')) movement.sub(right);
+
+      if (movement.lengthSq() > 0) {
+        camera.position.add(movement.normalize().multiplyScalar(speed));
+      }
+
+      camera.position.x = THREE.MathUtils.clamp(camera.position.x, SCENE_BOUNDS.minX, SCENE_BOUNDS.maxX);
+      camera.position.z = THREE.MathUtils.clamp(camera.position.z, SCENE_BOUNDS.minZ, SCENE_BOUNDS.maxZ);
+      camera.position.y = 2.45;
+      camera.rotation.set(walkPitch.current, walkYaw.current, 0, 'YXZ');
+    }
   });
 
   return null;
@@ -249,56 +412,40 @@ function DataStreams({ motionEnabled, focused }: { motionEnabled: boolean; focus
   );
 }
 
-function FocusCamera({ activeId, introActive, motionEnabled }: { activeId: string | null; introActive: boolean; motionEnabled: boolean }) {
-  const camera = useThree((state) => state.camera);
-  const desiredPosition = useMemo(() => new THREE.Vector3(), []);
-  const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
-  const lookMatrix = useMemo(() => new THREE.Matrix4(), []);
-
-  useFrame((_, delta) => {
-    if (!activeId || introActive) return;
-    const exhibit = EXHIBITS.find((item) => item.id === activeId);
-    if (!exhibit) return;
-    desiredPosition.set(exhibit.position[0] * 0.7, 3.3, exhibit.position[2] + 6.5);
-    lookMatrix.lookAt(desiredPosition, new THREE.Vector3(exhibit.position[0] + 1.2, 1.05, exhibit.position[2]), camera.up);
-    desiredQuaternion.setFromRotationMatrix(lookMatrix);
-    const factor = motionEnabled ? 1 - Math.exp(-delta * 3.6) : 1;
-    camera.position.lerp(desiredPosition, factor);
-    camera.quaternion.slerp(desiredQuaternion, factor);
-  });
-
-  return null;
-}
-
 interface SceneContentProps extends Omit<MuseumSceneProps, 'onReady' | 'onFallback'> {}
 
 function SceneContent(props: SceneContentProps) {
   const { scene, gl } = useThree();
 
   useEffect(() => {
-    scene.background = new THREE.Color('#030708');
-    scene.fog = new THREE.FogExp2('#030708', 0.027);
+    scene.background = new THREE.Color('#040a0e');
+    scene.fog = new THREE.FogExp2('#040a0e', 0.015);
     gl.toneMapping = THREE.ACESFilmicToneMapping;
-    gl.toneMappingExposure = 1.12;
+    gl.toneMappingExposure = 1.18;
   }, [gl, scene]);
 
   const coreIntensity = getZoneFocus(props.activeExhibit, 'litree-overview').intensity;
 
   return (
     <>
-      <hemisphereLight color="#b7e5df" groundColor="#040708" intensity={0.72} />
-      <directionalLight position={[5, 12, 8]} color="#e7f8f5" intensity={2.6} castShadow shadow-mapSize={[1024, 1024]} />
-      <pointLight position={[-10, 4, 5]} color="#ff6b3d" intensity={15} distance={14} decay={2} />
-      <pointLight position={[10, 4, -1]} color="#28d7e5" intensity={12} distance={16} decay={2} />
+      <hemisphereLight color="#9edfe6" groundColor="#061217" intensity={0.92} />
+      <directionalLight position={[6, 14, 8]} color="#eafaf8" intensity={2.8} castShadow shadow-mapSize={[1024, 1024]} />
+      <pointLight position={[-11, 5, 5]} color="#ff6b3d" intensity={18} distance={16} decay={2} />
+      <pointLight position={[11, 5, -1]} color="#28d7e5" intensity={16} distance={18} decay={2} />
       <FloorSystem />
       <StructuralFrames />
+      <NeonWalls motionEnabled={props.motionEnabled} />
       <DataStreams motionEnabled={props.motionEnabled} focused={props.activeExhibit !== null} />
       <IndustrialAssets activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} />
       <CentralCore motionEnabled={props.motionEnabled} intensity={coreIntensity} />
       <ExhibitHotspots activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
       <IntroSequence active={props.introActive} onComplete={props.onIntroComplete} />
-      <FocusCamera activeId={props.activeExhibit} introActive={props.introActive} motionEnabled={props.motionEnabled} />
-      <FreeWalkControls enabled={!props.introActive && props.activeExhibit === null} />
+      <IntegratedCameraController
+        activeExhibit={props.activeExhibit}
+        introActive={props.introActive}
+        motionEnabled={props.motionEnabled}
+        onDeselect={() => props.onSelectExhibit(null)}
+      />
     </>
   );
 }
