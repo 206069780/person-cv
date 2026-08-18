@@ -17,6 +17,13 @@ command -v docker >/dev/null 2>&1 || fail "未找到 docker，请先安装 Docke
 docker compose version >/dev/null 2>&1 || fail "未找到 docker compose 插件"
 
 info "项目目录: $ROOT"
+
+# 若为 Git 仓库且安装了 git，先拉取最新代码
+if [ -d ".git" ] && command -v git >/dev/null 2>&1; then
+  info "拉取最新代码 (git pull)..."
+  git pull || warn "git pull 执行遇到警告，继续尝试构建..."
+fi
+
 info "构建并启动容器..."
 $COMPOSE up -d --build
 

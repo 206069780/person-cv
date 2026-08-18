@@ -15,6 +15,19 @@ if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
 }
 
 Write-Info "项目目录: $Root"
+
+# 若为 Git 仓库且已安装 git，先拉取最新代码
+if (Test-Path "$Root\.git" -PathType Container) {
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        Write-Info "拉取最新代码 (git pull)..."
+        try {
+            git pull
+        } catch {
+            Write-Warn "git pull 执行遇到警告，继续尝试构建..."
+        }
+    }
+}
+
 Write-Info "构建并启动容器..."
 docker compose up -d --build
 if ($LASTEXITCODE -ne 0) { throw "docker compose 执行失败" }
