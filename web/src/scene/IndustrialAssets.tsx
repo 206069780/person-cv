@@ -89,7 +89,7 @@ function FlowPulses({
   color,
   intensity,
   motionEnabled,
-  count = 5,
+  count = 3,
 }: {
   start: readonly [number, number, number];
   end: readonly [number, number, number];
@@ -107,9 +107,9 @@ function FlowPulses({
   );
 
   useFrame((_, delta) => {
-    if (!ref.current) return;
+    if (!ref.current || !motionEnabled || intensity < 0.25) return;
     progress.current.forEach((value, index) => {
-      const next = motionEnabled ? (value + delta * (0.14 + index * 0.008)) % 1 : value;
+      const next = (value + delta * (0.15 + index * 0.012)) % 1;
       progress.current[index] = next;
       helper.position.set(
         THREE.MathUtils.lerp(start[0], end[0], next),
@@ -214,9 +214,11 @@ function LitreeOverviewCoreZone({ intensity, motionEnabled }: ZoneProps) {
         ))}
       </group>
 
-      <pointLight position={[0, 1.3, 0]} color={CYAN} intensity={12 * intensity} distance={7} decay={2} />
-      <FlowPulses start={[-1.3, 1.6, -1.1]} end={[0, 1.25, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={4} />
-      <FlowPulses start={[1.3, 1.6, 1.1]} end={[0, 1.25, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={4} />
+      {intensity > 0.8 && (
+        <pointLight position={[0, 1.3, 0]} color={CYAN} intensity={12} distance={7} decay={2} />
+      )}
+      <FlowPulses start={[-1.3, 1.6, -1.1]} end={[0, 1.25, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.3, 1.6, 1.1]} end={[0, 1.25, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
@@ -301,8 +303,8 @@ function LitreeAiotZone({ intensity, motionEnabled }: ZoneProps) {
         </group>
       </group>
 
-      <FlowPulses start={[-1.35, 1.1, 0]} end={[0, 1.85, 0]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={5} />
-      <FlowPulses start={[1.35, 1.1, 0]} end={[0, 1.85, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={5} />
+      <FlowPulses start={[-1.35, 1.1, 0]} end={[0, 1.85, 0]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.35, 1.1, 0]} end={[0, 1.85, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
@@ -377,9 +379,11 @@ function LitreeAgentZone({ intensity, motionEnabled }: ZoneProps) {
         ))}
       </group>
 
-      <pointLight position={[0, 1.5, 0]} color={CYAN} intensity={14 * intensity} distance={8} decay={2} />
-      <FlowPulses start={[-1.25, 0.9, -1.0]} end={[0, 1.45, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={4} />
-      <FlowPulses start={[1.25, 0.9, 1.0]} end={[0, 1.45, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={4} />
+      {intensity > 0.8 && (
+        <pointLight position={[0, 1.5, 0]} color={CYAN} intensity={14} distance={8} decay={2} />
+      )}
+      <FlowPulses start={[-1.25, 0.9, -1.0]} end={[0, 1.45, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.25, 0.9, 1.0]} end={[0, 1.45, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
@@ -441,9 +445,11 @@ function WelinkSearchZone({ intensity, motionEnabled }: ZoneProps) {
         </mesh>
       ))}
 
-      <pointLight position={[0, 2.0, 0]} color={GOLD} intensity={10 * intensity} distance={6} decay={2} />
-      <FlowPulses start={[-1.75, 0.3, 0]} end={[0, 1.95, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={5} />
-      <FlowPulses start={[1.75, 0.3, 0]} end={[0, 1.95, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={5} />
+      {intensity > 0.8 && (
+        <pointLight position={[0, 2.0, 0]} color={GOLD} intensity={10} distance={6} decay={2} />
+      )}
+      <FlowPulses start={[-1.75, 0.3, 0]} end={[0, 1.95, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.75, 0.3, 0]} end={[0, 1.95, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
@@ -511,9 +517,11 @@ function WelinkDataLakeZone({ intensity, motionEnabled }: ZoneProps) {
         </mesh>
       </group>
 
-      <pointLight position={[0, 1.3, 0]} color={CYAN} intensity={10 * intensity} distance={6} decay={2} />
-      <FlowPulses start={[-0.95, 1.7, 0]} end={[0.95, 1.7, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={6} />
-      <FlowPulses start={[0.95, 0.4, 0]} end={[-0.95, 0.4, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={6} />
+      {intensity > 0.8 && (
+        <pointLight position={[0, 1.3, 0]} color={CYAN} intensity={10} distance={6} decay={2} />
+      )}
+      <FlowPulses start={[-0.95, 1.7, 0]} end={[0.95, 1.7, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[0.95, 0.4, 0]} end={[-0.95, 0.4, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
@@ -581,9 +589,11 @@ function SengeGatewayZone({ intensity, motionEnabled }: ZoneProps) {
         ))}
       </group>
 
-      <pointLight position={[0, 2.2, 0]} color={SAFETY} intensity={12 * intensity} distance={7} decay={2} />
-      <FlowPulses start={[-1.4, 0.3, 0]} end={[0, 2.1, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={5} />
-      <FlowPulses start={[1.4, 0.3, 0]} end={[0, 2.1, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={5} />
+      {intensity > 0.8 && (
+        <pointLight position={[0, 2.2, 0]} color={SAFETY} intensity={12} distance={7} decay={2} />
+      )}
+      <FlowPulses start={[-1.4, 0.3, 0]} end={[0, 2.1, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.4, 0.3, 0]} end={[0, 2.1, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
@@ -640,9 +650,11 @@ function SengePlatformZone({ intensity, motionEnabled }: ZoneProps) {
         </mesh>
       ))}
 
-      <pointLight position={[0, 1.5, 0]} color={SIGNAL} intensity={10 * intensity} distance={7} decay={2} />
-      <FlowPulses start={[-1.4, 0.45, -0.75]} end={[1.4, 0.45, -0.75]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={6} />
-      <FlowPulses start={[0, 0.9, 0.35]} end={[0, 1.45, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={4} />
+      {intensity > 0.8 && (
+        <pointLight position={[0, 1.5, 0]} color={SIGNAL} intensity={10} distance={7} decay={2} />
+      )}
+      <FlowPulses start={[-1.4, 0.45, -0.75]} end={[1.4, 0.45, -0.75]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[0, 0.9, 0.35]} end={[0, 1.45, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }

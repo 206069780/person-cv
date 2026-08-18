@@ -261,7 +261,8 @@ def add_docx_cover(doc: Document, data: dict) -> None:
     set_run_font(r, 10.2, color=INK)
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p.add_run(f"{data['profile']['phone']}  |  {data['profile']['email']}")
+    website = data["profile"].get("website", "http://cv.bookfree.online/")
+    r = p.add_run(f"{data['profile']['phone']}  |  {data['profile']['email']}  |  3D 展馆: {website}")
     set_run_font(r, 9.5, bold=True, color=TEAL)
 
 
@@ -714,6 +715,11 @@ class PdfPage:
                 self.c.line(arrow_x + gap - 5, y + 13, arrow_x + gap - 2, y + 15.5)
 
     def footer(self) -> None:
+        website = "http://cv.bookfree.online/"
+        self.c.setFont(FONT_BOLD, 7.2)
+        self.c.setFillColor(HexColor(f"#{TEAL}"))
+        self.c.drawString(self.left, 17, f"3D PORTFOLIO: {website}")
+        self.c.linkURL(website, (self.left, 10, self.left + 175, 25))
         self.c.setFont(FONT_REGULAR, 7.2)
         self.c.setFillColor(HexColor(f"#{MUTED}"))
         self.c.drawRightString(self.right, 17, f"CASEBOOK  /  {self.page_no:02d} OF 09")
@@ -784,13 +790,16 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
         c.setFillColor(HexColor("#648894"))
         c.drawString(nx + tox, ny + toy, lbl)
 
+    website = data["profile"].get("website", "http://cv.bookfree.online/")
+
     # 1. 顶部身份区域 (Top Identity Header)
     c.setFont(FONT_BOLD, 8.5)
     c.setFillColor(HexColor(f"#{ORANGE}"))
     c.drawString(54, h - 55, "ENGINEERING CASEBOOK / 2026")
     c.setFont(FONT_REGULAR, 7.5)
     c.setFillColor(HexColor(f"#{TEAL}"))
-    c.drawString(245, h - 55, "[STATUS: PROD-READY · JAVA 21 LTS]")
+    c.drawString(205, h - 55, f"[3D PORTFOLIO: {website}]")
+    c.linkURL(website, (205, h - 60, 420, h - 48))
 
     c.setFont(FONT_BOLD, 36)
     c.setFillColor(HexColor(f"#{COLD_WHITE}"))
@@ -904,23 +913,29 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
     # 6. 底部联络与状态栏 (Footer & Contact Terminal)
     c.setStrokeColor(HexColor(f"#{TEAL}"))
     c.setLineWidth(0.8)
-    c.line(54, 86, 541, 86)
+    c.line(54, 88, 541, 88)
 
-    c.setFont(FONT_BOLD, 8.8)
+    c.setFont(FONT_BOLD, 8.2)
     c.setFillColor(HexColor(f"#{COLD_WHITE}"))
-    c.drawString(54, 62, f"TEL: {data['profile']['phone']}")
-    c.drawString(200, 62, f"EMAIL: {data['profile']['email']}")
-    c.drawString(410, 62, "BASE: 深圳 / 广州 · 全职")
+    c.drawString(54, 69, f"TEL: {data['profile']['phone']}")
+    c.drawString(175, 69, f"EMAIL: {data['profile']['email']}")
+    c.drawString(380, 69, "BASE: 深圳 / 广州 · 全职")
+
+    c.setFont(FONT_BOLD, 8.2)
+    c.setFillColor(HexColor(f"#{CYAN}"))
+    c.drawString(54, 51, f"3D PORTFOLIO SITE: {website}")
+    c.linkURL(website, (54, 46, 320, 58))
 
     c.setFont(FONT_REGULAR, 7.0)
     c.setFillColor(HexColor("#5D7881"))
-    c.drawString(54, 30, "CONFIDENTIAL / 付道品 个人技术经历与工程案例集")
-    c.drawRightString(541, 30, "01 / 09 · JAVA BACKEND · AIOT · GIS · AGENT")
+    c.drawString(54, 28, "CONFIDENTIAL / 付道品 个人技术经历与工程案例集")
+    c.drawRightString(541, 28, "01 / 09 · JAVA BACKEND · AIOT · GIS · AGENT")
 
 
 def draw_pdf_overview(c: canvas.Canvas, data: dict) -> None:
+    website = data["profile"].get("website", "http://cv.bookfree.online/")
     page = PdfPage(c, 2, "PROFILE / CAPABILITY MATRIX")
-    page.title("核心简历", "高级 Java 开发工程师 · 微服务 / 智慧水务 / AIoT / GIS / Agent")
+    page.title("核心简历", f"高级 Java 开发工程师 · 3D 展馆: {website} · 微服务 / AIoT / GIS / Agent")
     page.info_box(page.left, 670, page.content_width, 58, "职业定位", data["profile"]["summary"], ORANGE)
     page.section_label(page.left, 649, "核心能力矩阵", "A1")
     box_gap = 10

@@ -59,7 +59,9 @@ function ExhibitBeacon({ id, position, accent, active, focusIntensity, interacti
         <boxGeometry args={[1.72, 0.08, 0.08]} />
         <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.8} />
       </mesh>
-      <pointLight position={[0, 1.2, 0.6]} color={color} intensity={(active ? 8 : 3.5) * focusIntensity} distance={5} decay={2} />
+      {active && (
+        <pointLight position={[0, 1.2, 0.6]} color={color} intensity={8} distance={7} decay={2} />
+      )}
     </group>
   );
 }

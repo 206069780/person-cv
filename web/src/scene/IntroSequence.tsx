@@ -8,12 +8,17 @@ interface IntroSequenceProps {
   onComplete: () => void;
 }
 
+const _introLookAtVector = new THREE.Vector3();
+
 export function IntroSequence({ active, onComplete }: IntroSequenceProps) {
   const camera = useThree((state) => state.camera);
 
   useEffect(() => {
     const target = { x: 0, y: 1.8, z: 2 };
-    const lookAt = () => camera.lookAt(new THREE.Vector3(target.x, target.y, target.z));
+    const lookAt = () => {
+      _introLookAtVector.set(target.x, target.y, target.z);
+      camera.lookAt(_introLookAtVector);
+    };
 
     if (!active) {
       camera.position.set(0, 2.45, 13);
