@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#081117" />
+    <meta name="description" content="付道品，高级 Java 开发工程师，智慧水务、Java 微服务、AIoT/GIS 与 Agent 工程化项目经历。" />
+    <title>付道品 | 高级 Java 开发工程师</title>
+    <style>
+      body {
+        margin: 0;
+        background: #081117;
+        color: #f5f8f9;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #081117;
+        color: #f5f8f9;
+      }
+      .init-mark {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin-bottom: 28px;
+      }
+      .init-mark i {
+        position: absolute;
+        inset: 0;
+        border: 1px solid rgba(40, 215, 229, 0.5);
+        transform: rotate(45deg);
+        animation: init-spin 3.6s linear infinite;
+      }
+      .init-mark i:nth-child(2) {
+        inset: 16px;
+        border-color: rgba(255, 107, 61, 0.75);
+        animation-direction: reverse;
+      }
+      .init-mark i:nth-child(3) {
+        inset: 32px;
+        border-color: #00a89d;
+      }
+      .init-eyebrow {
+        margin: 0;
+        color: #00a89d;
+        font-family: "IBM Plex Mono", Consolas, monospace;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+      .init-title {
+        margin-top: 10px;
+        font-size: 20px;
+        font-weight: 600;
+      }
+      .init-track {
+        width: 200px;
+        height: 2px;
+        margin-top: 20px;
+        overflow: hidden;
+        background: #304149;
+      }
+      .init-track span {
+        display: block;
+        width: 45%;
+        height: 100%;
+        background: #00a89d;
+        box-shadow: 0 0 16px #00a89d;
+        animation: init-track 1.2s ease-in-out infinite;
+      }
+      @keyframes init-spin {
+        to { transform: rotate(405deg); }
+      }
+      @keyframes init-track {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(250%); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="initial-loader" aria-live="polite">
+        <div class="init-mark"><i /><i /><i /></div>
+        <p class="init-eyebrow">LITREE DIGITAL TWIN</p>
+        <div class="init-title">初始化展馆资源...</div>
+        <div class="init-track"><span></span></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+services:
+  resume-museum:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    image: fu-daopin-resume:latest
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+

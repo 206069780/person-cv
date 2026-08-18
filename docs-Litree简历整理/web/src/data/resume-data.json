@@ -1,0 +1,252 @@
+{
+  "profile": {
+    "name": "付道品",
+    "title": "高级 Java 开发工程师",
+    "experience": "近 6 年 Java 后端开发经验",
+    "phone": "17322443268",
+    "email": "fudaopin@icloud.com",
+    "summary": "专注 Java 微服务、智慧水务、AIoT/GIS、数据工程与 Agent 工程化，具备复杂业务系统研发、跨系统数据集成和从方案到上线交付的完整实践。"
+  },
+  "highlights": [
+    "覆盖国内外 10,000+ 水站",
+    "Java 21 与 Spring Cloud 微服务",
+    "AIoT 多协议接入与 GIS/DMA",
+    "AgentScope Java 与 Spring AI Alibaba Graph"
+  ],
+  "strengths": [
+    {
+      "title": "Java 微服务与复杂业务交付",
+      "evidence": "在 Litree 平台参与网关、基础资料、AIoT、水站、管网与数据处理服务协作，处理统一认证、租户上下文和跨服务数据一致性。"
+    },
+    {
+      "title": "AIoT 与多协议接入",
+      "evidence": "负责有人云协议组件与设备接入，参与 MQTT、Modbus、TCP/UDP、OPC/HTTP 等团队多协议平台实践。"
+    },
+    {
+      "title": "GIS/PostGIS 与 DMA",
+      "evidence": "参与管点、管线、设备、拓扑分析、DMA 分区及流量压力监控报表的后端建设。"
+    },
+    {
+      "title": "Agent 与 AI Coding 工程化",
+      "evidence": "推进 AgentScope Java 适配、Spring AI Alibaba Graph 数据智能体以及 AGENTS.md、Skills 和三态任务目录组成的 AI Coding 研发闭环。"
+    }
+  ],
+  "experiences": [
+    {
+      "period": "2023.10 至今",
+      "company": "立升净水科技",
+      "title": "高级 Java 开发工程师",
+      "summary": "参与智慧水务微服务平台建设，负责水站与设备相关后端模块、跨系统数据集成及部分 GIS/DMA 能力，参与 Agent 工程化与 AI Coding 研发流程建设。",
+      "achievements": [
+        "参与支撑覆盖国内外 10,000+ 水站的 Litree 智慧水务云平台建设。",
+        "打通站点主数据、设备接入、工艺监控、告警运维、GIS 管网、OA/HR 与数据智能体相关链路。"
+      ]
+    },
+    {
+      "period": "2021.10-2023.10",
+      "company": "外企德科",
+      "title": "Java / 大数据开发工程师",
+      "summary": "参与华为 WeLink 开放平台小薇搜索，负责搜人、搜群组、搜聊天记录、用户画像、亲密度规则和实时/离线数据接入。",
+      "achievements": [
+        "建设 Kafka/Flink 实时接入与 Hadoop/Hive/Spark 离线补偿链路，向 Elasticsearch 持续同步搜索数据。",
+        "承担技术方案、文档、QC/Review/Committer、上线评审与生产交付工作。"
+      ]
+    },
+    {
+      "period": "2020.09-2021.10",
+      "company": "森格自动化科技",
+      "title": "Java 开发工程师",
+      "summary": "负责智慧水务平台从 0 到 1 搭建，参与需求、方案、开发测试、部署上线和生产问题处理。",
+      "achievements": [
+        "建设权限、登录注册、设备监控告警、水质水压报表、导出和数据归档等核心能力。",
+        "基于 Kafka、Redis、WebSocket 和 Docker 完成数据链路与工程交付。"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "litree",
+      "name": "Litree 智慧水务云平台",
+      "company": "立升净水科技",
+      "period": "2023.10 至今",
+      "summary": "面向国内外 10,000+ 水站的统一智慧水务平台，连接站点主数据、AIoT 设备、工艺监控、告警运维、GIS 管网、数据分析和 OA/HR 业务域。",
+      "topics": [
+        {
+          "id": "litree-overview",
+          "title": "平台总览与微服务协作",
+          "background": "站点、项目空间、水站、网关、设备和物模型分属不同服务，需要形成统一的身份、租户、权限和数据协作基础。",
+          "role": "高级 Java 开发工程师，负责水站与设备相关后端模块、跨系统数据集成和部分 GIS/DMA 能力，参与平台级接口设计、联调与问题定位。",
+          "flow": "OA/主数据 → 项目空间与水站 → 网关与设备 → 产品物模型 → 实时监控、告警运维与报表分析。",
+          "engineeringBoundary": "以统一认证、租户上下文、数据权限和跨服务标识映射为协作底座；团队平台能力与个人负责模块分开表述。",
+          "implementation": [
+            "在 Java 21、Spring Boot 3、Spring Cloud 体系中参与网关、基础资料、AIoT、水站、管网和数据处理服务协作。",
+            "通过 Nacos 管理注册配置、OpenFeign 组织跨服务调用，并传递统一认证、租户上下文和数据权限。",
+            "围绕站点、项目空间、水站、网关、设备与物模型建立跨服务标识映射和接口契约。"
+          ],
+          "challenges": [
+            "跨服务对象标识和生命周期不同，需避免业务对象在多模块之间错配。",
+            "团队平台能力与个人贡献必须区分表述，不把全部模块写成个人独立完成。"
+          ],
+          "outcome": "参与形成从站点建档、设备接入、实时监控、告警运维到报表分析的后端业务闭环。",
+          "stack": ["Java 21", "Spring Boot 3", "Spring Cloud", "Nacos", "OpenFeign", "MyBatis", "PostgreSQL", "Redis", "Kafka", "TDengine", "Docker"]
+        },
+        {
+          "id": "litree-device-data",
+          "title": "水站设备与运行数据",
+          "background": "水站数据来自 OA 站点、项目空间、现场网关和 IoT 设备，存在单站多网关、未激活网关和台账与实时来源不一致等场景。",
+          "role": "负责水站多网关数据处理、设备台账、Excel 导入、模拟设备上报、运行监控统计及相关接口联调。",
+          "flow": "站点建档 → 多网关关联与过滤 → 设备台账/批量导入 → IoT 注册建模 → 模拟上报 → 运行监控统计。",
+          "engineeringBoundary": "围绕站点、网关、设备三级映射处理数据一致性；定时任务显式传递租户上下文，导入任务提供行级校验反馈。",
+          "implementation": [
+            "重构 OA 水站多网关设备数据处理并过滤未激活网关。",
+            "建设设备台账录入、查询与 Excel 批量导入，在具备 productKey 时联动创建 IoT 设备。",
+            "补充模拟设备上报能力和运行监控统计接口，处理 Quartz 调度任务中的租户上下文。"
+          ],
+          "challenges": [
+            "处理站点、网关、设备多级映射和不同台账字段差异。",
+            "为 Excel 行级校验提供明确错误反馈，并保证定时任务下的租户隔离。"
+          ],
+          "outcome": "打通站点建档、网关关联、设备注册、IoT 建模、模拟上报和监控统计链路。",
+          "stack": ["Spring Boot", "MyBatis", "PostgreSQL", "Quartz", "OpenFeign", "Redis", "TDengine", "EasyExcel"]
+        },
+        {
+          "id": "litree-aiot",
+          "title": "协议接入与 AIoT",
+          "background": "现场设备来自不同厂商，通信方式、设备标识和数据结构不统一，需要转换为统一产品、物模型、属性和事件。",
+          "role": "负责有人云协议组件及设备数据接入 IoT 平台；其他协议作为团队多协议平台能力呈现。",
+          "flow": "厂商连接与认证 → 周期拉取/报文接收 → 字段与寄存器映射 → 产品物模型 → 属性/事件 → 监控与告警。",
+          "engineeringBoundary": "个人负责有人云接入组件；MQTT、Modbus、TCP/UDP、OPC/HTTP 等按团队多协议平台实践呈现，不扩大个人归属。",
+          "implementation": [
+            "建设独立的有人云接入组件，完成厂商连接配置、HTTP 调用、周期任务、数据拉取转换和 Redis 状态处理。",
+            "建立产品元数据映射并与 AIoT Server 集成，将厂商数据标准化为物模型属性与事件。",
+            "参与 MQTT、Modbus TCP/RTU、TCP/UDP 水表、繁易、迈拓和巨控 OPC/HTTP 等团队协议实践。"
+          ],
+          "challenges": [
+            "处理连接认证、设备路由、报文字段映射、周期同步、重连重试和异常数据隔离。",
+            "二进制协议涉及粘包拆包、校验和寄存器映射等边界问题。"
+          ],
+          "outcome": "将有人云设备纳入 Litree 统一 IoT 数据链路，并与团队其他协议组件共同支撑设备管理、监控和告警。",
+          "stack": ["Java", "Spring Boot", "HTTP", "MQTT", "Modbus", "TCP/UDP", "OPC", "Redis", "Quartz", "Nacos", "物模型"]
+        },
+        {
+          "id": "litree-gis",
+          "title": "GIS 管网与 DMA",
+          "background": "供水管网需要在地图中统一管理管点、管线、设备和 DMA 分区，并结合流量、压力数据支持监测、分析和应急处置。",
+          "role": "负责或参与 GIS 管网后端、拓扑分析、DMA 数据绑定、空间权限、流量与压力监控报表及前后端接口联调。",
+          "flow": "PostGIS 管点/管线 → 图层与空间权限 → 管网拓扑 → DMA 分区与设备绑定 → 流量压力聚合 → 监控报表与导出。",
+          "engineeringBoundary": "空间对象、IoT 设备与项目空间通过业务标识关联；接口同时兼容 WKT/GeoJSON，并处理长整型 ID 的前端精度边界。",
+          "implementation": [
+            "建设 PostGIS 管点、管线、设备查询和 WKT/GeoJSON 兼容处理，支持图层管理与项目空间授权过滤。",
+            "落地拓扑关系、爆管上下游分析、关阀影响分析、多级 DMA 与进出口设备绑定。",
+            "聚合设备与 IoT 数据，提供流量、压力监控、趋势明细、KPI 汇总和导出 API。"
+          ],
+          "challenges": [
+            "处理空间几何类型兼容、管网对象与 IoT 设备关联、DMA 层级和跨服务数据聚合。",
+            "解决雪花 ID 在前端传递中的精度边界。"
+          ],
+          "outcome": "形成管网一张图、拓扑应急分析、DMA 分区和流量压力监测的一体化能力。",
+          "stack": ["Java", "Spring Boot", "PostgreSQL/PostGIS", "MyBatis", "OpenFeign", "Redis", "TDengine", "GeoJSON/WKT", "Excel/CSV"]
+        },
+        {
+          "id": "litree-oa",
+          "title": "OA/HR 与数据同步",
+          "background": "OA/HR 主数据需要与智慧水务平台的用户、组织、站点、项目空间和 IoT 业务域保持一致，并支撑考勤、绩效和人员全生命周期业务。",
+          "role": "参与 OA/HR 后端模块建设，负责或优化人员、组织和站点同步、统一登录及水务业务数据联动。",
+          "flow": "员工/部门/岗位主数据 → 入转调离 → 排班考勤 → 绩效评价 → 站点、项目空间与水站数据权限联动。",
+          "engineeringBoundary": "同步链路采用分页拉取、业务主键去重、分批 upsert 和幂等更新，重点处理批次内重复、分页一致性与跨域映射。",
+          "implementation": [
+            "统一员工、部门、岗位、组织层级和任职状态等主数据，支撑入职、转岗、调动、离职及数据权限联动。",
+            "围绕排班、打卡、请假、加班、出差和异常申诉建立考勤规则与日/月汇总链路。",
+            "支持考核周期、指标权重、目标下发、自评、上级评价、结果审批和汇总查询。",
+            "通过 OA API 分页拉取、Quartz 调度、业务主键去重、分批 upsert、字段清洗和幂等更新建设同步链路。"
+          ],
+          "challenges": [
+            "解决重复行导致的 ON CONFLICT 异常、单批 SQL 过大和分页同步一致性。",
+            "处理 OA 站点与水站、项目空间、网关、IoT 设备之间的映射和权限联动。"
+          ],
+          "outcome": "形成 OA/HR 主数据进入业务平台的定时同步与幂等更新链路，支撑考勤、绩效、人员组织和水站权限协同。",
+          "stack": ["Spring Boot", "MyBatis", "PostgreSQL", "Quartz", "REST API", "幂等", "分页同步", "批量 upsert", "数据权限"]
+        },
+        {
+          "id": "litree-agent",
+          "title": "Agent 与 AI Coding 工程化",
+          "background": "需要在 Litree Java 微服务体系中提供可控、可恢复、可审计的智能体运行能力，并以真实数据智能体项目支撑 AI 工程经验。",
+          "role": "推进 AgentScope Java 2.0 二次开发与 Litree 适配，并将 Spring AI Alibaba Graph 数据智能体纳入统一的业务工具、权限和研发流程。",
+          "flow": "用户意图 → AgentScope Harness/会话 → Tool/MCP 业务工具 → Spring AI Alibaba Graph 数据分析 → HITL 审批 → 报告与审计。",
+          "engineeringBoundary": "AgentScope 承担长任务、工具、会话和多 Agent 运行；Graph 承担可控数据分析编排；高风险动作必须经过权限、人工确认与沙箱隔离。",
+          "implementation": [
+            "围绕 HarnessAgent/ReActAgent 封装 Model、Toolkit、Memory、Session、Workspace 和 Event，接入 Nacos、统一认证、租户上下文和 Spring 依赖注入。",
+            "将水站、设备、物模型、告警、工单、GIS 管网和统计查询封装为 Tool/MCP 服务，统一校验、超时、重试和错误回传。",
+            "按 tenant/user/agent/session 隔离会话与执行状态，引入允许、人工审批、拒绝三态工具权限和 HITL 审计。",
+            "以 Spring AI Alibaba Graph 编排意图识别、Schema 召回、NL2SQL、Planner、Python 执行、人工反馈和报告生成。",
+            "结合 Elasticsearch Vector Store、关键词与向量混合检索构建 RAG，并对业务知识进行租户隔离。",
+            "将 Codex、Claude Code、Cursor 和 Trae 用于需求、实现、测试、Review 和文档，以 AGENTS.md、Skills、三态任务目录和 GitLab CI 固化 AI Coding 流程。"
+          ],
+          "challenges": [
+            "AgentScope 负责长任务、工具、会话和多 Agent 运行，Spring AI Alibaba Graph 负责可控数据分析图编排，职责必须清晰。",
+            "设备控制、数据修改和代码执行属于高风险动作，需要 HITL、沙箱、租户隔离和完整审计。"
+          ],
+          "outcome": "形成以实际水务数据智能体为支撑的 Agent 工程方案，并将 AI Coding 从个人工具使用提升为可复用研发流程。",
+          "stack": ["AgentScope Java 2.0", "HarnessAgent", "ReAct", "HITL", "Multi-Agent", "Spring AI Alibaba Graph", "RAG", "MCP", "Redis", "PostgreSQL", "Docker/Kubernetes Sandbox"]
+        }
+      ]
+    },
+    {
+      "id": "welink",
+      "name": "华为 WeLink",
+      "company": "外企德科",
+      "period": "2021.10-2023.10",
+      "summary": "面向中大型企业和高校的协同办公平台，所在开放平台项目组负责小薇搜索，为用户提供跨人员、群组和聊天记录的统一搜索。",
+      "topics": [
+        {
+          "id": "welink-search",
+          "title": "统一搜索与数据接入",
+          "background": "搜索需要覆盖人员、群组和聊天记录，并结合画像、个性化、推荐、纠错和意图识别提供稳定结果。",
+          "role": "负责搜人、搜群组、搜聊天记录、用户画像、人员亲密度规则以及实时/离线数据接入，同时承担技术方案、代码质量和上线交付职责。",
+          "flow": "业务数据 → Kafka/Flink 实时接入 + Hadoop/Hive/Spark 离线补偿 → Elasticsearch → 人员、群组与聊天记录统一搜索。",
+          "engineeringBoundary": "围绕统一口径处理实时变更、历史回灌和缺失补偿；承担方案文档、QC/Review/Committer、上线评审与交付协同。",
+          "implementation": [
+            "围绕人员、群组和聊天记录建设统一搜索能力，参与用户画像、个性化搜索、推荐、纠错和亲密度计算。",
+            "使用 Kafka/Flink 处理实时接入，将变更数据持续同步至 Elasticsearch。",
+            "使用 Hadoop、Hive、Spark 处理离线接入、历史数据回灌和实时链路缺失补偿。",
+            "承担技术分享、方案文档、QC/Review/Committer、排期、上线评审、流程申请和上线准备。"
+          ],
+          "challenges": [
+            "保证实时与离线链路的数据完整性和统一口径。",
+            "围绕 Elasticsearch 索引和查询链路定位问题，不虚构响应时间或提升比例。"
+          ],
+          "outcome": "参与交付人员、群组、聊天记录统一搜索及实时/离线数据接入闭环。",
+          "stack": ["Java", "Spring Boot", "Elasticsearch", "Kafka", "Flink", "Spark", "Hadoop", "Hive", "MySQL", "华为云数据湖"]
+        }
+      ]
+    },
+    {
+      "id": "senge",
+      "name": "森格智慧水务平台 0-1 建设",
+      "company": "森格自动化科技",
+      "period": "2020.09-2021.10",
+      "summary": "连接终端、服务端和客户端，实现水厂设备与环境在线监控、设备告警、数据报表和远程控制。",
+      "topics": [
+        {
+          "id": "senge-platform",
+          "title": "智慧水务平台 0-1 交付",
+          "background": "水厂需要从设备数据采集到业务监控、告警、报表和运维形成完整数字化闭环。",
+          "role": "负责平台从 0 到 1 搭建，全程参与需求分析、方案设计、开发测试、部署上线和生产问题处理。",
+          "flow": "现场设备数据 → Kafka/Redis → 状态处理与 WebSocket 展示 → 设备告警与监控 → 日月年报表 → 数据归档与运维。",
+          "engineeringBoundary": "在 0-1 阶段同时覆盖业务功能、实时数据链路和 Docker 部署，通过需求确认、方案实现、测试与上线形成完整交付闭环。",
+          "implementation": [
+            "建设权限、登录注册、操作日志、设备告警、设备监控、水质/水压及日月年报表、导出和数据归档。",
+            "通过 Kafka、Redis 和 WebSocket 支撑设备数据接入、状态更新和前端实时展示。",
+            "负责 SQL 优化、技术方案与文档、Docker 部署、上线准备和技术难点处理。"
+          ],
+          "challenges": [
+            "在 0-1 阶段同时保证业务闭环、实时数据链路和部署运维可用。",
+            "协调功能从需求确认推进至生产交付。"
+          ],
+          "outcome": "完成从设备采集、实时监控和告警到统计报表、归档和上线运维的完整实践。",
+          "stack": ["Java", "Spring Boot", "MyBatis", "MySQL", "Redis", "Kafka", "WebSocket", "Docker", "微信小程序"]
+        }
+      ]
+    }
+  ]
+}
