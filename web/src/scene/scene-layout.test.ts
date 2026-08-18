@@ -12,6 +12,6 @@ describe('industrial exhibit layout', () => {
   it('strengthens the active zone and dims unrelated zones', () => {
     expect(getZoneFocus(null, 'litree-aiot')).toEqual({ intensity: 1, interactive: true });
     expect(getZoneFocus('litree-aiot', 'litree-aiot')).toEqual({ intensity: 1.35, interactive: true });
-    expect(getZoneFocus('litree-aiot', 'litree-agent')).toEqual({ intensity: 0.28, interactive: false });
+    expect(getZoneFocus('litree-aiot', 'litree-agent')).toEqual({ intensity: 0.32, interactive: true });
   });
 });

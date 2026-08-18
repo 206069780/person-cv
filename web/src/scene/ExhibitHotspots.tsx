@@ -34,28 +34,63 @@ function ExhibitBeacon({ id, position, accent, active, focusIntensity, interacti
 
   const select = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
-    if (interactive) onSelect(id);
+    onSelect(id);
+  };
+
+  const handlePointerOver = () => {
+    document.body.style.cursor = 'pointer';
+  };
+
+  const handlePointerOut = () => {
+    document.body.style.cursor = '';
   };
 
   return (
     <group position={position}>
-      <mesh position={[0, 0.1, 0]} onClick={select} onPointerOver={() => { if (interactive) document.body.style.cursor = 'pointer'; }} onPointerOut={() => { document.body.style.cursor = ''; }}>
+      <mesh
+        position={[0, 0.1, 0]}
+        onClick={select}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+      >
         <cylinderGeometry args={[1.45, 1.7, 0.2, 8]} />
         <meshStandardMaterial color="#11191b" metalness={0.88} roughness={0.28} emissive={color} emissiveIntensity={(active ? 0.34 : 0.1) * focusIntensity} />
       </mesh>
-      <mesh ref={ringRef} position={[0, 0.28, 0]} rotation={[Math.PI / 2, 0, 0]} onClick={select}>
+      <mesh
+        ref={ringRef}
+        position={[0, 0.28, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+        onClick={select}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+      >
         <torusGeometry args={[1.1, 0.035, 8, 48]} />
         <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.28 + focusIntensity * 0.5} />
       </mesh>
-      <mesh position={[-0.82, 1.6, 0]} onClick={select}>
+      <mesh
+        position={[-0.82, 1.6, 0]}
+        onClick={select}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+      >
         <boxGeometry args={[0.08, 3, 0.08]} />
         <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.8} />
       </mesh>
-      <mesh position={[0.82, 1.6, 0]} onClick={select}>
+      <mesh
+        position={[0.82, 1.6, 0]}
+        onClick={select}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+      >
         <boxGeometry args={[0.08, 3, 0.08]} />
         <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.8} />
       </mesh>
-      <mesh position={[0, 3.06, 0]} onClick={select}>
+      <mesh
+        position={[0, 3.06, 0]}
+        onClick={select}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+      >
         <boxGeometry args={[1.72, 0.08, 0.08]} />
         <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.8} />
       </mesh>

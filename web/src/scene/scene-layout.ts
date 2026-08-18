@@ -21,7 +21,7 @@ export const EXHIBITS: readonly ExhibitLayout[] = [
 export function getZoneFocus(activeId: string | null, zoneId: string) {
   if (!activeId) return { intensity: 1, interactive: true } as const;
   if (activeId === zoneId) return { intensity: 1.35, interactive: true } as const;
-  return { intensity: 0.28, interactive: false } as const;
+  return { intensity: 0.32, interactive: true } as const;
 }
 
 export const SCENE_BOUNDS = {

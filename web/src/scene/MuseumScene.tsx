@@ -687,8 +687,8 @@ function SceneContent(props: SceneContentProps) {
 
       {/* 数据流与展品模型 */}
       <DataStreams motionEnabled={props.motionEnabled} focused={props.activeExhibit !== null} />
-      <IndustrialAssets activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} />
-      <ModelHologramTags activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} />
+      <IndustrialAssets activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
+      <ModelHologramTags activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
       <CentralCore motionEnabled={props.motionEnabled} intensity={coreIntensity} />
       <ExhibitHotspots activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
       <IntroSequence active={props.introActive} onComplete={props.onIntroComplete} />

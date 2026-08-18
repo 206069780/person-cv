@@ -873,7 +873,15 @@ function IndustrialZone(props: ZoneProps) {
   }
 }
 
-export function IndustrialAssets({ activeExhibit, motionEnabled }: { activeExhibit: string | null; motionEnabled: boolean }) {
+export function IndustrialAssets({
+  activeExhibit,
+  motionEnabled,
+  onSelectExhibit,
+}: {
+  activeExhibit: string | null;
+  motionEnabled: boolean;
+  onSelectExhibit?: (id: string) => void;
+}) {
   return (
     <>
       {EXHIBITS.map((exhibit) => {
@@ -884,6 +892,16 @@ export function IndustrialAssets({ activeExhibit, motionEnabled }: { activeExhib
             key={exhibit.id}
             position={exhibit.position}
             scale={isActive ? 1.06 : focus.intensity < 0.5 ? 0.94 : 1}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectExhibit?.(exhibit.id);
+            }}
+            onPointerOver={() => {
+              document.body.style.cursor = 'pointer';
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = '';
+            }}
           >
             <IndustrialZone exhibit={exhibit} intensity={focus.intensity} motionEnabled={motionEnabled} />
           </group>
