@@ -1,14 +1,12 @@
 import { Download, Home, Map, SkipForward } from 'lucide-react';
 
+import { getModelRepresentation } from '../data/model-representations';
 import { resumeData } from '../data/resume-data';
 import { EXHIBITS } from '../scene/scene-layout';
-import { EngineeringConsole } from './EngineeringConsole';
 
 interface MuseumHudProps {
   activeExhibit: string | null;
-  consoleVisible: boolean;
   introActive: boolean;
-  motionEnabled: boolean;
   onReturnHome: () => void;
   onSelectExhibit: (id: string) => void;
   onSkipIntro: () => void;
@@ -16,15 +14,14 @@ interface MuseumHudProps {
 
 export function MuseumHud({
   activeExhibit,
-  consoleVisible,
   introActive,
-  motionEnabled,
   onReturnHome,
   onSelectExhibit,
   onSkipIntro,
 }: MuseumHudProps) {
   const activeIndex = EXHIBITS.findIndex((exhibit) => exhibit.id === activeExhibit);
   const active = activeIndex >= 0 ? EXHIBITS[activeIndex] : null;
+  const activeModel = active ? getModelRepresentation(active.id) : null;
 
   return (
     <div className="museum-hud">
@@ -57,25 +54,20 @@ export function MuseumHud({
         </a>
       </div>
 
-      {active ? (
+      {active && activeModel ? (
         <div className="museum-hud__3d-hint" aria-live="polite">
           <span className="live-dot" />
-          <strong>3D 观察模式</strong>
-          <span>按住左键拖拽 360° 旋转 · 滚轮缩放 · ESC 复位</span>
+          <div className="museum-hud__3d-hint-text">
+            <strong>MODEL [{activeModel.order}] {active.label}</strong>
+            <span className="hint-entity">代表：{activeModel.entityName}</span>
+            <span className="hint-action">拖拽 360° 旋转 · 滚轮缩放 · ESC 复位</span>
+          </div>
         </div>
       ) : (
         <div className="museum-hud__status" aria-hidden="true">
           <span className="live-dot" />
           CAREER EVIDENCE / STATIC DATA
         </div>
-      )}
-
-      {consoleVisible && (
-        <EngineeringConsole
-          variant="overlay"
-          motionEnabled={motionEnabled}
-          onSelectExhibit={onSelectExhibit}
-        />
       )}
 
       <nav className="project-index" id="project-index" aria-label="项目索引">

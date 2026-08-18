@@ -1,5 +1,6 @@
-import { AlertTriangle, Cpu, Database, Download, Route, ShieldCheck, Target, X } from 'lucide-react';
+import { AlertTriangle, Boxes, Cpu, Database, Download, Layers, Route, ShieldCheck, Sparkles, Target, X } from 'lucide-react';
 
+import { getModelRepresentation } from '../data/model-representations';
 import { getProject, getTopic, resumeData } from '../data/resume-data';
 
 interface ExhibitPanelProps {
@@ -10,6 +11,7 @@ interface ExhibitPanelProps {
 export function ExhibitPanel({ exhibitId, onClose }: ExhibitPanelProps) {
   const topic = getTopic(exhibitId);
   const project = resumeData.projects.find((item) => item.topics.some((entry) => entry.id === exhibitId)) ?? getProject(exhibitId);
+  const model = getModelRepresentation(exhibitId);
 
   if (!topic || !project) return null;
 
@@ -33,6 +35,46 @@ export function ExhibitPanel({ exhibitId, onClose }: ExhibitPanelProps) {
       </header>
 
       <div className="exhibit-panel__body">
+        {model && (
+          <section className="exhibit-panel__model-spec">
+            <div className="model-spec__badge">
+              <Boxes size={15} />
+              <span>3D DIGITAL TWIN · MODEL [{model.order}] · {model.shortLabel}</span>
+              <span className="live-dot" />
+            </div>
+
+            <div className="model-spec__entity">
+              <div className="model-spec__label">
+                <Sparkles size={15} />
+                <strong>3D 模型代表实际系统架构</strong>
+              </div>
+              <p className="model-spec__name">{model.entityName}</p>
+              <p className="model-spec__desc">{model.entityDescription}</p>
+            </div>
+
+            <div className="model-spec__metaphor">
+              <div className="model-spec__label">
+                <Layers size={15} />
+                <strong>3D 视觉构件隐喻与架构映射</strong>
+              </div>
+              <div className="model-spec__components">
+                {model.components.map((comp) => (
+                  <div key={comp.name} className="model-spec__component-item">
+                    <span className="comp-tag">{comp.name}</span>
+                    <span className="comp-metaphor">{comp.metaphor}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="model-spec__metrics">
+              {model.keyMetrics.map((metric) => (
+                <span key={metric} className="metric-pill">{metric}</span>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="exhibit-panel__result">
           <span>DELIVERY RESULT</span>
           <p>{topic.outcome}</p>

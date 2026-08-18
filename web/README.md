@@ -16,12 +16,22 @@ npm run preview -- --host 0.0.0.0 --port 4173
 
 ## Docker 部署
 
+在项目根目录（推荐）：
+
 ```powershell
-docker build -t fu-daopin-resume .
-docker run --rm -p 8080:80 fu-daopin-resume
+docker compose up -d --build
 ```
 
-浏览器访问 `http://localhost:8080/`。最终 PDF 位于 `public/resume/付道品-高级Java开发工程师.pdf`，构建后可通过 `/resume/付道品-高级Java开发工程师.pdf` 下载。
+或仅构建本目录镜像：
+
+```powershell
+docker build -t fu-daopin-resume .
+docker run --rm -p 8090:80 fu-daopin-resume
+```
+
+浏览器访问 `http://localhost:8090/`。生产环境通过 NPM 反向代理时，Forward 建议使用 `172.17.0.1:8090`（详见根目录 `README.md`）。
+
+最终 PDF 位于 `public/resume/付道品-高级Java开发工程师.pdf`，构建后可通过 `/resume/付道品-高级Java开发工程师.pdf` 下载。`public/` 下其他文件（如域名验证 txt）也会一并发布到站点根目录。
 
 桌面端以程序化 PBR 几何呈现设备、协议、GIS/DMA、OA/HR、Agent、WeLink 与水厂展区，项目规模统一为国内外 `10w+` 水站。手机端会先提示使用电脑端获取完整体验，随后进入内容完整的纵向简历；桌面端 WebGL 不可用时自动使用同一降级页面。
 

@@ -108,9 +108,7 @@ export default function App() {
       </Suspense>
       <MuseumHud
         activeExhibit={activeExhibit}
-        consoleVisible={!loading && !introActive && activeExhibit === null}
         introActive={introActive}
-        motionEnabled={motionEnabled}
         onReturnHome={returnHome}
         onSelectExhibit={setActiveExhibit}
         onSkipIntro={finishIntro}

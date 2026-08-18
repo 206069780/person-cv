@@ -243,28 +243,47 @@ a:focus-visible {
   left: 34px;
   bottom: 116px;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 16px;
+  max-width: 480px;
   border-radius: 4px;
-  border: 1px solid rgba(40, 215, 229, 0.4);
-  background: rgba(7, 16, 21, 0.88);
-  backdrop-filter: blur(8px);
+  border: 1px solid rgba(40, 215, 229, 0.45);
+  background: rgba(7, 16, 21, 0.92);
+  backdrop-filter: blur(10px);
   color: var(--museum-text);
   font-family: "IBM Plex Mono", Consolas, monospace;
-  font-size: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(40, 215, 229, 0.08);
+  font-size: 11px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 0 16px rgba(40, 215, 229, 0.1);
   animation: hud-hint-fade 280ms ease-out;
   pointer-events: none;
 }
 
-.museum-hud__3d-hint strong {
-  color: var(--museum-signal);
-  font-weight: 700;
+.museum-hud__3d-hint-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.museum-hud__3d-hint span {
+.museum-hud__3d-hint-text strong {
+  color: var(--museum-cyan);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.museum-hud__3d-hint-text .hint-entity {
+  color: #e2eff5;
+  font-size: 12px;
+  font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.museum-hud__3d-hint-text .hint-action {
   color: var(--museum-muted);
+  font-size: 10px;
+  margin-top: 2px;
 }
 
 @keyframes hud-hint-fade {
@@ -844,6 +863,116 @@ a:focus-visible {
 .exhibit-panel__body li + li { margin-top: 8px; }
 
 .exhibit-panel__body .topic-context { color: var(--museum-text); }
+
+.exhibit-panel__model-spec {
+  margin-top: 8px;
+  padding: 18px 20px !important;
+  border-radius: 4px;
+  border: 1px solid rgba(40, 215, 229, 0.42);
+  background: linear-gradient(135deg, rgba(8, 20, 28, 0.96) 0%, rgba(13, 30, 40, 0.92) 100%);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), inset 0 0 20px rgba(40, 215, 229, 0.08);
+}
+
+.model-spec__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(40, 215, 229, 0.5);
+  background: rgba(40, 215, 229, 0.12);
+  color: var(--museum-cyan);
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.model-spec__entity {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--museum-signal);
+  background: rgba(0, 168, 157, 0.08);
+  border-radius: 0 3px 3px 0;
+}
+
+.model-spec__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--museum-cyan);
+  font-size: 11px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.model-spec__name {
+  margin: 6px 0 0 !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1.45 !important;
+}
+
+.model-spec__desc {
+  margin: 4px 0 0 !important;
+  color: #9cb3bf !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.model-spec__metaphor {
+  margin-top: 14px;
+}
+
+.model-spec__components {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.model-spec__component-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.model-spec__component-item .comp-tag {
+  color: var(--museum-safety);
+  font-family: "IBM Plex Mono", Consolas, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.model-spec__component-item .comp-metaphor {
+  color: #c8d7dc;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.model-spec__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.model-spec__metrics .metric-pill {
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid rgba(40, 215, 229, 0.35);
+  background: rgba(40, 215, 229, 0.08);
+  color: var(--museum-cyan);
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+}
 
 .exhibit-panel__result {
   margin-top: 6px;

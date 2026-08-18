@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { ExhibitHotspots } from './ExhibitHotspots';
 import { IndustrialAssets } from './IndustrialAssets';
 import { IntroSequence } from './IntroSequence';
+import { ModelHologramTags } from './ModelHologramTag';
 import { NeonWalls } from './NeonWalls';
 import { EXHIBITS, getZoneFocus, SCENE_BOUNDS } from './scene-layout';
 
@@ -592,6 +593,7 @@ function SceneContent(props: SceneContentProps) {
       {/* 数据流与展品模型 */}
       <DataStreams motionEnabled={props.motionEnabled} focused={props.activeExhibit !== null} />
       <IndustrialAssets activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} />
+      <ModelHologramTags activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} />
       <CentralCore motionEnabled={props.motionEnabled} intensity={coreIntensity} />
       <ExhibitHotspots activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
       <IntroSequence active={props.introActive} onComplete={props.onIntroComplete} />
