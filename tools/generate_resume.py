@@ -851,47 +851,32 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
         c.setFillColor(HexColor(f"#{COLD_WHITE}"))
         c.drawString(x + 14, y + 17, item)
 
-    # 4. 中间件基础设施矩阵 (Middleware Fabric - 3行2列)
+    # 4. 中间件基础设施矩阵 (Middleware Fabric - 2行2列)
     middleware_items = (
-        ("CACHE", "Redis Cluster", TEAL),
-        ("MQ", "RabbitMQ", ORANGE),
-        ("REGISTRY", "Nacos", CYAN),
-        ("RESILIENCE", "Sentinel", TEAL),
-        ("RDBMS", "MySQL · PostgreSQL", ORANGE),
-        ("TSDB", "TDengine", CYAN),
+        ("Redis Cluster", TEAL),
+        ("RabbitMQ", ORANGE),
+        ("Nacos", CYAN),
+        ("Sentinel", TEAL),
     )
-    middleware_start_y = 280
-    middleware_box_h = 20
-    middleware_row_gap = 6
+    middleware_start_y = 275
 
-    c.setFont(FONT_BOLD, 6.2)
-    c.setFillColor(HexColor("#648894"))
-    c.drawString(54, 307, "MIDDLEWARE FABRIC // 基础设施能力")
-
-    for index, (category, technology, accent) in enumerate(middleware_items):
+    for index, (technology, accent) in enumerate(middleware_items):
         col = index % 2
         row = index // 2
         x = 54 + col * (box_w + col_gap)
-        y = middleware_start_y - row * (middleware_box_h + middleware_row_gap)
+        y = middleware_start_y - row * (box_h + row_gap)
 
-        c.setFillColor(HexColor("#0C1A20"))
+        c.setFillColor(HexColor("#102027"))
         c.setStrokeColor(HexColor("#264750"))
-        c.setLineWidth(0.7)
-        c.rect(x, y, box_w, middleware_box_h, fill=1, stroke=1)
+        c.setLineWidth(0.9)
+        c.rect(x, y, box_w, box_h, fill=1, stroke=1)
 
         c.setFillColor(HexColor(f"#{accent}"))
-        c.rect(x, y, 3, middleware_box_h, fill=1, stroke=0)
-        c.circle(x + 12, y + middleware_box_h / 2, 1.6, fill=1, stroke=0)
+        c.rect(x, y, 4.5, box_h, fill=1, stroke=0)
 
-        category_label = f"{category} //"
-        c.setFont(FONT_REGULAR, 5.5)
-        c.setFillColor(HexColor("#648894"))
-        c.drawString(x + 19, y + 7.2, category_label)
-        category_width = pdf_text_width(category_label, FONT_REGULAR, 5.5)
-
-        c.setFont(FONT_BOLD, 7.0)
+        c.setFont(FONT_BOLD, 8.4)
         c.setFillColor(HexColor(f"#{COLD_WHITE}"))
-        c.drawString(x + 23 + category_width, y + 6.5, technology)
+        c.drawString(x + 14, y + 17, technology)
 
     # 5. 职业定位与工程准则终端框 (Engineering Statement Terminal)
     stmt_y = 120
