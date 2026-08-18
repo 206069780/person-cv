@@ -148,15 +148,17 @@ function IntegratedCameraController({
   const panOffset = useRef(new THREE.Vector3(0, 0, 0));
   const idleTime = useRef(0);
   const lastActiveExhibit = useRef<string | null>(null);
+  const walkHeight = useRef(2.45);
+  const touchDistance = useRef<number | null>(null);
 
   // 当切换选中展品时，平滑重置观察中心与视角
   useEffect(() => {
     if (activeExhibit) {
       const exhibit = EXHIBITS.find((item) => item.id === activeExhibit);
       if (exhibit) {
-        targetCenter.current.set(exhibit.position[0] + 1.35, 1.25, exhibit.position[2]);
+        targetCenter.current.set(exhibit.position[0], 1.25, exhibit.position[2]);
         panOffset.current.set(0, 0, 0);
-        orbitRadius.current.target = 5.2;
+        orbitRadius.current.target = 5.0;
         orbitPhi.current.target = 1.12;
 
         if (lastActiveExhibit.current !== activeExhibit) {
@@ -171,16 +173,69 @@ function IntegratedCameraController({
     lastActiveExhibit.current = activeExhibit;
   }, [activeExhibit, camera]);
 
-  // 事件监听：键盘、鼠标拖拽、滚轮缩放、触摸手势
+  // 事件监听：键盘、鼠标拖拽、滚轮缩放、触摸手势与 UI 缩放联动
   useEffect(() => {
     if (introActive) return;
     const element = gl.domElement;
+
+    // 缩放步进函数
+    const zoomIn = () => {
+      idleTime.current = 0;
+      if (activeExhibit) {
+        orbitRadius.current.target = Math.max(1.6, orbitRadius.current.target - 0.75);
+      } else {
+        const forward = new THREE.Vector3(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
+        camera.position.add(forward.multiplyScalar(1.8));
+      }
+    };
+
+    const zoomOut = () => {
+      idleTime.current = 0;
+      if (activeExhibit) {
+        orbitRadius.current.target = Math.min(16.0, orbitRadius.current.target + 0.75);
+      } else {
+        const forward = new THREE.Vector3(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
+        camera.position.sub(forward.multiplyScalar(1.8));
+      }
+    };
+
+    const zoomReset = () => {
+      idleTime.current = 0;
+      if (activeExhibit) {
+        orbitRadius.current.target = 5.0;
+        orbitPhi.current.target = 1.12;
+        panOffset.current.set(0, 0, 0);
+      } else {
+        walkHeight.current = 2.45;
+        camera.position.set(0, 2.45, 14);
+        walkYaw.current = 0;
+        walkPitch.current = 0;
+      }
+    };
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'BUTTON'].includes((event.target as HTMLElement)?.tagName)) return;
       if (event.key === 'Escape' && activeExhibit) {
         onDeselect();
         return;
+      }
+      if (event.code === 'Equal' || event.code === 'NumpadAdd' || event.key === '+') {
+        zoomIn();
+        return;
+      }
+      if (event.code === 'Minus' || event.code === 'NumpadSubtract' || event.key === '-') {
+        zoomOut();
+        return;
+      }
+      if (event.code === 'KeyR') {
+        zoomReset();
+        return;
+      }
+      if (event.code === 'PageUp' || event.code === 'KeyE') {
+        walkHeight.current = Math.min(5.5, walkHeight.current + 0.4);
+      }
+      if (event.code === 'PageDown' || event.code === 'KeyQ') {
+        walkHeight.current = Math.max(1.2, walkHeight.current - 0.4);
       }
       keys.current.add(event.code);
     };
@@ -200,6 +255,7 @@ function IntegratedCameraController({
     const onPointerUp = () => {
       dragging.current = false;
       element.style.cursor = activeExhibit ? 'grab' : 'default';
+      touchDistance.current = null;
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -228,20 +284,54 @@ function IntegratedCameraController({
     };
 
     const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
       idleTime.current = 0;
       if (activeExhibit) {
-        event.preventDefault();
         orbitRadius.current.target = THREE.MathUtils.clamp(
-          orbitRadius.current.target + event.deltaY * 0.006,
-          2.3,
-          10.5
+          orbitRadius.current.target + event.deltaY * 0.005,
+          1.6,
+          16.0
         );
+      } else {
+        // 漫游模式下滚轮推进/拉远
+        const forward = new THREE.Vector3(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
+        const moveDist = -event.deltaY * 0.012;
+        camera.position.add(forward.multiplyScalar(moveDist));
+      }
+    };
+
+    // 触摸手势缩放支持
+    const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 2) {
+        const t1 = event.touches[0];
+        const t2 = event.touches[1];
+        const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        if (touchDistance.current !== null) {
+          const delta = dist - touchDistance.current;
+          if (activeExhibit) {
+            orbitRadius.current.target = THREE.MathUtils.clamp(
+              orbitRadius.current.target - delta * 0.015,
+              1.6,
+              16.0
+            );
+          }
+        }
+        touchDistance.current = dist;
       }
     };
 
     const onContextMenu = (event: MouseEvent) => {
       if (activeExhibit) event.preventDefault();
     };
+
+    // 监听 UI HUD 触发的缩放指令
+    const handleCustomZoomIn = () => zoomIn();
+    const handleCustomZoomOut = () => zoomOut();
+    const handleCustomZoomReset = () => zoomReset();
+
+    window.addEventListener('museum-zoom-in', handleCustomZoomIn);
+    window.addEventListener('museum-zoom-out', handleCustomZoomOut);
+    window.addEventListener('museum-zoom-reset', handleCustomZoomReset);
 
     element.style.cursor = activeExhibit ? 'grab' : 'default';
     window.addEventListener('keydown', onKeyDown);
@@ -250,19 +340,24 @@ function IntegratedCameraController({
     element.addEventListener('pointerdown', onPointerDown);
     element.addEventListener('pointermove', onPointerMove);
     element.addEventListener('wheel', onWheel, { passive: false });
+    element.addEventListener('touchmove', onTouchMove, { passive: true });
     element.addEventListener('contextmenu', onContextMenu);
 
     return () => {
       keys.current.clear();
+      window.removeEventListener('museum-zoom-in', handleCustomZoomIn);
+      window.removeEventListener('museum-zoom-out', handleCustomZoomOut);
+      window.removeEventListener('museum-zoom-reset', handleCustomZoomReset);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('pointerup', onPointerUp);
       element.removeEventListener('pointerdown', onPointerDown);
       element.removeEventListener('pointermove', onPointerMove);
       element.removeEventListener('wheel', onWheel);
+      element.removeEventListener('touchmove', onTouchMove);
       element.removeEventListener('contextmenu', onContextMenu);
     };
-  }, [activeExhibit, gl, introActive, onDeselect]);
+  }, [activeExhibit, camera, gl, introActive, onDeselect]);
 
   useFrame((_, delta) => {
     if (introActive) return;
@@ -323,7 +418,7 @@ function IntegratedCameraController({
 
       camera.position.x = THREE.MathUtils.clamp(camera.position.x, SCENE_BOUNDS.minX, SCENE_BOUNDS.maxX);
       camera.position.z = THREE.MathUtils.clamp(camera.position.z, SCENE_BOUNDS.minZ, SCENE_BOUNDS.maxZ);
-      camera.position.y = 2.45;
+      camera.position.y = walkHeight.current;
       camera.rotation.set(walkPitch.current, walkYaw.current, 0, 'YXZ');
     }
   });

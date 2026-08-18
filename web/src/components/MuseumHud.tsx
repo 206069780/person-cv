@@ -1,4 +1,4 @@
-import { Download, Home, Map, SkipForward } from 'lucide-react';
+import { Download, Home, Map, RotateCcw, SkipForward, ZoomIn, ZoomOut } from 'lucide-react';
 
 import { getModelRepresentation } from '../data/model-representations';
 import { resumeData } from '../data/resume-data';
@@ -22,6 +22,10 @@ export function MuseumHud({
   const activeIndex = EXHIBITS.findIndex((exhibit) => exhibit.id === activeExhibit);
   const active = activeIndex >= 0 ? EXHIBITS[activeIndex] : null;
   const activeModel = active ? getModelRepresentation(active.id) : null;
+
+  const triggerZoomIn = () => window.dispatchEvent(new CustomEvent('museum-zoom-in'));
+  const triggerZoomOut = () => window.dispatchEvent(new CustomEvent('museum-zoom-out'));
+  const triggerZoomReset = () => window.dispatchEvent(new CustomEvent('museum-zoom-reset'));
 
   return (
     <div className="museum-hud">
@@ -54,19 +58,50 @@ export function MuseumHud({
         </a>
       </div>
 
+      {/* 视野缩放与视角控制组 */}
+      <div className="museum-hud__zoom-controls" aria-label="视野缩放控制">
+        <button
+          type="button"
+          className="icon-command zoom-btn"
+          onClick={triggerZoomIn}
+          title="放大视野 (快捷键: +)"
+          aria-label="放大视野"
+        >
+          <ZoomIn size={17} />
+        </button>
+        <button
+          type="button"
+          className="icon-command zoom-btn"
+          onClick={triggerZoomOut}
+          title="缩小视野 (快捷键: -)"
+          aria-label="缩小视野"
+        >
+          <ZoomOut size={17} />
+        </button>
+        <button
+          type="button"
+          className="icon-command zoom-btn"
+          onClick={triggerZoomReset}
+          title="复位视野 (快捷键: R / ESC)"
+          aria-label="复位视野"
+        >
+          <RotateCcw size={16} />
+        </button>
+      </div>
+
       {active && activeModel ? (
         <div className="museum-hud__3d-hint" aria-live="polite">
           <span className="live-dot" />
           <div className="museum-hud__3d-hint-text">
             <strong>MODEL [{activeModel.order}] {active.label}</strong>
             <span className="hint-entity">代表：{activeModel.entityName}</span>
-            <span className="hint-action">拖拽 360° 旋转 · 滚轮缩放 · ESC 复位</span>
+            <span className="hint-action">左键 360° 旋转 · 滚轮或 [+/-] 缩放视野 · ESC 复位</span>
           </div>
         </div>
       ) : (
         <div className="museum-hud__status" aria-hidden="true">
           <span className="live-dot" />
-          CAREER EVIDENCE / STATIC DATA
+          <span>WASD 漫游 · 滚轮或 [+/-] 缩放视野 · 点击展位对焦</span>
         </div>
       )}
 
