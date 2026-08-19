@@ -1900,8 +1900,9 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(4, 8, 11, 0.82);
+  background: rgba(4, 8, 11, 0.85);
   backdrop-filter: blur(12px);
+  pointer-events: auto;
   animation: modal-fade-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -1914,7 +1915,8 @@ a:focus-visible {
   position: relative;
   width: 100%;
   max-width: 860px;
-  max-height: 88vh;
+  height: 84vh;
+  max-height: 84vh;
   display: flex;
   flex-direction: column;
   background: #091217;
@@ -1922,9 +1924,11 @@ a:focus-visible {
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
   border-radius: 6px;
   overflow: hidden;
+  pointer-events: auto;
 }
 
 .resume-overview-card__header {
+  flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1954,11 +1958,34 @@ a:focus-visible {
 }
 
 .resume-overview-card__body {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 24px 28px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  pointer-events: auto;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--museum-steel) transparent;
+}
+
+.resume-overview-card__body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.resume-overview-card__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.resume-overview-card__body::-webkit-scrollbar-thumb {
+  background: var(--museum-steel);
+  border-radius: 3px;
+}
+
+.resume-overview-card__body::-webkit-scrollbar-thumb:hover {
+  background: var(--museum-cyan);
 }
 
 .overview-section__title {

@@ -39,11 +39,13 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
       role="dialog"
       aria-modal="true"
       aria-labelledby="overview-modal-title"
+      onWheel={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="resume-overview-card">
+      <div className="resume-overview-card" onWheel={(e) => e.stopPropagation()}>
         <header className="resume-overview-card__header">
           <div>
             <p className="eyebrow">CAREER MATRIX & WORK EXPERIENCE</p>
