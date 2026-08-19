@@ -16,11 +16,7 @@
 
 * { box-sizing: border-box; }
 
-html {
-  min-width: 320px;
-  background: var(--museum-bg);
-  overflow-x: hidden;
-}
+html { min-width: 320px; background: var(--museum-bg); }
 
 body {
   margin: 0;
