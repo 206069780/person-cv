@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { calculateParallaxOffset, calculateScrollProgress } from '../app/mobile-scroll';
+import { calculateScrollProgress } from '../app/mobile-scroll';
 
 interface ScrollProgressProps {
   markers?: number;
@@ -12,23 +12,27 @@ export function ScrollProgress({ markers = 0 }: ScrollProgressProps) {
 
   useEffect(() => {
     let frame = 0;
+    let lastPassedIndex = -1;
 
     const update = () => {
       frame = 0;
       const root = document.documentElement;
       const progress = calculateScrollProgress(root.scrollTop, root.scrollHeight, root.clientHeight);
-      const heroProgress = Math.min(1, root.scrollTop / Math.max(1, root.clientHeight * 0.7));
-      const parallaxOffset = calculateParallaxOffset(root.scrollTop);
 
-      barRef.current?.style.setProperty('--scroll-progress', String(progress));
-      root.style.setProperty('--mobile-hero-progress', String(heroProgress));
-      root.style.setProperty('--mobile-hero-offset', `${heroProgress * -12}px`);
-      root.style.setProperty('--mobile-hero-opacity', String(1 - heroProgress * 0.08));
-      root.style.setProperty('--mobile-grid-offset', `${parallaxOffset}px`);
-      root.style.setProperty('--mobile-depth-offset', `${parallaxOffset * -0.35}px`);
-      markersRef.current?.querySelectorAll<HTMLElement>('.scroll-progress__node').forEach((node, index) => {
-        node.dataset.passed = progress >= (index + 1) / (markers + 1) ? 'true' : 'false';
-      });
+      // 直接操作进度条变换，零全局 Style Recalculation 开销
+      if (barRef.current) {
+        barRef.current.style.transform = `scaleX(${progress})`;
+      }
+
+      // 仅在跨越节点阈值时才局部更新 marker 节点状态，避免高频 DOM 遍历
+      const currentPassedIndex = Math.floor(progress * (markers + 1)) - 1;
+      if (currentPassedIndex !== lastPassedIndex && markersRef.current) {
+        lastPassedIndex = currentPassedIndex;
+        const nodes = markersRef.current.children;
+        for (let i = 0; i < nodes.length; i++) {
+          (nodes[i] as HTMLElement).dataset.passed = i <= currentPassedIndex ? 'true' : 'false';
+        }
+      }
     };
 
     const schedule = () => {
@@ -37,17 +41,12 @@ export function ScrollProgress({ markers = 0 }: ScrollProgressProps) {
 
     update();
     window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
+    window.addEventListener('resize', schedule, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', schedule);
       if (frame) cancelAnimationFrame(frame);
-      document.documentElement.style.removeProperty('--mobile-hero-progress');
-      document.documentElement.style.removeProperty('--mobile-hero-offset');
-      document.documentElement.style.removeProperty('--mobile-hero-opacity');
-      document.documentElement.style.removeProperty('--mobile-grid-offset');
-      document.documentElement.style.removeProperty('--mobile-depth-offset');
     };
   }, [markers]);
 
@@ -67,3 +66,4 @@ export function ScrollProgress({ markers = 0 }: ScrollProgressProps) {
     </div>
   );
 }
+

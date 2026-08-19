@@ -29,7 +29,7 @@ export function ScrollReveal({
       ref={elementRef}
       className={`scroll-reveal scroll-reveal--${variant} ${className}`.trim()}
       data-revealed={revealed ? 'true' : 'false'}
-      style={{ '--reveal-delay': `${delay}ms` } as CSSProperties}
+      style={delay > 0 ? ({ '--reveal-delay': `${delay}ms` } as CSSProperties) : undefined}
     >
       {children}
     </div>
