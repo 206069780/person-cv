@@ -767,16 +767,90 @@ a:focus-visible {
   top: 0;
   bottom: 0;
   z-index: 50;
-  width: min(640px, 48vw);
-  min-width: 470px;
+  width: min(560px, 42vw);
+  min-width: 380px;
   overflow: hidden;
   border-left: 1px solid rgba(40, 215, 229, 0.46);
-  background: rgba(7, 16, 21, 0.97);
-  box-shadow: -26px 0 70px rgba(0, 0, 0, 0.38);
+  background: rgba(7, 16, 21, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: -26px 0 70px rgba(0, 0, 0, 0.55);
   animation: panel-enter 320ms cubic-bezier(0.16, 1, 0.3, 1);
   transform: translate3d(0, 0, 0);
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms ease;
   backface-visibility: hidden;
   isolation: isolate;
+}
+
+.exhibit-panel.is-collapsed {
+  transform: translate3d(100%, 0, 0);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.exhibit-panel__collapse-toggle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 54px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 26, 35, 0.95);
+  border: 1px solid rgba(40, 215, 229, 0.4);
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  color: var(--museum-cyan);
+  cursor: pointer;
+  z-index: 10;
+  transition: background 180ms ease, width 180ms ease, color 180ms ease;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(40, 215, 229, 0.2);
+}
+
+.exhibit-panel__collapse-toggle:hover {
+  background: rgba(40, 215, 229, 0.2);
+  width: 26px;
+  color: #ffffff;
+}
+
+.exhibit-panel__expand-pill {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px 10px 12px;
+  background: rgba(7, 18, 25, 0.94);
+  border: 1px solid rgba(40, 215, 229, 0.5);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  color: var(--museum-cyan);
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(40, 215, 229, 0.15);
+  animation: expand-pill-enter 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background 180ms ease, padding-right 180ms ease, color 180ms ease;
+}
+
+.exhibit-panel__expand-pill:hover {
+  background: rgba(14, 34, 45, 0.98);
+  color: #ffffff;
+  padding-right: 20px;
+  border-color: var(--museum-cyan);
+}
+
+@keyframes expand-pill-enter {
+  from { transform: translateY(-50%) translateX(100%); opacity: 0; }
+  to { transform: translateY(-50%) translateX(0); opacity: 1; }
 }
 
 .exhibit-panel__rail {

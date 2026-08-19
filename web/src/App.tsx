@@ -58,6 +58,7 @@ export default function App() {
   const [sceneReady, setSceneReady] = useState(false);
   const [introActive, setIntroActive] = useState(mode === 'museum');
   const [activeExhibit, setActiveExhibit] = useState<string | null>(null);
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [sceneKey, setSceneKey] = useState(0);
   const motionEnabled = mode === 'museum';
 
@@ -78,9 +79,19 @@ export default function App() {
     setLoading(false);
   }, []);
 
+  const handleSelectExhibit = useCallback((id: string | null) => {
+    setActiveExhibit(id);
+    setPanelCollapsed(false);
+  }, []);
+
   const returnHome = useCallback(() => {
     setActiveExhibit(null);
+    setPanelCollapsed(false);
     setSceneKey((value) => value + 1);
+  }, []);
+
+  const togglePanelCollapse = useCallback(() => {
+    setPanelCollapsed((prev) => !prev);
   }, []);
 
   const fallbackContent = useMemo(() => (
@@ -92,28 +103,38 @@ export default function App() {
 
   if (mode === 'fallback') return fallbackContent;
 
+  const isPanelOpen = Boolean(activeExhibit && !panelCollapsed);
+
   return (
     <main className="museum-shell" id="main-content">
       <Suspense fallback={null}>
         <MuseumScene
           key={sceneKey}
           activeExhibit={activeExhibit}
+          panelOpen={isPanelOpen}
           introActive={introActive}
           motionEnabled={motionEnabled}
           onIntroComplete={finishIntro}
           onReady={handleSceneReady}
           onFallback={fallback}
-          onSelectExhibit={setActiveExhibit}
+          onSelectExhibit={handleSelectExhibit}
         />
       </Suspense>
       <MuseumHud
         activeExhibit={activeExhibit}
         introActive={introActive}
         onReturnHome={returnHome}
-        onSelectExhibit={setActiveExhibit}
+        onSelectExhibit={handleSelectExhibit}
         onSkipIntro={finishIntro}
       />
-      {activeExhibit && <ExhibitPanel exhibitId={activeExhibit} onClose={() => setActiveExhibit(null)} />}
+      {activeExhibit && (
+        <ExhibitPanel
+          exhibitId={activeExhibit}
+          collapsed={panelCollapsed}
+          onToggleCollapse={togglePanelCollapse}
+          onClose={() => setActiveExhibit(null)}
+        />
+      )}
       {loading && <LoadingScreen ready={sceneReady} onFinish={handleLoadingFinish} />}
     </main>
   );

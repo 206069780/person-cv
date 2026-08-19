@@ -86,6 +86,7 @@ const _camRight = new THREE.Vector3();
 
 interface MuseumSceneProps {
   activeExhibit: string | null;
+  panelOpen?: boolean;
   introActive: boolean;
   motionEnabled: boolean;
   onIntroComplete: () => void;
@@ -120,11 +121,13 @@ class SceneBoundary extends Component<BoundaryProps, { failed: boolean }> {
  */
 function IntegratedCameraController({
   activeExhibit,
+  panelOpen = false,
   introActive,
   motionEnabled,
   onDeselect,
 }: {
   activeExhibit: string | null;
+  panelOpen?: boolean;
   introActive: boolean;
   motionEnabled: boolean;
   onDeselect: () => void;
@@ -146,6 +149,7 @@ function IntegratedCameraController({
   const orbitCenter = useRef(new THREE.Vector3(0, 1.25, 0));
   const targetCenter = useRef(new THREE.Vector3(0, 1.25, 0));
   const panOffset = useRef(new THREE.Vector3(0, 0, 0));
+  const sideShift = useRef(0);
   const idleTime = useRef(0);
   const lastActiveExhibit = useRef<string | null>(null);
   const walkHeight = useRef(2.45);
@@ -394,6 +398,14 @@ function IntegratedCameraController({
       _camFinalTarget.copy(targetCenter.current).add(panOffset.current);
       orbitCenter.current.lerp(_camFinalTarget, smoothFactor);
 
+      // 右侧抽屉展开时，相机视口焦点向右偏置（使 3D 模型居中在屏幕左侧剩余可用视口，绝不被右侧抽屉遮挡）
+      const sideShiftTarget = activeExhibit && panelOpen ? 1.05 : 0;
+      sideShift.current = THREE.MathUtils.lerp(
+        sideShift.current,
+        sideShiftTarget,
+        smoothFactor
+      );
+
       const r = orbitRadius.current.current;
       const phi = orbitPhi.current.current;
       const theta = orbitTheta.current.current;
@@ -402,8 +414,18 @@ function IntegratedCameraController({
       const camY = orbitCenter.current.y + r * Math.cos(phi);
       const camZ = orbitCenter.current.z + r * Math.sin(phi) * Math.cos(theta);
 
-      camera.position.set(camX, camY, camZ);
-      camera.lookAt(orbitCenter.current.x, orbitCenter.current.y + 0.15, orbitCenter.current.z);
+      // 相机水平右向量
+      const rightX = Math.cos(theta);
+      const rightZ = -Math.sin(theta);
+      const shiftX = rightX * sideShift.current;
+      const shiftZ = rightZ * sideShift.current;
+
+      camera.position.set(camX + shiftX, camY, camZ + shiftZ);
+      camera.lookAt(
+        orbitCenter.current.x + shiftX,
+        orbitCenter.current.y + 0.15,
+        orbitCenter.current.z + shiftZ
+      );
     } else {
       _camMovement.set(0, 0, 0);
       _camForward.set(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
@@ -697,6 +719,7 @@ function SceneContent(props: SceneContentProps) {
       <IntroSequence active={props.introActive} onComplete={props.onIntroComplete} />
       <IntegratedCameraController
         activeExhibit={props.activeExhibit}
+        panelOpen={props.panelOpen}
         introActive={props.introActive}
         motionEnabled={props.motionEnabled}
         onDeselect={() => props.onSelectExhibit(null)}
