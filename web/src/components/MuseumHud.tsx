@@ -1,7 +1,6 @@
 import { Briefcase, Download, Home, Map, RotateCcw, SkipForward, ZoomIn, ZoomOut } from 'lucide-react';
 import { useState } from 'react';
 
-import { getModelRepresentation } from '../data/model-representations';
 import { resumeData } from '../data/resume-data';
 import { EXHIBITS } from '../scene/scene-layout';
 import { ResumeOverviewModal } from './ResumeOverviewModal';
@@ -24,7 +23,6 @@ export function MuseumHud({
   const [overviewOpen, setOverviewOpen] = useState(false);
   const activeIndex = EXHIBITS.findIndex((exhibit) => exhibit.id === activeExhibit);
   const active = activeIndex >= 0 ? EXHIBITS[activeIndex] : null;
-  const activeModel = active ? getModelRepresentation(active.id) : null;
 
   const triggerZoomIn = () => window.dispatchEvent(new CustomEvent('museum-zoom-in'));
   const triggerZoomOut = () => window.dispatchEvent(new CustomEvent('museum-zoom-out'));
@@ -105,35 +103,14 @@ export function MuseumHud({
         </button>
       </div>
 
-      {active && activeModel ? (
-        <div className="museum-hud__3d-hint" aria-live="polite">
-          <span className="live-dot" />
-          <div className="museum-hud__3d-hint-text">
-            <div className="hint-header">
-              <strong>MODEL [{activeModel.order}] {active.label}</strong>
-              <span className="hint-tag">{activeModel.shortLabel}</span>
-            </div>
-            <div className="hint-entity">
-              <span className="hint-label">代表实际架构：</span>
-              <span className="hint-name">{activeModel.entityName}</span>
-            </div>
-            <div className="hint-components">
-              {activeModel.components.slice(0, 3).map((comp) => (
-                <div key={comp.name} className="hint-comp-item">
-                  <span className="comp-tag">{comp.name}</span>
-                  <span className="comp-text">{comp.metaphor}</span>
-                </div>
-              ))}
-            </div>
-            <span className="hint-action">左键 360° 空间旋转 · 滚轮或 [+/-] 缩放视野 · 右侧查看案例详情</span>
-          </div>
-        </div>
-      ) : (
-        <div className="museum-hud__status" aria-hidden="true">
-          <span className="live-dot" />
-          <span>WASD 漫游 · 滚轮或 [+/-] 缩放视野 · 点击展位对焦</span>
-        </div>
-      )}
+      <div className="museum-hud__status" aria-hidden="true">
+        <span className="live-dot" />
+        <span>
+          {active
+            ? '左键 360° 空间旋转 · 滚轮或 [+/-] 缩放视野 · 点击其他展位切换'
+            : 'WASD 漫游 · 滚轮或 [+/-] 缩放视野 · 点击展位对焦'}
+        </span>
+      </div>
 
       <nav className="project-index" id="project-index" aria-label="项目索引">
         <div className="project-index__title">
