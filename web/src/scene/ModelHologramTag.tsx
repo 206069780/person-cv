@@ -197,7 +197,7 @@ function SingleHologramTag({ exhibit, isActive, motionEnabled, onSelectExhibit }
 
     if (motionEnabled) {
       const floatOffset = Math.sin(clock.elapsedTime * 2 + exhibit.position[0]) * 0.035;
-      tagGroupRef.current.position.y = (isActive ? 3.35 : 2.95) + floatOffset;
+      tagGroupRef.current.position.y = (isActive ? 3.95 : 3.65) + floatOffset;
     }
 
     if (reticleRef.current && motionEnabled) {
@@ -225,11 +225,12 @@ function SingleHologramTag({ exhibit, isActive, motionEnabled, onSelectExhibit }
       {isActive ? (
         // 选中状态：在模型正上方呈现一个高科技全息瞄准环与聚焦激光锥，文字面板始终正对摄像机视野
         <group>
-          {/* 3D 顶部紧凑状态牌 */}
+          {/* 3D 顶部紧凑状态牌（抬升高度 + depthTest=false + renderOrder=99，彻底解决穿模） */}
           {inspectingTexture && (
             <group
               ref={tagGroupRef}
-              position={[0, 3.35, 0]}
+              position={[0, 3.95, 0]}
+              renderOrder={99}
               onClick={handleClick}
               onPointerOver={handlePointerOver}
               onPointerOut={handlePointerOut}
@@ -240,45 +241,55 @@ function SingleHologramTag({ exhibit, isActive, motionEnabled, onSelectExhibit }
                   transparent
                   toneMapped={false}
                   opacity={0.96}
+                  depthTest={false}
                   depthWrite={false}
                   side={THREE.DoubleSide}
                 />
               </mesh>
               <mesh position={[0, 0, -0.01]} geometry={reticleTopPlateWireGeo}>
-                <meshBasicMaterial color={model.accentColor} wireframe transparent toneMapped={false} opacity={0.35} depthWrite={false} />
+                <meshBasicMaterial
+                  color={model.accentColor}
+                  wireframe
+                  transparent
+                  toneMapped={false}
+                  opacity={0.35}
+                  depthTest={false}
+                  depthWrite={false}
+                />
               </mesh>
             </group>
           )}
 
           {/* 3D 锁定瞄准环 */}
-          <group position={[0, 2.7, 0]}>
+          <group position={[0, 3.2, 0]} renderOrder={90}>
             <group ref={reticleRef} rotation={[Math.PI / 2, 0, 0]}>
               <mesh geometry={reticleRingOuterGeo}>
-                <meshBasicMaterial color={model.accentColor} toneMapped={false} transparent opacity={0.75} />
+                <meshBasicMaterial color={model.accentColor} toneMapped={false} transparent opacity={0.8} depthTest={false} depthWrite={false} />
               </mesh>
               <mesh geometry={reticleRingInnerGeo}>
-                <meshBasicMaterial color="#ffffff" toneMapped={false} transparent opacity={0.55} />
+                <meshBasicMaterial color="#ffffff" toneMapped={false} transparent opacity={0.6} depthTest={false} depthWrite={false} />
               </mesh>
               {/* 4向十字准星 */}
               {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((angle, idx) => (
                 <mesh key={idx} position={[Math.cos(angle) * 0.72, Math.sin(angle) * 0.72, 0]} rotation={[0, 0, angle]} geometry={reticleCrossGeo}>
-                  <meshBasicMaterial color={model.accentColor} toneMapped={false} />
+                  <meshBasicMaterial color={model.accentColor} toneMapped={false} depthTest={false} depthWrite={false} />
                 </mesh>
               ))}
             </group>
 
             {/* 聚光通透光锥引线直指模型核心 */}
-            <mesh position={[0, -0.7, 0]} geometry={reticleBeamConeGeo}>
-              <meshBasicMaterial color={model.accentColor} toneMapped={false} transparent opacity={0.25} side={THREE.DoubleSide} />
+            <mesh position={[0, -1.0, 0]} geometry={reticleBeamConeGeo}>
+              <meshBasicMaterial color={model.accentColor} toneMapped={false} transparent opacity={0.25} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
             </mesh>
           </group>
         </group>
       ) : (
-        // 未选中状态：悬浮于模型上方的高清全息标牌（始终面向摄像机，点击秒级对焦）
+        // 未选中状态：悬浮于模型上方的高清全息标牌（抬高至 3.65m + 禁用 depthTest，消除模型交错穿模）
         compactTexture && (
           <group
             ref={tagGroupRef}
-            position={[0, 2.95, 0]}
+            position={[0, 3.65, 0]}
+            renderOrder={99}
             onClick={handleClick}
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
@@ -288,18 +299,27 @@ function SingleHologramTag({ exhibit, isActive, motionEnabled, onSelectExhibit }
                 map={compactTexture}
                 transparent
                 toneMapped={false}
-                opacity={0.94}
+                opacity={0.96}
+                depthTest={false}
                 depthWrite={false}
                 side={THREE.DoubleSide}
               />
             </mesh>
             <mesh position={[0, 0, -0.01]} geometry={panelCompactWireGeo}>
-              <meshBasicMaterial color={model.accentColor} wireframe transparent toneMapped={false} opacity={0.35} depthWrite={false} />
+              <meshBasicMaterial
+                color={model.accentColor}
+                wireframe
+                transparent
+                toneMapped={false}
+                opacity={0.35}
+                depthTest={false}
+                depthWrite={false}
+              />
             </mesh>
-            {/* 底部高科技引线 */}
-            <mesh position={[0, -0.42, 0]}>
-              <cylinderGeometry args={[0.008, 0.008, 0.28, 6]} />
-              <meshBasicMaterial color={model.accentColor} toneMapped={false} transparent opacity={0.7} />
+            {/* 底部高科技引线连通至模型顶部 */}
+            <mesh position={[0, -0.55, 0]}>
+              <cylinderGeometry args={[0.008, 0.008, 0.45, 6]} />
+              <meshBasicMaterial color={model.accentColor} toneMapped={false} transparent opacity={0.7} depthTest={false} depthWrite={false} />
             </mesh>
           </group>
         )
