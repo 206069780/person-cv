@@ -18,10 +18,16 @@ export interface Project {
   name: string;
   company: string;
   period: string;
+  pageSpan: number;
   summary: string;
   businessContext: string;
   painPoints: string[];
   buildGoals: string[];
+  role: string;
+  flow: string;
+  engineeringBoundary: string;
+  outcome: string;
+  stack: string[];
   topics: Topic[];
 }
 

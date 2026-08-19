@@ -1,6 +1,6 @@
 export interface ExhibitLayout {
   id: string;
-  projectId: 'litree' | 'welink' | 'senge';
+  projectId: 'litree' | 'oa' | 'welink' | 'senge';
   label: string;
   shortLabel: string;
   position: readonly [number, number, number];
@@ -11,7 +11,8 @@ export interface ExhibitLayout {
 export const EXHIBITS: readonly ExhibitLayout[] = [
   { id: 'litree-overview', projectId: 'litree', label: '微服务与数据底座', shortLabel: 'ARCH', position: [0, 0, -8], accent: 'signal', zone: 'core' },
   { id: 'litree-aiot', projectId: 'litree', label: 'AIoT 与空间拓扑', shortLabel: 'AIoT', position: [-7, 0, -2], accent: 'signal', zone: 'protocol' },
-  { id: 'litree-agent', projectId: 'litree', label: 'OA 中台与 Agent', shortLabel: 'AGENT', position: [7, 0, -2], accent: 'cyber', zone: 'agent' },
+  { id: 'litree-agent', projectId: 'litree', label: '水务智能体', shortLabel: 'AGENT', position: [7, 0, -2], accent: 'cyber', zone: 'agent' },
+  { id: 'oa-hr', projectId: 'oa', label: '立升 OA / HR', shortLabel: 'OA', position: [11, 0, 2], accent: 'signal', zone: 'oa' },
   { id: 'welink-search', projectId: 'welink', label: 'WeLink 统一搜索', shortLabel: 'SEARCH', position: [-8, 0, 6], accent: 'safety', zone: 'search' },
   { id: 'welink-data', projectId: 'welink', label: 'WeLink 双路数据湖', shortLabel: 'LAKE', position: [-3, 0, 8], accent: 'safety', zone: 'search' },
   { id: 'senge-gateway', projectId: 'senge', label: '森格实时通信网关', shortLabel: 'GATEWAY', position: [3, 0, 8], accent: 'safety', zone: 'plant' },

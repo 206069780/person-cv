@@ -1,8 +1,10 @@
-import { Download, Home, Map, RotateCcw, SkipForward, ZoomIn, ZoomOut } from 'lucide-react';
+import { Briefcase, Download, Home, Map, RotateCcw, SkipForward, ZoomIn, ZoomOut } from 'lucide-react';
+import { useState } from 'react';
 
 import { getModelRepresentation } from '../data/model-representations';
 import { resumeData } from '../data/resume-data';
 import { EXHIBITS } from '../scene/scene-layout';
+import { ResumeOverviewModal } from './ResumeOverviewModal';
 
 interface MuseumHudProps {
   activeExhibit: string | null;
@@ -19,6 +21,7 @@ export function MuseumHud({
   onSelectExhibit,
   onSkipIntro,
 }: MuseumHudProps) {
+  const [overviewOpen, setOverviewOpen] = useState(false);
   const activeIndex = EXHIBITS.findIndex((exhibit) => exhibit.id === activeExhibit);
   const active = activeIndex >= 0 ? EXHIBITS[activeIndex] : null;
   const activeModel = active ? getModelRepresentation(active.id) : null;
@@ -31,7 +34,12 @@ export function MuseumHud({
     <div className="museum-hud">
       <a className="skip-link" href="#project-index">跳到项目索引</a>
 
-      <header className="museum-hud__identity">
+      <header
+        className="museum-hud__identity"
+        style={{ cursor: 'pointer' }}
+        onClick={() => setOverviewOpen(true)}
+        title="点击查看核心能力与工作经历档案"
+      >
         <p className="eyebrow">SMART WATER / BACKEND ENGINEERING</p>
         <h1>{resumeData.profile.name}</h1>
         <p>{resumeData.profile.title}</p>
@@ -50,6 +58,14 @@ export function MuseumHud({
             <SkipForward size={18} /> 跳过动画
           </button>
         )}
+        <button
+          className="text-command text-command--cyan"
+          type="button"
+          onClick={() => setOverviewOpen(true)}
+          title="查看核心能力矩阵与工作经历档案"
+        >
+          <Briefcase size={17} /> 核心履历
+        </button>
         <button className="icon-command" type="button" onClick={onReturnHome} aria-label="返回中央馆" title="返回中央馆">
           <Home size={19} />
         </button>
@@ -126,6 +142,8 @@ export function MuseumHud({
           ))}
         </div>
       </nav>
+
+      <ResumeOverviewModal isOpen={overviewOpen} onClose={() => setOverviewOpen(false)} />
     </div>
   );
 }

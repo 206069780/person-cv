@@ -5,7 +5,7 @@ import { EXHIBITS, getZoneFocus } from './scene-layout';
 describe('industrial exhibit layout', () => {
   it('assigns a meaningful industrial zone to every exhibit', () => {
     expect(EXHIBITS.map((exhibit) => exhibit.zone)).toEqual([
-      'core', 'protocol', 'agent', 'search', 'search', 'plant', 'plant',
+      'core', 'protocol', 'agent', 'oa', 'search', 'search', 'plant', 'plant',
     ]);
   });
 

@@ -23,10 +23,13 @@ describe('engineering console', () => {
 
     expect(text).toContain('10w+');
     expect(text).toContain('项目覆盖口径');
+    expect(text).toContain('MQTT');
+    expect(text).toContain('Modbus');
     expect(text).toContain('有人云');
-    expect(text).toContain('团队');
+    expect(text).toContain('本人负责');
     expect(text).toContain('AgentScope Java 2.0');
     expect(text).not.toMatch(/QPS|并发量|项目金额|团队人数|性能提升\s*\d+%|SYSTEM ONLINE/);
+    expect(text).not.toContain('团队多协议');
   });
 
   it('switches focus, command and inline expansion predictably', () => {

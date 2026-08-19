@@ -63,6 +63,12 @@ const agentMiddlePlatformGeo = new THREE.BoxGeometry(0.38, 0.95, 0.38);
 const agentFloatingGemGeo = new THREE.OctahedronGeometry(0.16, 0);
 const agentSatelliteBodyGeo = new THREE.DodecahedronGeometry(0.16, 0);
 
+// Litree OA / HR (04 - 独立业务中台)
+const oaHubCubeGeo = new THREE.BoxGeometry(0.72, 0.72, 0.72);
+const oaHubInnerGeo = new THREE.BoxGeometry(0.42, 0.42, 0.42);
+const oaStateRingGeo = new THREE.TorusGeometry(0.95, 0.03, 8, 40);
+const oaSyncBridgeGeo = new THREE.BoxGeometry(2.4, 0.08, 0.18);
+
 // WeLink Search (04 - 统一搜索与个性化打分)
 const searchCabinetRackGeo = new THREE.BoxGeometry(0.42, 1.7, 0.64);
 const searchServerTrayGeo = new THREE.BoxGeometry(0.38, 0.14, 0.02);
@@ -453,23 +459,6 @@ function LitreeAgentZone({ intensity, motionEnabled }: ZoneProps) {
     <group>
       <ZoneBase intensity={intensity} accent={PURPLE} motionEnabled={motionEnabled} />
 
-      {/* 4座分布式执行中台立柱（组织架构 / 考勤打卡 / 绩效薪酬 / OpenAPI） */}
-      {[[-1.3, -1.05], [1.3, -1.05], [-1.3, 1.05], [1.3, 1.05]].map(([x, z], idx) => (
-        <group key={idx} position={[x, 0.22, z]}>
-          <mesh position={[0, 0.48, 0]} castShadow geometry={agentMiddlePlatformGeo}>
-            <meshStandardMaterial color={STEEL_MID} metalness={0.92} roughness={0.2} emissive={idx === 0 ? SAFETY : PURPLE} emissiveIntensity={0.25 * intensity} />
-          </mesh>
-          {/* 顶端悬浮业务状态宝石 */}
-          <mesh position={[0, 1.08, 0]} geometry={agentFloatingGemGeo}>
-            <meshBasicMaterial color={idx % 2 === 0 ? CYAN : GOLD} toneMapped={false} />
-          </mesh>
-          <mesh position={[0, 0.96, 0]}>
-            <boxGeometry args={[0.42, 0.04, 0.42]} />
-            <meshBasicMaterial color={PURPLE} toneMapped={false} />
-          </mesh>
-        </group>
-      ))}
-
       {/* 中央 ReAct AI 神经网络推理决策核心 */}
       <group position={[0, 1.5, 0]}>
         <group ref={coreRef}>
@@ -518,6 +507,51 @@ function LitreeAgentZone({ intensity, motionEnabled }: ZoneProps) {
       )}
       <FlowPulses start={[-1.3, 1.1, -1.05]} end={[0, 1.5, 0]} color={PURPLE} intensity={intensity} motionEnabled={motionEnabled} count={3} />
       <FlowPulses start={[1.3, 1.1, 1.05]} end={[0, 1.5, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+    </group>
+  );
+}
+
+function LitreeOaZone({ intensity, motionEnabled }: ZoneProps) {
+  const hubRef = useRef<THREE.Group>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
+
+  useFrame((_, delta) => {
+    if (!motionEnabled) return;
+    const speedMult = intensity > 1 ? 1.5 : 1;
+    if (hubRef.current) hubRef.current.rotation.y += delta * 0.45 * speedMult;
+    if (ringRef.current) ringRef.current.rotation.z -= delta * 0.7 * speedMult;
+  });
+
+  return (
+    <group>
+      <ZoneBase intensity={intensity} accent={SIGNAL} motionEnabled={motionEnabled} />
+      {[[-1.3, -1.05], [1.3, -1.05], [-1.3, 1.05], [1.3, 1.05]].map(([x, z], idx) => (
+        <group key={idx} position={[x, 0.22, z]}>
+          <mesh position={[0, 0.48, 0]} castShadow geometry={agentMiddlePlatformGeo}>
+            <meshStandardMaterial color={STEEL_MID} metalness={0.92} roughness={0.2} emissive={idx % 2 === 0 ? SIGNAL : GOLD} emissiveIntensity={0.28 * intensity} />
+          </mesh>
+          <mesh position={[0, 1.08, 0]} geometry={agentFloatingGemGeo}>
+            <meshBasicMaterial color={idx % 2 === 0 ? CYAN : GOLD} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+      <group ref={hubRef} position={[0, 1.35, 0]}>
+        <mesh geometry={oaHubCubeGeo}>
+          <meshStandardMaterial color={STEEL_DARK} metalness={0.9} roughness={0.16} emissive={SIGNAL} emissiveIntensity={0.7 * intensity} />
+        </mesh>
+        <mesh geometry={oaHubInnerGeo}>
+          <meshBasicMaterial color={CYAN} toneMapped={false} />
+        </mesh>
+      </group>
+      <mesh ref={ringRef} position={[0, 1.35, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={oaStateRingGeo}>
+        <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.55 + intensity * 0.35} />
+      </mesh>
+      <mesh position={[0, 0.62, 0]} geometry={oaSyncBridgeGeo}>
+        <meshStandardMaterial color={STEEL_LIGHT} metalness={0.88} emissive={SIGNAL} emissiveIntensity={0.35 * intensity} />
+      </mesh>
+      {intensity > 0.8 && <pointLight position={[0, 1.5, 0]} color={SIGNAL} intensity={12} distance={8} decay={2} />}
+      <FlowPulses start={[-1.3, 1.1, -1.05]} end={[0, 1.35, 0]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.3, 1.1, 1.05]} end={[0, 1.35, 0]} color={GOLD} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
@@ -860,6 +894,8 @@ function IndustrialZone(props: ZoneProps) {
       return <LitreeAiotZone {...props} />;
     case 'litree-agent':
       return <LitreeAgentZone {...props} />;
+    case 'oa-hr':
+      return <LitreeOaZone {...props} />;
     case 'welink-search':
       return <WelinkSearchZone {...props} />;
     case 'welink-data':
