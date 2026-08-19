@@ -24,9 +24,9 @@ const frameLightPurpleMat = new THREE.MeshBasicMaterial({ color: '#c084fc', tone
 
 const floorPlaneGeo = new THREE.PlaneGeometry(36, 42);
 const floorPlaneMat = new THREE.MeshStandardMaterial({
-  color: '#060d11',
-  metalness: 0.92,
-  roughness: 0.22,
+  color: '#050c10',
+  metalness: 0.95,
+  roughness: 0.16,
 });
 const floorCenterDiscGeo = new THREE.CircleGeometry(4.2, 64);
 const floorCenterDiscMat = new THREE.MeshStandardMaterial({
@@ -64,15 +64,6 @@ const railSideMat = new THREE.MeshBasicMaterial({ color: '#1a4347', toneMapped: 
 const crossRailMat = new THREE.MeshBasicMaterial({ color: '#ff6b3d', toneMapped: false, transparent: true, opacity: 0.45 });
 const floorGridMatCyan = new THREE.MeshBasicMaterial({ color: '#28d7e5', toneMapped: false, transparent: true, opacity: 0.4 });
 const floorGridMatOrange = new THREE.MeshBasicMaterial({ color: '#ff6b3d', toneMapped: false, transparent: true, opacity: 0.35 });
-
-const coreBaseGeo = new THREE.CylinderGeometry(2.4, 2.8, 0.35, 12);
-const coreBaseMat = new THREE.MeshStandardMaterial({ color: '#11191b', metalness: 0.92, roughness: 0.24 });
-const coreTorusOuterGeo = new THREE.TorusGeometry(2.2, 0.08, 10, 64);
-const coreTorusOuterMat = new THREE.MeshBasicMaterial({ color: '#62e8cf', toneMapped: false });
-const coreTorusInnerGeo = new THREE.TorusGeometry(1.7, 0.035, 8, 48);
-const coreTorusInnerMat = new THREE.MeshBasicMaterial({ color: '#ff6b3d', toneMapped: false });
-const coreOctahedronGeo = new THREE.OctahedronGeometry(1.05, 0);
-const coreWireframeMat = new THREE.MeshBasicMaterial({ color: '#ff6b3d', wireframe: true, toneMapped: false });
 
 const streamParticleGeo = new THREE.BoxGeometry(0.03, 0.015, 0.8);
 const streamParticleMatFocus = new THREE.MeshBasicMaterial({ color: '#28d7e5', toneMapped: false, transparent: true, opacity: 0.25 });
@@ -629,33 +620,6 @@ function FloorSystem() {
   );
 }
 
-function CentralCore({ motionEnabled, intensity }: { motionEnabled: boolean; intensity: number }) {
-  const outerRef = useRef<THREE.Group>(null);
-  const innerRef = useRef<THREE.Group>(null);
-
-  useFrame((_, delta) => {
-    if (!motionEnabled || document.documentElement.dataset.modalOpen === 'true') return;
-    if (outerRef.current) outerRef.current.rotation.y += delta * 0.18;
-    if (innerRef.current) innerRef.current.rotation.y -= delta * 0.32;
-  });
-
-  return (
-    <group position={[0, 2.2, -8]}>
-      <mesh position={[0, -1.95, 0]} geometry={coreBaseGeo} material={coreBaseMat} />
-      <group ref={outerRef} rotation={[Math.PI / 2, 0, 0]}>
-        <mesh geometry={coreTorusOuterGeo} material={coreTorusOuterMat} />
-        <mesh geometry={coreTorusInnerGeo} material={coreTorusInnerMat} />
-      </group>
-      <group ref={innerRef}>
-        <mesh rotation={[0, Math.PI / 4, 0]} geometry={coreOctahedronGeo}>
-          <meshStandardMaterial color="#0c1718" metalness={0.72} roughness={0.22} emissive="#28d7e5" emissiveIntensity={1.35 * intensity} />
-        </mesh>
-        <mesh scale={0.62} rotation={[0, -Math.PI / 4, 0]} geometry={coreOctahedronGeo} material={coreWireframeMat} />
-      </group>
-    </group>
-  );
-}
-
 function DataStreams({ motionEnabled, focused }: { motionEnabled: boolean; focused: boolean }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const particles = useMemo(() => Array.from({ length: 48 }, (_, index) => ({
@@ -694,20 +658,40 @@ function SceneContent(props: SceneContentProps) {
 
   useEffect(() => {
     scene.background = new THREE.Color('#03080c');
-    scene.fog = new THREE.FogExp2('#03080c', 0.014);
+    scene.fog = new THREE.FogExp2('#03080c', 0.013);
     gl.toneMapping = THREE.ACESFilmicToneMapping;
-    gl.toneMappingExposure = 1.24;
+    gl.toneMappingExposure = 1.32;
   }, [gl, scene]);
 
-  const coreIntensity = getZoneFocus(props.activeExhibit, 'litree-overview').intensity;
+  const activeExhibitData = EXHIBITS.find((e) => e.id === props.activeExhibit);
 
   return (
     <>
       {/* 赛博朋克双色环境光与顶光 */}
-      <hemisphereLight color="#a8eef5" groundColor="#08151c" intensity={1.1} />
-      <directionalLight position={[6, 14, 8]} color="#edfcf9" intensity={2.6} castShadow shadow-mapSize={[512, 512]} shadow-bias={-0.0005} />
-      <pointLight position={[-10, 4.5, 4]} color="#ff6b3d" intensity={14} distance={16} decay={2} />
-      <pointLight position={[10, 4.5, -2]} color="#28d7e5" intensity={14} distance={16} decay={2} />
+      <hemisphereLight color="#c2f5f9" groundColor="#061218" intensity={1.15} />
+      <directionalLight
+        position={[8, 16, 10]}
+        color="#f0fdff"
+        intensity={2.8}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.0001}
+      />
+      {/* 左右侧翼强轮廓补光 */}
+      <pointLight position={[-12, 5.0, 4]} color="#ff6b3d" intensity={16} distance={18} decay={2} />
+      <pointLight position={[12, 5.0, -2]} color="#28d7e5" intensity={16} distance={18} decay={2} />
+      <pointLight position={[0, 6.5, 12]} color="#a78bfa" intensity={12} distance={16} decay={2} />
+
+      {/* 选中展品时的聚焦舞台顶灯 */}
+      {activeExhibitData && (
+        <pointLight
+          position={[activeExhibitData.position[0], 5.5, activeExhibitData.position[2]]}
+          color={activeExhibitData.accent === 'safety' ? '#ff9248' : activeExhibitData.accent === 'cyber' ? '#d8b4fe' : '#67e8f9'}
+          intensity={22}
+          distance={10}
+          decay={2}
+        />
+      )}
 
       {/* 地面系统 */}
       <FloorSystem />
@@ -722,7 +706,6 @@ function SceneContent(props: SceneContentProps) {
       <DataStreams motionEnabled={props.motionEnabled} focused={props.activeExhibit !== null} />
       <IndustrialAssets activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
       <ModelHologramTags activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
-      <CentralCore motionEnabled={props.motionEnabled} intensity={coreIntensity} />
       <ExhibitHotspots activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
       <IntroSequence active={props.introActive} onComplete={props.onIntroComplete} />
       <IntegratedCameraController

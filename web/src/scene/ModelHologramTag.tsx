@@ -162,10 +162,10 @@ function createInspectingTagTexture(model: ModelRepresentation): THREE.CanvasTex
 }
 
 // 共享几何体（选中时轻盈的高科技瞄准定位标，绝不遮挡模型，也不会产生 3D 透视斜切糊字）
-const reticleRingOuterGeo = new THREE.TorusGeometry(0.88, 0.016, 8, 48);
-const reticleRingInnerGeo = new THREE.TorusGeometry(0.56, 0.012, 8, 36);
-const reticleCrossGeo = new THREE.BoxGeometry(0.18, 0.015, 0.015);
-const reticleBeamConeGeo = new THREE.CylinderGeometry(0.01, 0.45, 1.4, 16, 1, true);
+const reticleRingOuterGeo = new THREE.TorusGeometry(0.72, 0.014, 8, 48);
+const reticleRingInnerGeo = new THREE.TorusGeometry(0.48, 0.01, 8, 36);
+const reticleCrossGeo = new THREE.BoxGeometry(0.14, 0.012, 0.012);
+const reticleBeamConeGeo = new THREE.CylinderGeometry(0.006, 0.22, 1.1, 16, 1, true);
 const reticleTopPlateGeo = new THREE.PlaneGeometry(2.1, 0.58);
 const reticleTopPlateWireGeo = new THREE.PlaneGeometry(2.14, 0.62);
 

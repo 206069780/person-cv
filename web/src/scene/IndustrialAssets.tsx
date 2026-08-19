@@ -4,20 +4,26 @@ import * as THREE from 'three';
 
 import { EXHIBITS, ExhibitLayout, getZoneFocus } from './scene-layout';
 
-// 调色盘
+// 调色盘与高级材质配色
 const SIGNAL = '#00a89d';
 const CYAN = '#28d7e5';
 const SAFETY = '#ff6b3d';
 const PURPLE = '#c084fc';
 const GOLD = '#f5a623';
-const STEEL_DARK = '#091014';
-const STEEL_MID = '#16232b';
-const STEEL_LIGHT = '#2d424e';
-const STEEL_BRIGHT = '#4a6575';
+const EMERALD = '#34d399';
+
+// 精密工业金属色彩定义
+const COLOR_STEEL_DARK = '#070f14';
+const COLOR_STEEL_MID = '#142129';
+const COLOR_STEEL_LIGHT = '#293d49';
+const COLOR_STEEL_CHROME = '#7e9cb0';
+const COLOR_GOLD_ALLOY = '#d4941e';
 
 // ==========================================
-// 1. 通用共享几何体与材质池（零 GC 静态复用）
+// 1. 全局静态共享几何体池（零 GC 静态复用）
 // ==========================================
+
+// 通用重型基座
 const baseOctagonGeo = new THREE.CylinderGeometry(2.45, 2.75, 0.22, 8);
 const baseTopPlateGeo = new THREE.CylinderGeometry(2.25, 2.25, 0.06, 8);
 const baseRingInnerGeo = new THREE.RingGeometry(1.65, 1.88, 32);
@@ -25,85 +31,158 @@ const baseRingOuterGeo = new THREE.RingGeometry(2.0, 2.22, 8);
 const baseGearTorusGeo = new THREE.TorusGeometry(2.38, 0.026, 6, 64);
 const baseAuraHaloGeo = new THREE.RingGeometry(2.55, 2.82, 48);
 const baseCornerBlockGeo = new THREE.BoxGeometry(0.32, 0.24, 0.32);
+const baseCornerBoltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.06, 6);
 const baseVentGeo = new THREE.BoxGeometry(0.65, 0.045, 0.14);
-const pulseSphereGeo = new THREE.SphereGeometry(0.06, 8, 8);
+const pulseSphereGeo = new THREE.SphereGeometry(0.065, 8, 8);
 
-// Litree Overview (01 - 微服务与数据底座)
-const corePillarMainGeo = new THREE.BoxGeometry(0.34, 1.85, 0.34);
-const corePillarFinGeo = new THREE.BoxGeometry(0.42, 0.045, 0.42);
-const corePillarSpireGeo = new THREE.ConeGeometry(0.09, 0.26, 4);
-const coreOctaOuterGeo = new THREE.OctahedronGeometry(0.68, 0);
-const coreOctaInnerGeo = new THREE.OctahedronGeometry(0.42, 0);
-const coreOctaWireGeo = new THREE.OctahedronGeometry(0.85, 0);
-const coreGimbalRing1Geo = new THREE.TorusGeometry(1.22, 0.026, 8, 48);
-const coreGimbalRing2Geo = new THREE.TorusGeometry(0.98, 0.022, 8, 40);
-const coreGimbalRing3Geo = new THREE.TorusGeometry(0.76, 0.018, 8, 36);
-const coreElectrodeGeo = new THREE.CylinderGeometry(0.04, 0.1, 0.58, 8);
-const coreShardBoxGeo = new THREE.BoxGeometry(0.24, 0.36, 0.2);
+// 01 - Litree Overview (微服务与数据底座)
+const corePillarMainGeo = new THREE.BoxGeometry(0.38, 1.95, 0.38);
+const corePillarFinGeo = new THREE.BoxGeometry(0.46, 0.04, 0.46);
+const corePillarSpireGeo = new THREE.ConeGeometry(0.1, 0.32, 4);
+const coreOctaOuterGeo = new THREE.OctahedronGeometry(0.72, 0);
+const coreOctaInnerGeo = new THREE.OctahedronGeometry(0.44, 0);
+const coreOctaWireGeo = new THREE.OctahedronGeometry(0.88, 0);
+const coreGimbalRing1Geo = new THREE.TorusGeometry(1.28, 0.028, 8, 56);
+const coreGimbalRing2Geo = new THREE.TorusGeometry(1.02, 0.024, 8, 48);
+const coreGimbalRing3Geo = new THREE.TorusGeometry(0.78, 0.02, 8, 40);
+const coreElectrodeGeo = new THREE.CylinderGeometry(0.045, 0.12, 0.65, 8);
+const coreShardBoxGeo = new THREE.BoxGeometry(0.26, 0.38, 0.22);
+const coreShardCapGeo = new THREE.BoxGeometry(0.28, 0.035, 0.24);
 
-// Litree AIoT (02 - AIoT 协议与 GIS 空间拓扑)
-const gisHexPlateGeo = new THREE.CylinderGeometry(2.0, 2.12, 0.09, 6);
-const gisHexRingGeo = new THREE.RingGeometry(0.95, 1.92, 6);
-const gisPillarNodeGeo = new THREE.CylinderGeometry(0.13, 0.13, 0.4, 8);
-const gisPillarHighGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.78, 8);
-const gisBeaconCoreGeo = new THREE.SphereGeometry(0.12, 8, 8);
-const radarMastPillarGeo = new THREE.CylinderGeometry(0.055, 0.1, 2.2, 12);
-const radarDishPlateGeo = new THREE.ConeGeometry(0.4, 0.22, 12);
-const radarFeedHornGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.35, 8);
-const radarSweepFanGeo = new THREE.CylinderGeometry(0.01, 2.05, 0.02, 16, 1, true, 0, Math.PI / 2.3);
-const aiotServerCabinetGeo = new THREE.BoxGeometry(0.46, 1.85, 0.72);
-const aiotCabinetDoorGeo = new THREE.BoxGeometry(0.4, 1.7, 0.02);
+// 02 - Litree AIoT (AIoT 协议与 GIS 空间拓扑)
+const gisHexPlateGeo = new THREE.CylinderGeometry(2.05, 2.18, 0.1, 6);
+const gisHexRingGeo = new THREE.RingGeometry(0.95, 1.95, 6);
+const gisPillarNodeGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.44, 8);
+const gisPillarHighGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.82, 8);
+const gisBeaconCoreGeo = new THREE.SphereGeometry(0.13, 10, 10);
+const radarMastPillarGeo = new THREE.CylinderGeometry(0.06, 0.11, 2.3, 12);
+const radarCrossArmGeo = new THREE.BoxGeometry(0.55, 0.06, 0.06);
+const radarDishPlateGeo = new THREE.ConeGeometry(0.44, 0.24, 16);
+const radarFeedHornGeo = new THREE.CylinderGeometry(0.024, 0.024, 0.38, 8);
+const radarSweepFanGeo = new THREE.CylinderGeometry(0.01, 2.15, 0.02, 16, 1, true, 0, Math.PI / 2.2);
+const aiotServerCabinetGeo = new THREE.BoxGeometry(0.48, 1.9, 0.76);
+const aiotCabinetDoorGeo = new THREE.BoxGeometry(0.42, 1.76, 0.02);
 
-// Litree Agent (03 - OA 中台与 AI Agent 智能体)
-const agentIcosaMainGeo = new THREE.IcosahedronGeometry(0.64, 0);
-const agentIcosaInnerGeo = new THREE.IcosahedronGeometry(0.38, 0);
-const agentIcosaWireGeo = new THREE.IcosahedronGeometry(0.82, 1);
-const agentOrbitTorusXGeo = new THREE.TorusGeometry(1.38, 0.024, 8, 56);
-const agentOrbitTorusYGeo = new THREE.TorusGeometry(1.16, 0.022, 8, 48);
-const agentOrbitTorusZGeo = new THREE.TorusGeometry(0.94, 0.018, 8, 40);
-const agentMiddlePlatformGeo = new THREE.BoxGeometry(0.42, 1.05, 0.42);
-const agentFloatingGemGeo = new THREE.OctahedronGeometry(0.18, 0);
-const agentSatelliteBodyGeo = new THREE.DodecahedronGeometry(0.18, 0);
+// 03 - Litree Agent (水务数据智能体)
+const agentIcosaMainGeo = new THREE.IcosahedronGeometry(0.68, 0);
+const agentIcosaInnerGeo = new THREE.IcosahedronGeometry(0.4, 0);
+const agentIcosaWireGeo = new THREE.IcosahedronGeometry(0.86, 1);
+const agentOrbitTorusXGeo = new THREE.TorusGeometry(1.42, 0.025, 8, 56);
+const agentOrbitTorusYGeo = new THREE.TorusGeometry(1.18, 0.022, 8, 48);
+const agentOrbitTorusZGeo = new THREE.TorusGeometry(0.96, 0.019, 8, 40);
+const agentMiddlePlatformGeo = new THREE.BoxGeometry(0.44, 1.1, 0.44);
+const agentFloatingGemGeo = new THREE.OctahedronGeometry(0.19, 0);
+const agentSatelliteBodyGeo = new THREE.DodecahedronGeometry(0.19, 0);
+const agentSatelliteRingGeo = new THREE.TorusGeometry(0.28, 0.018, 6, 24);
 
-// Litree OA / HR (04 - 独立业务中台)
-const oaHubCubeGeo = new THREE.BoxGeometry(0.78, 0.78, 0.78);
-const oaHubInnerGeo = new THREE.BoxGeometry(0.46, 0.46, 0.46);
-const oaStateRingGeo = new THREE.TorusGeometry(1.05, 0.032, 8, 40);
-const oaSyncBridgeGeo = new THREE.BoxGeometry(2.55, 0.09, 0.2);
+// 04 - Litree OA / HR (独立业务中台)
+const oaHubCubeGeo = new THREE.BoxGeometry(0.82, 0.82, 0.82);
+const oaHubInnerGeo = new THREE.BoxGeometry(0.48, 0.48, 0.48);
+const oaStateRingGeo = new THREE.TorusGeometry(1.1, 0.035, 8, 44);
+const oaSyncBridgeGeo = new THREE.BoxGeometry(2.65, 0.09, 0.22);
+const oaPedestalTopGeo = new THREE.CylinderGeometry(0.26, 0.26, 0.05, 8);
 
-// WeLink Search (04 - 统一搜索与个性化打分)
-const searchCabinetRackGeo = new THREE.BoxGeometry(0.46, 1.8, 0.68);
-const searchServerTrayGeo = new THREE.BoxGeometry(0.42, 0.15, 0.02);
-const searchPrismCrystalGeo = new THREE.ConeGeometry(0.56, 0.88, 4);
-const searchBeamConeGeo = new THREE.ConeGeometry(1.2, 1.35, 16, 1, true);
-const searchScannerBarGeo = new THREE.BoxGeometry(2.8, 0.035, 0.035);
-const searchIndexCubeGeo = new THREE.BoxGeometry(0.26, 0.18, 0.22);
+// 05 - WeLink Search (统一搜索与个性化打分)
+const searchCabinetRackGeo = new THREE.BoxGeometry(0.48, 1.88, 0.72);
+const searchServerTrayGeo = new THREE.BoxGeometry(0.44, 0.16, 0.025);
+const searchPrismCrystalGeo = new THREE.ConeGeometry(0.58, 0.92, 4);
+const searchBeamConeGeo = new THREE.ConeGeometry(1.25, 1.45, 16, 1, true);
+const searchScannerBarGeo = new THREE.BoxGeometry(2.9, 0.04, 0.04);
+const searchIndexCubeGeo = new THREE.BoxGeometry(0.28, 0.19, 0.24);
 
-// WeLink Data Lake (05 - 双路数据湖)
-const lakeReactorTubeGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.95, 24);
-const lakeHelixCoilGeo = new THREE.TorusGeometry(0.38, 0.03, 6, 32);
-const lakeCapHeavyGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.16, 24);
-const lakeBridgeTrussGeo = new THREE.BoxGeometry(1.35, 0.2, 0.35);
-const lakeAcidPrismGeo = new THREE.OctahedronGeometry(0.28, 0);
-const lakeFlowRingGeo = new THREE.TorusGeometry(0.72, 0.026, 8, 36);
+// 06 - WeLink Data Lake (双路数据湖)
+const lakeReactorTubeGeo = new THREE.CylinderGeometry(0.52, 0.52, 2.05, 24);
+const lakeInnerPlasmaGeo = new THREE.CylinderGeometry(0.38, 0.38, 1.85, 16);
+const lakeHelixCoilGeo = new THREE.TorusGeometry(0.42, 0.032, 6, 32);
+const lakeCapHeavyGeo = new THREE.CylinderGeometry(0.62, 0.62, 0.18, 24);
+const lakeCapRingGeo = new THREE.TorusGeometry(0.58, 0.025, 6, 24);
+const lakeBridgeTrussGeo = new THREE.BoxGeometry(1.42, 0.22, 0.36);
+const lakeAcidPrismGeo = new THREE.OctahedronGeometry(0.3, 0);
+const lakeFlowRingGeo = new THREE.TorusGeometry(0.75, 0.028, 8, 36);
 
-// Senge Gateway (06 - 实时通信网关与告警风暴)
-const gatewayTowerPillarGeo = new THREE.CylinderGeometry(0.095, 0.22, 2.45, 16);
-const gatewayTrussCrossGeo = new THREE.BoxGeometry(1.5, 0.05, 0.05);
-const gatewayMicrowaveDishGeo = new THREE.ConeGeometry(0.24, 0.15, 12);
-const gatewayLightningRodGeo = new THREE.CylinderGeometry(0.018, 0.04, 0.65, 8);
-const gatewayPulseWaveTorusGeo = new THREE.TorusGeometry(1.5, 0.032, 6, 48);
-const gatewayComputePodGeo = new THREE.BoxGeometry(0.28, 0.42, 0.28);
+// 07 - Senge Gateway (实时通信网关与告警风暴)
+const gatewayTowerPillarGeo = new THREE.CylinderGeometry(0.1, 0.24, 2.55, 16);
+const gatewayTrussCrossGeo = new THREE.BoxGeometry(1.55, 0.055, 0.055);
+const gatewayTrussDiagGeo = new THREE.BoxGeometry(0.85, 0.04, 0.04);
+const gatewayMicrowaveDishGeo = new THREE.ConeGeometry(0.26, 0.16, 14);
+const gatewayLightningRodGeo = new THREE.CylinderGeometry(0.018, 0.045, 0.72, 8);
+const gatewayPulseWaveTorusGeo = new THREE.TorusGeometry(1.55, 0.034, 6, 48);
+const gatewayComputePodGeo = new THREE.BoxGeometry(0.3, 0.44, 0.3);
 
-// Senge Platform (07 - 0-1 平台架构与容器化)
-const platformK8sPodGeo = new THREE.BoxGeometry(0.94, 0.46, 0.78);
-const platformPodFrameOuterGeo = new THREE.BoxGeometry(0.98, 0.055, 0.82);
-const platformPipeMainGeo = new THREE.CylinderGeometry(0.09, 0.09, 2.25, 16);
-const platformPipeFlangeGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.065, 16);
-const platformValveWheelGeo = new THREE.TorusGeometry(0.18, 0.04, 8, 24);
-const platformDualRing1Geo = new THREE.TorusGeometry(1.6, 0.03, 8, 56);
-const platformDualRing2Geo = new THREE.TorusGeometry(1.38, 0.024, 8, 48);
-const platformTelemetryScreenGeo = new THREE.PlaneGeometry(0.64, 0.4);
+// 08 - Senge Platform (0-1 平台架构与容器化)
+const platformK8sPodGeo = new THREE.BoxGeometry(0.98, 0.48, 0.82);
+const platformPodFrameOuterGeo = new THREE.BoxGeometry(1.02, 0.06, 0.86);
+const platformPipeMainGeo = new THREE.CylinderGeometry(0.095, 0.095, 2.35, 16);
+const platformPipeFlangeGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.07, 16);
+const platformValveWheelGeo = new THREE.TorusGeometry(0.19, 0.042, 8, 24);
+const platformDualRing1Geo = new THREE.TorusGeometry(1.65, 0.032, 8, 56);
+const platformDualRing2Geo = new THREE.TorusGeometry(1.42, 0.026, 8, 48);
+const platformTelemetryScreenGeo = new THREE.PlaneGeometry(0.68, 0.44);
+
+// ==========================================
+// 2. 静态 PBR 材质池（零 GC 静态复用）
+// ==========================================
+const matTitaniumDark = new THREE.MeshStandardMaterial({
+  color: COLOR_STEEL_DARK,
+  metalness: 0.96,
+  roughness: 0.14,
+});
+
+const matSteelMid = new THREE.MeshStandardMaterial({
+  color: COLOR_STEEL_MID,
+  metalness: 0.92,
+  roughness: 0.22,
+});
+
+const matSteelLight = new THREE.MeshStandardMaterial({
+  color: COLOR_STEEL_LIGHT,
+  metalness: 0.9,
+  roughness: 0.24,
+});
+
+const matChromeBright = new THREE.MeshStandardMaterial({
+  color: COLOR_STEEL_CHROME,
+  metalness: 0.98,
+  roughness: 0.06,
+});
+
+const matGoldAlloy = new THREE.MeshStandardMaterial({
+  color: COLOR_GOLD_ALLOY,
+  metalness: 0.94,
+  roughness: 0.12,
+  emissive: new THREE.Color(GOLD),
+  emissiveIntensity: 0.45,
+});
+
+const matAcrylicCyan = new THREE.MeshStandardMaterial({
+  color: '#0a232b',
+  metalness: 0.9,
+  roughness: 0.08,
+  transparent: true,
+  opacity: 0.62,
+  emissive: new THREE.Color(CYAN),
+  emissiveIntensity: 0.25,
+});
+
+const matAcrylicOrange = new THREE.MeshStandardMaterial({
+  color: '#28130a',
+  metalness: 0.9,
+  roughness: 0.08,
+  transparent: true,
+  opacity: 0.62,
+  emissive: new THREE.Color(SAFETY),
+  emissiveIntensity: 0.25,
+});
+
+const matAcrylicPurple = new THREE.MeshStandardMaterial({
+  color: '#210e2d',
+  metalness: 0.9,
+  roughness: 0.08,
+  transparent: true,
+  opacity: 0.62,
+  emissive: new THREE.Color(PURPLE),
+  emissiveIntensity: 0.25,
+});
 
 interface ZoneProps {
   exhibit: ExhibitLayout;
@@ -138,14 +217,14 @@ function FlowPulses({
   useFrame((_, delta) => {
     if (!ref.current || !motionEnabled || intensity < 0.25) return;
     progress.current.forEach((value, index) => {
-      const next = (value + delta * (0.18 + index * 0.015)) % 1;
+      const next = (value + delta * (0.2 + index * 0.015)) % 1;
       progress.current[index] = next;
       helper.position.set(
         THREE.MathUtils.lerp(start[0], end[0], next),
         THREE.MathUtils.lerp(start[1], end[1], next),
         THREE.MathUtils.lerp(start[2], end[2], next),
       );
-      helper.scale.setScalar(index % 2 === 0 ? 1 : 0.75);
+      helper.scale.setScalar(index % 2 === 0 ? 1.1 : 0.8);
       helper.updateMatrix();
       ref.current?.setMatrixAt(index, helper.matrix);
     });
@@ -181,39 +260,42 @@ function ZoneBase({ intensity, accent = SIGNAL, motionEnabled = true }: { intens
     <group>
       {/* 1. 八角重型合金主基台 */}
       <mesh position={[0, 0.11, 0]} receiveShadow geometry={baseOctagonGeo}>
-        <meshStandardMaterial color={STEEL_DARK} metalness={0.94} roughness={0.22} emissive={accent} emissiveIntensity={0.1 * intensity} />
+        <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.96} roughness={0.16} emissive={accent} emissiveIntensity={0.12 * intensity} />
       </mesh>
 
-      {/* 2. 顶部钛合金防滑内嵌台面 */}
+      {/* 2. 顶部钛合金防滑精密切削台面 */}
       <mesh position={[0, 0.22, 0]} receiveShadow geometry={baseTopPlateGeo}>
-        <meshStandardMaterial color={STEEL_MID} metalness={0.9} roughness={0.28} />
+        <meshStandardMaterial color={COLOR_STEEL_MID} metalness={0.94} roughness={0.18} />
       </mesh>
 
       {/* 3. 内嵌双发光刻度环 */}
       <mesh position={[0, 0.255, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={baseRingInnerGeo}>
-        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.38 + intensity * 0.48} />
+        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.42 + intensity * 0.48} />
       </mesh>
       <mesh position={[0, 0.26, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={baseRingOuterGeo}>
-        <meshBasicMaterial color={accent} wireframe toneMapped={false} transparent opacity={0.22 + intensity * 0.35} />
+        <meshBasicMaterial color={accent} wireframe toneMapped={false} transparent opacity={0.25 + intensity * 0.35} />
       </mesh>
 
       {/* 4. 缓慢旋转外圈刻度齿轮环 */}
       <mesh ref={gearRingRef} position={[0, 0.265, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={baseGearTorusGeo}>
-        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.45 + intensity * 0.45} />
+        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.5 + intensity * 0.45} />
       </mesh>
 
       {/* 5. 选中时的地面高科技全息能量投影光晕 */}
       {intensity > 1 && (
         <mesh ref={haloRef} position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={baseAuraHaloGeo}>
-          <meshBasicMaterial color={accent} wireframe toneMapped={false} transparent opacity={0.5} />
+          <meshBasicMaterial color={accent} wireframe toneMapped={false} transparent opacity={0.55} />
         </mesh>
       )}
 
-      {/* 6. 四角减震定位角标 */}
+      {/* 6. 四角减震定位角标与高亮镀铬螺栓 */}
       {[-1.85, 1.85].flatMap((x) => [-1.85, 1.85].map((z) => (
-        <mesh key={`${x}-${z}`} position={[x * 0.8, 0.23, z * 0.8]} geometry={baseCornerBlockGeo}>
-          <meshStandardMaterial color={STEEL_LIGHT} metalness={0.92} emissive={accent} emissiveIntensity={0.35 * intensity} />
-        </mesh>
+        <group key={`${x}-${z}`} position={[x * 0.8, 0.23, z * 0.8]}>
+          <mesh geometry={baseCornerBlockGeo}>
+            <meshStandardMaterial color={COLOR_STEEL_LIGHT} metalness={0.94} roughness={0.15} emissive={accent} emissiveIntensity={0.35 * intensity} />
+          </mesh>
+          <mesh position={[0, 0.14, 0]} geometry={baseCornerBoltGeo} material={matChromeBright} />
+        </group>
       )))}
 
       {/* 7. 四边发光散热格栅条 */}
@@ -224,7 +306,7 @@ function ZoneBase({ intensity, accent = SIGNAL, motionEnabled = true }: { intens
         [-2.35, 0.16, 0, Math.PI / 2],
       ].map(([x, y, z, rot], idx) => (
         <mesh key={idx} position={[x, y, z]} rotation={[0, rot, 0]} geometry={baseVentGeo}>
-          <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.5 + intensity * 0.38} />
+          <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.55 + intensity * 0.38} />
         </mesh>
       ))}
     </group>
@@ -261,22 +343,16 @@ function LitreeOverviewCoreZone({ intensity, motionEnabled }: ZoneProps) {
       {/* 4角高耸多租户服务计算立柱（精密工业机柜） */}
       {[-1, 1].flatMap((x) => [-1, 1].map((z) => (
         <group key={`${x}-${z}`} position={[x * 1.38, 0.24, z * 1.12]}>
-          <mesh position={[0, 0.92, 0]} castShadow geometry={corePillarMainGeo}>
-            <meshStandardMaterial color={STEEL_MID} metalness={0.94} roughness={0.18} emissive={CYAN} emissiveIntensity={0.18 * intensity} />
-          </mesh>
+          <mesh position={[0, 0.97, 0]} castShadow geometry={corePillarMainGeo} material={matTitaniumDark} />
           {/* 散热片与立柱顶盖 */}
           {[0.32, 0.75, 1.18, 1.6].map((y, fIdx) => (
-            <mesh key={fIdx} position={[0, y, 0]} geometry={corePillarFinGeo}>
-              <meshStandardMaterial color={STEEL_DARK} metalness={0.85} />
-            </mesh>
+            <mesh key={fIdx} position={[0, y, 0]} geometry={corePillarFinGeo} material={matSteelLight} />
           ))}
-          <mesh position={[0, 1.94, 0]} geometry={corePillarSpireGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} />
-          </mesh>
+          <mesh position={[0, 2.08, 0]} geometry={corePillarSpireGeo} material={matChromeBright} />
           {/* 垂直高亮激光总线 */}
-          <mesh position={[0, 0.92, 0.18]}>
-            <boxGeometry args={[0.045, 1.65, 0.02]} />
-            <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.75 + intensity * 0.25} />
+          <mesh position={[0, 0.97, 0.2]}>
+            <boxGeometry args={[0.05, 1.75, 0.02]} />
+            <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.8 + intensity * 0.2} />
           </mesh>
         </group>
       )))}
@@ -284,38 +360,32 @@ function LitreeOverviewCoreZone({ intensity, motionEnabled }: ZoneProps) {
       {/* 中央悬浮超导八面体晶核（Seata 事务与两级缓存协调中枢） */}
       <group position={[0, 1.38, 0]}>
         <group ref={coreRef}>
-          {/* 外壳晶体 */}
-          <mesh geometry={coreOctaOuterGeo}>
-            <meshStandardMaterial color={STEEL_DARK} metalness={0.92} roughness={0.08} emissive={CYAN} emissiveIntensity={1.2 * intensity} />
-          </mesh>
-          {/* 内部高亮发光内胆 */}
+          {/* 外壳半透明折射晶体 */}
+          <mesh geometry={coreOctaOuterGeo} material={matAcrylicCyan} />
+          {/* 内部高亮自旋发光内胆 */}
           <mesh geometry={coreOctaInnerGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} />
+            <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.9} emissive={CYAN} emissiveIntensity={1.8 * intensity} />
           </mesh>
           {/* 外部线框网格 */}
           <mesh geometry={coreOctaWireGeo}>
-            <meshBasicMaterial color={SAFETY} wireframe toneMapped={false} transparent opacity={0.55 + intensity * 0.4} />
+            <meshBasicMaterial color={SAFETY} wireframe toneMapped={false} transparent opacity={0.6 + intensity * 0.4} />
           </mesh>
         </group>
 
         {/* 3层嵌套双轴陀螺万向环 */}
         <mesh ref={ring1Ref} rotation={[Math.PI / 4, 0, 0]} geometry={coreGimbalRing1Geo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.6 + intensity * 0.4} />
+          <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
         </mesh>
         <mesh ref={ring2Ref} rotation={[0, Math.PI / 3, 0]} geometry={coreGimbalRing2Geo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.55 + intensity * 0.4} />
+          <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.6 + intensity * 0.4} />
         </mesh>
         <mesh ref={ring3Ref} rotation={[0, 0, Math.PI / 4]} geometry={coreGimbalRing3Geo}>
-          <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.5 + intensity * 0.4} />
+          <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.55 + intensity * 0.45} />
         </mesh>
 
-        {/* 上下聚能电极柱与激光光针 */}
-        <mesh position={[0, 1.12, 0]} rotation={[Math.PI, 0, 0]} geometry={coreElectrodeGeo}>
-          <meshStandardMaterial color={STEEL_LIGHT} metalness={0.94} emissive={CYAN} emissiveIntensity={0.55 * intensity} />
-        </mesh>
-        <mesh position={[0, -1.12, 0]} geometry={coreElectrodeGeo}>
-          <meshStandardMaterial color={STEEL_LIGHT} metalness={0.94} emissive={CYAN} emissiveIntensity={0.55 * intensity} />
-        </mesh>
+        {/* 上下聚能电极柱与镀金高频放电针 */}
+        <mesh position={[0, 1.18, 0]} rotation={[Math.PI, 0, 0]} geometry={coreElectrodeGeo} material={matGoldAlloy} />
+        <mesh position={[0, -1.18, 0]} geometry={coreElectrodeGeo} material={matGoldAlloy} />
       </group>
 
       {/* 环绕多阶数据分片池（Sharding 分库分表数据切片） */}
@@ -323,12 +393,19 @@ function LitreeOverviewCoreZone({ intensity, motionEnabled }: ZoneProps) {
         {[0, 1, 2, 3, 4, 5].map((idx) => {
           const angle = (idx / 6) * Math.PI * 2;
           return (
-            <group key={idx} position={[Math.cos(angle) * 1.78, Math.sin(angle * 3) * 0.24, Math.sin(angle) * 1.78]}>
+            <group key={idx} position={[Math.cos(angle) * 1.82, Math.sin(angle * 3) * 0.24, Math.sin(angle) * 1.82]}>
               <mesh geometry={coreShardBoxGeo}>
-                <meshStandardMaterial color={STEEL_LIGHT} metalness={0.92} emissive={idx % 2 === 0 ? CYAN : SAFETY} emissiveIntensity={0.5 * intensity} />
+                <meshStandardMaterial
+                  color={COLOR_STEEL_LIGHT}
+                  metalness={0.94}
+                  roughness={0.12}
+                  emissive={idx % 2 === 0 ? CYAN : SAFETY}
+                  emissiveIntensity={0.55 * intensity}
+                />
               </mesh>
-              <mesh position={[0, 0, 0.11]}>
-                <boxGeometry args={[0.18, 0.035, 0.02]} />
+              <mesh position={[0, 0.2, 0]} geometry={coreShardCapGeo} material={matChromeBright} />
+              <mesh position={[0, 0, 0.12]}>
+                <boxGeometry args={[0.2, 0.04, 0.02]} />
                 <meshBasicMaterial color={CYAN} toneMapped={false} />
               </mesh>
             </group>
@@ -337,10 +414,10 @@ function LitreeOverviewCoreZone({ intensity, motionEnabled }: ZoneProps) {
       </group>
 
       {intensity > 0.8 && (
-        <pointLight position={[0, 1.45, 0]} color={CYAN} intensity={15} distance={8} decay={2} />
+        <pointLight position={[0, 1.45, 0]} color={CYAN} intensity={16} distance={8.5} decay={2} />
       )}
-      <FlowPulses start={[-1.38, 1.88, -1.12]} end={[0, 1.38, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
-      <FlowPulses start={[1.38, 1.88, 1.12]} end={[0, 1.38, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[-1.38, 1.95, -1.12]} end={[0, 1.38, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.38, 1.95, 1.12]} end={[0, 1.38, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
@@ -371,10 +448,10 @@ function LitreeAiotZone({ intensity, motionEnabled }: ZoneProps) {
 
       {/* GIS 空间六边形蜂窝多层网格底盘 */}
       <mesh position={[0, 0.25, 0]} receiveShadow geometry={gisHexPlateGeo}>
-        <meshStandardMaterial color={STEEL_MID} metalness={0.92} roughness={0.22} emissive={SIGNAL} emissiveIntensity={0.14 * intensity} />
+        <meshStandardMaterial color={COLOR_STEEL_MID} metalness={0.94} roughness={0.16} emissive={SIGNAL} emissiveIntensity={0.16 * intensity} />
       </mesh>
-      <mesh position={[0, 0.3, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={gisHexRingGeo}>
-        <meshBasicMaterial color={SIGNAL} wireframe toneMapped={false} transparent opacity={0.38 + intensity * 0.48} />
+      <mesh position={[0, 0.31, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={gisHexRingGeo}>
+        <meshBasicMaterial color={SIGNAL} wireframe toneMapped={false} transparent opacity={0.42 + intensity * 0.48} />
       </mesh>
 
       {/* GIS 空间 3D 立体管网测点与高度柱（实时压力/水质指标柱） */}
@@ -388,14 +465,12 @@ function LitreeAiotZone({ intensity, motionEnabled }: ZoneProps) {
             {/* 空间管道光纤 */}
             <mesh position={[(x1 + x2) / 2, 0.38, (z1 + z2) / 2]} rotation={[0, -Math.atan2(dz, dx), 0]}>
               <boxGeometry args={[length, 0.045, 0.055]} />
-              <meshBasicMaterial color={index % 2 === 0 ? SIGNAL : CYAN} toneMapped={false} transparent opacity={0.55 + intensity * 0.4} />
+              <meshBasicMaterial color={index % 2 === 0 ? SIGNAL : CYAN} toneMapped={false} transparent opacity={0.6 + intensity * 0.4} />
             </mesh>
             {/* 3D 测点指标高立柱 */}
-            <mesh position={[x1, isHigh ? 0.65 : 0.48, z1]} geometry={isHigh ? gisPillarHighGeo : gisPillarNodeGeo}>
-              <meshStandardMaterial color={STEEL_DARK} metalness={0.94} emissive={CYAN} emissiveIntensity={0.4 * intensity} />
-            </mesh>
-            {/* 测点发光核心 */}
-            <mesh position={[x1, isHigh ? 1.06 : 0.7, z1]} geometry={gisBeaconCoreGeo}>
+            <mesh position={[x1, isHigh ? 0.67 : 0.48, z1]} geometry={isHigh ? gisPillarHighGeo : gisPillarNodeGeo} material={matTitaniumDark} />
+            {/* 测点发光核心珠 */}
+            <mesh position={[x1, isHigh ? 1.1 : 0.72, z1]} geometry={gisBeaconCoreGeo}>
               <meshBasicMaterial color={index === 2 ? SAFETY : SIGNAL} toneMapped={false} />
             </mesh>
           </group>
@@ -405,17 +480,13 @@ function LitreeAiotZone({ intensity, motionEnabled }: ZoneProps) {
       {/* AIoT 工业协议网关机柜列（多层 LED 状态面板） */}
       {[-1.45, 1.45].map((x) => (
         <group key={x} position={[x, 0.24, 0]}>
-          <mesh position={[0, 0.92, 0]} castShadow geometry={aiotServerCabinetGeo}>
-            <meshStandardMaterial color={STEEL_MID} metalness={0.95} roughness={0.18} />
-          </mesh>
-          <mesh position={[0, 0.92, 0.37]} geometry={aiotCabinetDoorGeo}>
-            <meshStandardMaterial color={STEEL_DARK} metalness={0.92} />
-          </mesh>
+          <mesh position={[0, 0.95, 0]} castShadow geometry={aiotServerCabinetGeo} material={matTitaniumDark} />
+          <mesh position={[0, 0.95, 0.39]} geometry={aiotCabinetDoorGeo} material={matSteelMid} />
           {/* 阵列式机架状态 LED 屏 */}
           {[0.38, 0.7, 1.02, 1.34, 1.66].map((y, ledIdx) => (
-            <group key={ledIdx} position={[0, y, 0.39]}>
+            <group key={ledIdx} position={[0, y, 0.41]}>
               <mesh>
-                <boxGeometry args={[0.34, 0.055, 0.02]} />
+                <boxGeometry args={[0.36, 0.06, 0.02]} />
                 <meshBasicMaterial color={ledIdx % 2 === 0 ? SIGNAL : CYAN} toneMapped={false} />
               </mesh>
             </group>
@@ -425,25 +496,20 @@ function LitreeAiotZone({ intensity, motionEnabled }: ZoneProps) {
 
       {/* 空间雷达天线旋转扫描总成（15km 缓冲区与 BFS 拓扑追踪） */}
       <group position={[0, 0.26, 0]}>
-        <mesh position={[0, 1.1, 0]} geometry={radarMastPillarGeo}>
-          <meshStandardMaterial color={STEEL_LIGHT} metalness={0.94} />
-        </mesh>
-        <group ref={radarRef} position={[0, 2.2, 0]}>
-          <mesh rotation={[Math.PI / 3.5, 0, 0]} geometry={radarDishPlateGeo}>
-            <meshStandardMaterial color={STEEL_DARK} metalness={0.9} emissive={SIGNAL} emissiveIntensity={0.7 * intensity} />
-          </mesh>
-          <mesh position={[0, 0.11, 0.24]} rotation={[Math.PI / 3.5, 0, 0]} geometry={radarFeedHornGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} />
-          </mesh>
+        <mesh position={[0, 1.15, 0]} geometry={radarMastPillarGeo} material={matChromeBright} />
+        <mesh position={[0, 2.28, 0]} geometry={radarCrossArmGeo} material={matSteelLight} />
+        <group ref={radarRef} position={[0, 2.32, 0]}>
+          <mesh rotation={[Math.PI / 3.5, 0, 0]} geometry={radarDishPlateGeo} material={matTitaniumDark} />
+          <mesh position={[0, 0.12, 0.26]} rotation={[Math.PI / 3.5, 0, 0]} geometry={radarFeedHornGeo} material={matGoldAlloy} />
           {/* 大角度半透明动态扫描扇面 */}
-          <mesh position={[0, -0.24, 0.95]} rotation={[Math.PI / 2, 0, 0]} geometry={radarSweepFanGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.35 + intensity * 0.4} side={THREE.DoubleSide} />
+          <mesh position={[0, -0.24, 1.0]} rotation={[Math.PI / 2, 0, 0]} geometry={radarSweepFanGeo}>
+            <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.38 + intensity * 0.4} side={THREE.DoubleSide} />
           </mesh>
         </group>
       </group>
 
-      <FlowPulses start={[-1.45, 1.25, 0]} end={[0, 2.2, 0]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={3} />
-      <FlowPulses start={[1.45, 1.25, 0]} end={[0, 2.2, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[-1.45, 1.25, 0]} end={[0, 2.32, 0]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.45, 1.25, 0]} end={[0, 2.32, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
@@ -479,48 +545,51 @@ function LitreeAgentZone({ intensity, motionEnabled }: ZoneProps) {
       {/* 中央 ReAct AI 神经网络推理决策核心 */}
       <group position={[0, 1.55, 0]}>
         <group ref={coreRef}>
-          {/* 正二十面体核心 */}
-          <mesh geometry={agentIcosaMainGeo}>
-            <meshStandardMaterial color={STEEL_DARK} metalness={0.92} roughness={0.08} emissive={PURPLE} emissiveIntensity={1.4 * intensity} />
-          </mesh>
+          {/* 正二十面体外骨骼 */}
+          <mesh geometry={agentIcosaMainGeo} material={matAcrylicPurple} />
           <mesh geometry={agentIcosaInnerGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} />
+            <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.92} emissive={CYAN} emissiveIntensity={1.8 * intensity} />
           </mesh>
           {/* 线框思维链 */}
           <mesh geometry={agentIcosaWireGeo}>
-            <meshBasicMaterial color={SAFETY} wireframe toneMapped={false} transparent opacity={0.6 + intensity * 0.45} />
+            <meshBasicMaterial color={SAFETY} wireframe toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
           </mesh>
         </group>
 
         {/* 3轴陀螺仪任务编排星环 */}
         <mesh ref={orbitXRef} rotation={[0, 0, Math.PI / 4]} geometry={agentOrbitTorusXGeo}>
-          <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.65 + intensity * 0.4} />
+          <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.7 + intensity * 0.3} />
         </mesh>
         <mesh ref={orbitYRef} rotation={[Math.PI / 3, 0, 0]} geometry={agentOrbitTorusYGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.6 + intensity * 0.4} />
+          <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
         </mesh>
         <mesh ref={orbitZRef} rotation={[0, Math.PI / 4, 0]} geometry={agentOrbitTorusZGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.55 + intensity * 0.4} />
+          <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.6 + intensity * 0.4} />
         </mesh>
       </group>
 
       {/* 环绕多智能体工作决策卫星（Tool Calling: DB / 工单 / Docker 沙箱 / IM 消息） */}
       <group ref={satelliteGroupRef} position={[0, 1.55, 0]}>
         {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((angle, idx) => (
-          <group key={idx} position={[Math.cos(angle) * 1.75, Math.sin(angle * 3) * 0.35, Math.sin(angle) * 1.75]}>
+          <group key={idx} position={[Math.cos(angle) * 1.8, Math.sin(angle * 3) * 0.35, Math.sin(angle) * 1.8]}>
             <mesh geometry={agentSatelliteBodyGeo}>
-              <meshStandardMaterial color={STEEL_LIGHT} metalness={0.94} emissive={idx % 2 === 0 ? CYAN : GOLD} emissiveIntensity={0.85 * intensity} />
+              <meshStandardMaterial
+                color={COLOR_STEEL_LIGHT}
+                metalness={0.94}
+                roughness={0.14}
+                emissive={idx % 2 === 0 ? CYAN : GOLD}
+                emissiveIntensity={0.85 * intensity}
+              />
             </mesh>
-            <mesh position={[0, 0, 0]}>
-              <torusGeometry args={[0.26, 0.016, 6, 20]} />
-              <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.75} />
+            <mesh geometry={agentSatelliteRingGeo}>
+              <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.8} />
             </mesh>
           </group>
         ))}
       </group>
 
       {intensity > 0.8 && (
-        <pointLight position={[0, 1.65, 0]} color={PURPLE} intensity={16} distance={9} decay={2} />
+        <pointLight position={[0, 1.65, 0]} color={PURPLE} intensity={18} distance={9.5} decay={2} />
       )}
       <FlowPulses start={[-1.35, 1.15, -1.1]} end={[0, 1.55, 0]} color={PURPLE} intensity={intensity} motionEnabled={motionEnabled} count={3} />
       <FlowPulses start={[1.35, 1.15, 1.1]} end={[0, 1.55, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
@@ -528,6 +597,9 @@ function LitreeAgentZone({ intensity, motionEnabled }: ZoneProps) {
   );
 }
 
+// ==========================================
+// 4. Litree OA / HR 独立业务中台 (OA Zone)
+// ==========================================
 function LitreeOaZone({ intensity, motionEnabled }: ZoneProps) {
   const hubRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
@@ -542,39 +614,49 @@ function LitreeOaZone({ intensity, motionEnabled }: ZoneProps) {
   return (
     <group>
       <ZoneBase intensity={intensity} accent={SIGNAL} motionEnabled={motionEnabled} />
+
+      {/* 四座业务立柱 */}
       {[[-1.35, -1.1], [1.35, -1.1], [-1.35, 1.1], [1.35, 1.1]].map(([x, z], idx) => (
         <group key={idx} position={[x, 0.24, z]}>
-          <mesh position={[0, 0.52, 0]} castShadow geometry={agentMiddlePlatformGeo}>
-            <meshStandardMaterial color={STEEL_MID} metalness={0.94} roughness={0.18} emissive={idx % 2 === 0 ? SIGNAL : GOLD} emissiveIntensity={0.32 * intensity} />
+          <mesh position={[0, 0.55, 0]} castShadow geometry={agentMiddlePlatformGeo}>
+            <meshStandardMaterial
+              color={COLOR_STEEL_MID}
+              metalness={0.94}
+              roughness={0.16}
+              emissive={idx % 2 === 0 ? SIGNAL : GOLD}
+              emissiveIntensity={0.35 * intensity}
+            />
           </mesh>
-          <mesh position={[0, 1.15, 0]} geometry={agentFloatingGemGeo}>
+          <mesh position={[0, 1.12, 0]} geometry={oaPedestalTopGeo} material={matChromeBright} />
+          <mesh position={[0, 1.25, 0]} geometry={agentFloatingGemGeo}>
             <meshBasicMaterial color={idx % 2 === 0 ? CYAN : GOLD} toneMapped={false} />
           </mesh>
         </group>
       ))}
-      <group ref={hubRef} position={[0, 1.42, 0]}>
-        <mesh geometry={oaHubCubeGeo}>
-          <meshStandardMaterial color={STEEL_DARK} metalness={0.92} roughness={0.14} emissive={SIGNAL} emissiveIntensity={0.75 * intensity} />
-        </mesh>
+
+      {/* 中央状态机枢纽 */}
+      <group ref={hubRef} position={[0, 1.45, 0]}>
+        <mesh geometry={oaHubCubeGeo} material={matTitaniumDark} />
         <mesh geometry={oaHubInnerGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} />
+          <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.9} emissive={SIGNAL} emissiveIntensity={1.4 * intensity} />
         </mesh>
       </group>
-      <mesh ref={ringRef} position={[0, 1.42, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={oaStateRingGeo}>
-        <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.6 + intensity * 0.35} />
+      <mesh ref={ringRef} position={[0, 1.45, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={oaStateRingGeo}>
+        <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
       </mesh>
-      <mesh position={[0, 0.65, 0]} geometry={oaSyncBridgeGeo}>
-        <meshStandardMaterial color={STEEL_LIGHT} metalness={0.9} emissive={SIGNAL} emissiveIntensity={0.38 * intensity} />
+      <mesh position={[0, 0.68, 0]} geometry={oaSyncBridgeGeo}>
+        <meshStandardMaterial color={COLOR_STEEL_LIGHT} metalness={0.92} emissive={SIGNAL} emissiveIntensity={0.4 * intensity} />
       </mesh>
-      {intensity > 0.8 && <pointLight position={[0, 1.55, 0]} color={SIGNAL} intensity={14} distance={8} decay={2} />}
-      <FlowPulses start={[-1.35, 1.15, -1.1]} end={[0, 1.42, 0]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={3} />
-      <FlowPulses start={[1.35, 1.15, 1.1]} end={[0, 1.42, 0]} color={GOLD} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+
+      {intensity > 0.8 && <pointLight position={[0, 1.55, 0]} color={SIGNAL} intensity={15} distance={8.5} decay={2} />}
+      <FlowPulses start={[-1.35, 1.15, -1.1]} end={[0, 1.45, 0]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.35, 1.15, 1.1]} end={[0, 1.45, 0]} color={GOLD} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
 
 // ==========================================
-// 4. WeLink 统一搜索与个性化打分引擎 (Search Zone)
+// 5. WeLink 统一搜索与个性化打分引擎 (Search Zone)
 // ==========================================
 function WelinkSearchZone({ intensity, motionEnabled }: ZoneProps) {
   const prismRef = useRef<THREE.Mesh>(null);
@@ -586,14 +668,14 @@ function WelinkSearchZone({ intensity, motionEnabled }: ZoneProps) {
     const speedMult = intensity > 1 ? 1.65 : 1;
     if (prismRef.current) {
       prismRef.current.rotation.y += delta * 1.05 * speedMult;
-      prismRef.current.position.y = 2.15 + Math.sin(clock.elapsedTime * 2.8) * 0.1;
+      prismRef.current.position.y = 2.18 + Math.sin(clock.elapsedTime * 2.8) * 0.1;
     }
     if (scannerRef.current) {
       scannerRef.current.position.y = 0.58 + Math.sin(clock.elapsedTime * 3.2) * 0.55;
     }
     if (beamRef.current) {
       const mat = beamRef.current.material as THREE.MeshBasicMaterial;
-      if (mat) mat.opacity = 0.2 + Math.sin(clock.elapsedTime * 3) * 0.09;
+      if (mat) mat.opacity = 0.22 + Math.sin(clock.elapsedTime * 3) * 0.09;
     }
   });
 
@@ -604,17 +686,13 @@ function WelinkSearchZone({ intensity, motionEnabled }: ZoneProps) {
       {/* 4联分布式 ES 搜索服务器机柜阵列（带抽屉导轨与指示灯） */}
       {[-1.4, -0.48, 0.48, 1.4].map((x, index) => (
         <group key={x} position={[x, 0.24, index % 2 === 0 ? 0.2 : -0.2]}>
-          <mesh position={[0, 0.9, 0]} castShadow geometry={searchCabinetRackGeo}>
-            <meshStandardMaterial color={index % 2 === 0 ? '#1b262c' : STEEL_MID} metalness={0.94} roughness={0.18} emissive={CYAN} emissiveIntensity={0.1 * intensity} />
-          </mesh>
+          <mesh position={[0, 0.94, 0]} castShadow geometry={searchCabinetRackGeo} material={matTitaniumDark} />
           {/* 独立服务器抽屉面板 */}
           {[0.26, 0.58, 0.9, 1.22, 1.54].map((y, trayIdx) => (
-            <group key={trayIdx} position={[0, y, 0.35]}>
-              <mesh geometry={searchServerTrayGeo}>
-                <meshStandardMaterial color={STEEL_DARK} metalness={0.92} />
-              </mesh>
+            <group key={trayIdx} position={[0, y, 0.37]}>
+              <mesh geometry={searchServerTrayGeo} material={matSteelMid} />
               <mesh position={[0.13, 0, 0.02]}>
-                <boxGeometry args={[0.07, 0.035, 0.01]} />
+                <boxGeometry args={[0.08, 0.04, 0.01]} />
                 <meshBasicMaterial color={trayIdx % 2 === 0 ? SAFETY : CYAN} toneMapped={false} />
               </mesh>
             </group>
@@ -623,40 +701,38 @@ function WelinkSearchZone({ intensity, motionEnabled }: ZoneProps) {
       ))}
 
       {/* 悬浮倒金字塔多维打分分发棱镜 */}
-      <mesh ref={prismRef} position={[0, 2.15, 0]} rotation={[Math.PI, 0, 0]} geometry={searchPrismCrystalGeo}>
-        <meshStandardMaterial color={STEEL_DARK} metalness={0.92} roughness={0.1} emissive={GOLD} emissiveIntensity={1.3 * intensity} />
-      </mesh>
+      <mesh ref={prismRef} position={[0, 2.18, 0]} rotation={[Math.PI, 0, 0]} geometry={searchPrismCrystalGeo} material={matGoldAlloy} />
 
       {/* 打分向下投射的半透明光锥 */}
       <mesh ref={beamRef} position={[0, 1.5, 0]} rotation={[Math.PI, 0, 0]} geometry={searchBeamConeGeo}>
-        <meshBasicMaterial color={GOLD} transparent opacity={0.22} toneMapped={false} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={GOLD} transparent opacity={0.25} toneMapped={false} side={THREE.DoubleSide} />
       </mesh>
 
       {/* 动态水平切片扫描激光 */}
       <group ref={scannerRef} position={[0, 0.9, 0]}>
         <mesh geometry={searchScannerBarGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.8 + intensity * 0.2} />
+          <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.85 + intensity * 0.15} />
         </mesh>
       </group>
 
       {/* 悬浮倒排索引分片数据块 */}
       {[-1.1, 0.0, 1.1].map((x, idx) => (
-        <mesh key={idx} position={[x, 1.62, 0.55]} geometry={searchIndexCubeGeo}>
-          <meshStandardMaterial color={STEEL_LIGHT} metalness={0.9} emissive={CYAN} emissiveIntensity={0.55 * intensity} />
+        <mesh key={idx} position={[x, 1.65, 0.55]} geometry={searchIndexCubeGeo}>
+          <meshStandardMaterial color={COLOR_STEEL_LIGHT} metalness={0.92} emissive={CYAN} emissiveIntensity={0.65 * intensity} />
         </mesh>
       ))}
 
       {intensity > 0.8 && (
-        <pointLight position={[0, 2.2, 0]} color={GOLD} intensity={14} distance={7.5} decay={2} />
+        <pointLight position={[0, 2.2, 0]} color={GOLD} intensity={16} distance={8} decay={2} />
       )}
-      <FlowPulses start={[-1.85, 0.45, 0]} end={[0, 2.15, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
-      <FlowPulses start={[1.85, 0.45, 0]} end={[0, 2.15, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[-1.85, 0.45, 0]} end={[0, 2.18, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.85, 0.45, 0]} end={[0, 2.18, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
 
 // ==========================================
-// 5. WeLink 双路数据湖管道与版本一致性治理 (Lake Zone)
+// 6. WeLink 双路数据湖管道与版本一致性治理 (Lake Zone)
 // ==========================================
 function WelinkDataLakeZone({ intensity, motionEnabled }: ZoneProps) {
   const helixLeftRef = useRef<THREE.Group>(null);
@@ -680,66 +756,66 @@ function WelinkDataLakeZone({ intensity, motionEnabled }: ZoneProps) {
 
       {/* 左柱：Flink 实时流式管道反应柱（透明防护管 + 内部双螺旋） */}
       <group position={[-1.05, 0.24, 0]}>
-        <mesh position={[0, 1.0, 0]} castShadow geometry={lakeReactorTubeGeo}>
-          <meshStandardMaterial color={STEEL_DARK} metalness={0.92} roughness={0.18} transparent opacity={0.68} emissive={CYAN} emissiveIntensity={0.18 * intensity} />
+        <mesh position={[0, 1.05, 0]} castShadow geometry={lakeReactorTubeGeo} material={matAcrylicCyan} />
+        <mesh position={[0, 1.05, 0]} geometry={lakeInnerPlasmaGeo}>
+          <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.9} emissive={CYAN} emissiveIntensity={0.85 * intensity} />
         </mesh>
         {/* 内部旋转流动线圈 */}
-        <group ref={helixLeftRef} position={[0, 1.0, 0]}>
+        <group ref={helixLeftRef} position={[0, 1.05, 0]}>
           {[-0.65, -0.22, 0.22, 0.65].map((y, cIdx) => (
             <mesh key={cIdx} position={[0, y, 0]} geometry={lakeHelixCoilGeo}>
-              <meshBasicMaterial color={CYAN} wireframe toneMapped={false} transparent opacity={0.7 + intensity * 0.3} />
+              <meshBasicMaterial color={CYAN} wireframe toneMapped={false} transparent opacity={0.75 + intensity * 0.25} />
             </mesh>
           ))}
         </group>
-        <mesh position={[0, 2.0, 0]} geometry={lakeCapHeavyGeo}>
-          <meshStandardMaterial color={STEEL_MID} metalness={0.96} emissive={CYAN} emissiveIntensity={0.65 * intensity} />
+        <mesh position={[0, 2.12, 0]} geometry={lakeCapHeavyGeo} material={matChromeBright} />
+        <mesh position={[0, 2.22, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeCapRingGeo}>
+          <meshBasicMaterial color={CYAN} toneMapped={false} />
         </mesh>
-        <mesh position={[0, 1.0, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeFlowRingGeo}>
+        <mesh position={[0, 1.05, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeFlowRingGeo}>
           <meshBasicMaterial color={CYAN} toneMapped={false} />
         </mesh>
       </group>
 
       {/* 右柱：Spark 批处理离线计算反应柱（活力橙双螺旋） */}
       <group position={[1.05, 0.24, 0]}>
-        <mesh position={[0, 1.0, 0]} castShadow geometry={lakeReactorTubeGeo}>
-          <meshStandardMaterial color={STEEL_DARK} metalness={0.92} roughness={0.18} transparent opacity={0.68} emissive={SAFETY} emissiveIntensity={0.18 * intensity} />
+        <mesh position={[0, 1.05, 0]} castShadow geometry={lakeReactorTubeGeo} material={matAcrylicOrange} />
+        <mesh position={[0, 1.05, 0]} geometry={lakeInnerPlasmaGeo}>
+          <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.9} emissive={SAFETY} emissiveIntensity={0.85 * intensity} />
         </mesh>
-        <group ref={helixRightRef} position={[0, 1.0, 0]}>
+        <group ref={helixRightRef} position={[0, 1.05, 0]}>
           {[-0.65, -0.22, 0.22, 0.65].map((y, cIdx) => (
             <mesh key={cIdx} position={[0, y, 0]} geometry={lakeHelixCoilGeo}>
-              <meshBasicMaterial color={SAFETY} wireframe toneMapped={false} transparent opacity={0.7 + intensity * 0.3} />
+              <meshBasicMaterial color={SAFETY} wireframe toneMapped={false} transparent opacity={0.75 + intensity * 0.25} />
             </mesh>
           ))}
         </group>
-        <mesh position={[0, 2.0, 0]} geometry={lakeCapHeavyGeo}>
-          <meshStandardMaterial color={STEEL_MID} metalness={0.96} emissive={SAFETY} emissiveIntensity={0.65 * intensity} />
+        <mesh position={[0, 2.12, 0]} geometry={lakeCapHeavyGeo} material={matChromeBright} />
+        <mesh position={[0, 2.22, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeCapRingGeo}>
+          <meshBasicMaterial color={SAFETY} toneMapped={false} />
         </mesh>
-        <mesh position={[0, 1.0, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeFlowRingGeo}>
+        <mesh position={[0, 1.05, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeFlowRingGeo}>
           <meshBasicMaterial color={SAFETY} toneMapped={false} />
         </mesh>
       </group>
 
       {/* 中央 ACID 版本治理协调桥与锁晶体 */}
-      <group position={[0, 1.2, 0]}>
-        <mesh geometry={lakeBridgeTrussGeo}>
-          <meshStandardMaterial color={STEEL_DARK} metalness={0.94} roughness={0.12} emissive={SIGNAL} emissiveIntensity={0.4 * intensity} />
-        </mesh>
-        <mesh ref={crystalRef} position={[0, 0.45, 0]} geometry={lakeAcidPrismGeo}>
-          <meshStandardMaterial color={STEEL_DARK} metalness={0.92} emissive={GOLD} emissiveIntensity={1.35 * intensity} />
-        </mesh>
+      <group position={[0, 1.25, 0]}>
+        <mesh geometry={lakeBridgeTrussGeo} material={matTitaniumDark} />
+        <mesh ref={crystalRef} position={[0, 0.48, 0]} geometry={lakeAcidPrismGeo} material={matGoldAlloy} />
       </group>
 
       {intensity > 0.8 && (
-        <pointLight position={[0, 1.48, 0]} color={CYAN} intensity={14} distance={7.5} decay={2} />
+        <pointLight position={[0, 1.48, 0]} color={CYAN} intensity={16} distance={8} decay={2} />
       )}
-      <FlowPulses start={[-1.05, 1.95, 0]} end={[1.05, 1.95, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[-1.05, 2.05, 0]} end={[1.05, 2.05, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
       <FlowPulses start={[1.05, 0.48, 0]} end={[-1.05, 0.48, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
 
 // ==========================================
-// 6. 森格实时通信网关与告警风暴治理 (Gateway Zone)
+// 7. 森格实时通信网关与告警风暴治理 (Gateway Zone)
 // ==========================================
 function SengeGatewayZone({ intensity, motionEnabled }: ZoneProps) {
   const wavesRef = useRef<THREE.Group>(null);
@@ -767,15 +843,21 @@ function SengeGatewayZone({ intensity, motionEnabled }: ZoneProps) {
       {/* Netty 高并发通信矩阵底座节点（环形 6 节点集群） */}
       {[0, 1, 2, 3, 4, 5].map((idx) => {
         const angle = (idx / 6) * Math.PI * 2;
-        const x = Math.cos(angle) * 1.32;
-        const z = Math.sin(angle) * 1.32;
+        const x = Math.cos(angle) * 1.35;
+        const z = Math.sin(angle) * 1.35;
         return (
           <group key={idx} position={[x, 0.24, z]}>
             <mesh position={[0, 0.24, 0]} geometry={gatewayComputePodGeo}>
-              <meshStandardMaterial color={STEEL_MID} metalness={0.94} emissive={idx % 2 === 0 ? SAFETY : CYAN} emissiveIntensity={0.35 * intensity} />
+              <meshStandardMaterial
+                color={COLOR_STEEL_MID}
+                metalness={0.94}
+                roughness={0.16}
+                emissive={idx % 2 === 0 ? SAFETY : CYAN}
+                emissiveIntensity={0.4 * intensity}
+              />
             </mesh>
-            <mesh position={[0, 0.46, 0]}>
-              <boxGeometry args={[0.22, 0.045, 0.22]} />
+            <mesh position={[0, 0.47, 0]}>
+              <boxGeometry args={[0.24, 0.05, 0.24]} />
               <meshBasicMaterial color={SAFETY} toneMapped={false} />
             </mesh>
           </group>
@@ -784,49 +866,48 @@ function SengeGatewayZone({ intensity, motionEnabled }: ZoneProps) {
 
       {/* 中央通信重型铁塔与微波天线阵列 */}
       <group position={[0, 0.24, 0]}>
-        <mesh position={[0, 1.25, 0]} castShadow geometry={gatewayTowerPillarGeo}>
-          <meshStandardMaterial color={STEEL_MID} metalness={0.95} roughness={0.18} emissive={SAFETY} emissiveIntensity={0.24 * intensity} />
-        </mesh>
-        {/* 桁架十字交叉横担 */}
-        {[0.95, 1.58, 2.1].map((y, tIdx) => (
-          <mesh key={tIdx} position={[0, y, 0]} geometry={gatewayTrussCrossGeo}>
-            <meshStandardMaterial color={STEEL_LIGHT} metalness={0.92} />
-          </mesh>
+        <mesh position={[0, 1.3, 0]} castShadow geometry={gatewayTowerPillarGeo} material={matTitaniumDark} />
+        {/* 桁架十字交叉横担与对角斜撑 */}
+        {[0.95, 1.58, 2.15].map((y, tIdx) => (
+          <group key={tIdx} position={[0, y, 0]}>
+            <mesh geometry={gatewayTrussCrossGeo} material={matSteelLight} />
+            <mesh rotation={[0, Math.PI / 2, 0]} geometry={gatewayTrussCrossGeo} material={matSteelLight} />
+            <mesh rotation={[0, 0, Math.PI / 4]} geometry={gatewayTrussDiagGeo} material={matChromeBright} />
+            <mesh rotation={[0, 0, -Math.PI / 4]} geometry={gatewayTrussDiagGeo} material={matChromeBright} />
+          </group>
         ))}
         {/* 塔顶 4 向微波天线 */}
-        <group ref={dishGroupRef} position={[0, 2.38, 0]}>
+        <group ref={dishGroupRef} position={[0, 2.48, 0]}>
           {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((angle, idx) => (
-            <mesh key={idx} position={[Math.cos(angle) * 0.4, 0, Math.sin(angle) * 0.4]} rotation={[0, -angle + Math.PI / 2, Math.PI / 4]} geometry={gatewayMicrowaveDishGeo}>
-              <meshStandardMaterial color={STEEL_DARK} metalness={0.9} emissive={SAFETY} emissiveIntensity={0.65 * intensity} />
+            <mesh key={idx} position={[Math.cos(angle) * 0.42, 0, Math.sin(angle) * 0.42]} rotation={[0, -angle + Math.PI / 2, Math.PI / 4]} geometry={gatewayMicrowaveDishGeo}>
+              <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.92} emissive={SAFETY} emissiveIntensity={0.75 * intensity} />
             </mesh>
           ))}
-          {/* 避雷高频探针 */}
-          <mesh position={[0, 0.38, 0]} geometry={gatewayLightningRodGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} />
-          </mesh>
+          {/* 避雷高频放电探针 */}
+          <mesh position={[0, 0.42, 0]} geometry={gatewayLightningRodGeo} material={matChromeBright} />
         </group>
       </group>
 
       {/* 电磁波辐射扩散环（突发告警风暴滑动窗口平滑与抑制） */}
-      <group ref={wavesRef} position={[0, 2.38, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      <group ref={wavesRef} position={[0, 2.48, 0]} rotation={[Math.PI / 2, 0, 0]}>
         {[0, 1, 2].map((idx) => (
           <mesh key={idx} geometry={gatewayPulseWaveTorusGeo}>
-            <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.65} />
+            <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.7} />
           </mesh>
         ))}
       </group>
 
       {intensity > 0.8 && (
-        <pointLight position={[0, 2.45, 0]} color={SAFETY} intensity={15} distance={8.5} decay={2} />
+        <pointLight position={[0, 2.55, 0]} color={SAFETY} intensity={16} distance={9} decay={2} />
       )}
-      <FlowPulses start={[-1.45, 0.45, 0]} end={[0, 2.38, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
-      <FlowPulses start={[1.45, 0.45, 0]} end={[0, 2.38, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[-1.45, 0.45, 0]} end={[0, 2.48, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[1.45, 0.45, 0]} end={[0, 2.48, 0]} color={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
 
 // ==========================================
-// 7. 森格智慧水务平台 0-1 架构底座与容器化交付 (Platform Zone)
+// 8. 森格智慧水务平台 0-1 架构底座与容器化交付 (Platform Zone)
 // ==========================================
 function SengePlatformZone({ intensity, motionEnabled }: ZoneProps) {
   const ring1Ref = useRef<THREE.Mesh>(null);
@@ -847,57 +928,53 @@ function SengePlatformZone({ intensity, motionEnabled }: ZoneProps) {
 
       {/* 3层阶梯式云原生容器 Pod 集群模块（设备中台 / 告警引擎 / 运维中枢） */}
       {[
-        [-0.85, 0.35, -0.42, STEEL_MID],
-        [0.85, 0.35, -0.42, '#1e2c33'],
-        [0, 0.85, 0.42, STEEL_LIGHT],
+        [-0.85, 0.35, -0.42, COLOR_STEEL_MID],
+        [0.85, 0.35, -0.42, '#182730'],
+        [0, 0.88, 0.42, COLOR_STEEL_LIGHT],
       ].map(([x, y, z, color], idx) => (
         <group key={idx} position={[x as number, y as number, z as number]}>
           <mesh castShadow geometry={platformK8sPodGeo}>
-            <meshStandardMaterial color={color as string} metalness={0.94} roughness={0.18} emissive={SIGNAL} emissiveIntensity={0.2 * intensity} />
+            <meshStandardMaterial color={color as string} metalness={0.94} roughness={0.16} emissive={SIGNAL} emissiveIntensity={0.22 * intensity} />
           </mesh>
-          <mesh position={[0, 0.24, 0]} geometry={platformPodFrameOuterGeo}>
-            <meshBasicMaterial color={idx === 2 ? SAFETY : SIGNAL} toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
+          <mesh position={[0, 0.25, 0]} geometry={platformPodFrameOuterGeo}>
+            <meshBasicMaterial color={idx === 2 ? SAFETY : SIGNAL} toneMapped={false} transparent opacity={0.7 + intensity * 0.3} />
           </mesh>
         </group>
       ))}
 
       {/* 工业流体管路、法兰与旋转控制阀门总成 */}
       <group position={[0, 0.52, -0.9]}>
-        <mesh rotation={[0, 0, Math.PI / 2]} geometry={platformPipeMainGeo}>
-          <meshStandardMaterial color={STEEL_LIGHT} metalness={0.96} roughness={0.16} emissive={SAFETY} emissiveIntensity={0.2 * intensity} />
-        </mesh>
+        <mesh rotation={[0, 0, Math.PI / 2]} geometry={platformPipeMainGeo} material={matChromeBright} />
         {[-0.65, 0.65].map((px) => (
-          <mesh key={px} position={[px, 0, 0]} rotation={[0, 0, Math.PI / 2]} geometry={platformPipeFlangeGeo}>
-            <meshStandardMaterial color={STEEL_MID} metalness={0.92} />
-          </mesh>
+          <mesh key={px} position={[px, 0, 0]} rotation={[0, 0, Math.PI / 2]} geometry={platformPipeFlangeGeo} material={matSteelLight} />
         ))}
         <mesh ref={valveRef} position={[0, 0, 0]} rotation={[0, Math.PI / 2, 0]} geometry={platformValveWheelGeo}>
-          <meshStandardMaterial color={SAFETY} metalness={0.88} emissive={SAFETY} emissiveIntensity={0.55 * intensity} />
+          <meshStandardMaterial color={SAFETY} metalness={0.92} emissive={SAFETY} emissiveIntensity={0.65 * intensity} />
         </mesh>
       </group>
 
       {/* 顶部服务网格双交错旋转负载均衡光环 */}
-      <group position={[0, 1.62, 0]}>
+      <group position={[0, 1.68, 0]}>
         <mesh ref={ring1Ref} rotation={[Math.PI / 2, 0, 0]} geometry={platformDualRing1Geo}>
-          <meshBasicMaterial color={SIGNAL} wireframe toneMapped={false} transparent opacity={0.5 + intensity * 0.45} />
+          <meshBasicMaterial color={SIGNAL} wireframe toneMapped={false} transparent opacity={0.55 + intensity * 0.45} />
         </mesh>
         <mesh ref={ring2Ref} rotation={[Math.PI / 2.2, 0.3, 0]} geometry={platformDualRing2Geo}>
-          <meshBasicMaterial color={CYAN} wireframe toneMapped={false} transparent opacity={0.4 + intensity * 0.4} />
+          <meshBasicMaterial color={CYAN} wireframe toneMapped={false} transparent opacity={0.45 + intensity * 0.45} />
         </mesh>
       </group>
 
       {/* 双向全息遥测态势监控看板 */}
-      {[-0.95, 0.95].map((x, idx) => (
-        <mesh key={idx} position={[x, 1.3, 0.75]} rotation={[-0.2, idx === 0 ? 0.35 : -0.35, 0]} geometry={platformTelemetryScreenGeo}>
-          <meshBasicMaterial color={CYAN} wireframe toneMapped={false} transparent opacity={0.5 + intensity * 0.45} />
+      {[-0.98, 0.98].map((x, idx) => (
+        <mesh key={idx} position={[x, 1.35, 0.78]} rotation={[-0.2, idx === 0 ? 0.35 : -0.35, 0]} geometry={platformTelemetryScreenGeo}>
+          <meshBasicMaterial color={CYAN} wireframe toneMapped={false} transparent opacity={0.55 + intensity * 0.45} />
         </mesh>
       ))}
 
       {intensity > 0.8 && (
-        <pointLight position={[0, 1.68, 0]} color={SIGNAL} intensity={14} distance={8.5} decay={2} />
+        <pointLight position={[0, 1.72, 0]} color={SIGNAL} intensity={15} distance={9} decay={2} />
       )}
       <FlowPulses start={[-1.45, 0.52, -0.9]} end={[1.45, 0.52, -0.9]} color={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={3} />
-      <FlowPulses start={[0, 1.0, 0.42]} end={[0, 1.62, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
+      <FlowPulses start={[0, 1.0, 0.42]} end={[0, 1.68, 0]} color={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={3} />
     </group>
   );
 }
