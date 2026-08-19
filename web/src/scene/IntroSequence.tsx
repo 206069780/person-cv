@@ -21,18 +21,18 @@ export function IntroSequence({ active, onComplete }: IntroSequenceProps) {
     };
 
     if (!active) {
-      camera.position.set(0, 2.45, 13);
+      camera.position.set(0, 2.6, 16.5);
       target.x = 0;
-      target.y = 1.4;
+      target.y = 1.3;
       target.z = -2;
       lookAt();
       return;
     }
 
-    camera.position.set(0, 3.6, 28);
+    camera.position.set(0, 3.8, 30);
     target.x = 0;
-    target.y = 1.0;
-    target.z = 2;
+    target.y = 1.1;
+    target.z = 1;
     lookAt();
 
     const timeline = gsap.timeline({
@@ -42,10 +42,10 @@ export function IntroSequence({ active, onComplete }: IntroSequenceProps) {
 
     // 优化后的紧凑镜头：总时长约 2.2 秒，兼顾全景张力与快速就绪
     timeline
-      .to(camera.position, { x: -2.2, y: 2.2, z: 18, duration: 0.9, ease: 'power2.inOut', onUpdate: lookAt })
+      .to(camera.position, { x: -2.8, y: 2.6, z: 21, duration: 0.9, ease: 'power2.inOut', onUpdate: lookAt })
       .to(target, { x: 0, y: 1.6, z: -4, duration: 0.9, ease: 'power2.inOut', onUpdate: lookAt }, '<')
-      .to(camera.position, { x: 0, y: 2.45, z: 13, duration: 1.3, ease: 'expo.out', onUpdate: lookAt })
-      .to(target, { x: 0, y: 1.4, z: -2, duration: 1.3, ease: 'expo.out', onUpdate: lookAt }, '<');
+      .to(camera.position, { x: 0, y: 2.6, z: 16.5, duration: 1.3, ease: 'expo.out', onUpdate: lookAt })
+      .to(target, { x: 0, y: 1.3, z: -2, duration: 1.3, ease: 'expo.out', onUpdate: lookAt }, '<');
 
     return () => {
       timeline.kill();

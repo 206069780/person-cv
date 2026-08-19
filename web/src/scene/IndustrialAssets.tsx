@@ -36,6 +36,14 @@ const baseVentGeo = new THREE.BoxGeometry(0.65, 0.045, 0.14);
 const pulseSphereGeo = new THREE.SphereGeometry(0.065, 8, 8);
 const baseUplightConeGeo = new THREE.ConeGeometry(0.16, 0.85, 12, 1, true);
 const baseUndercarriageRingGeo = new THREE.RingGeometry(2.65, 2.78, 8);
+const ambientMoteGeo = new THREE.SphereGeometry(0.032, 6, 6);
+
+// 通用全息高能立柱光效几何体 (Cyber Pillar Optics)
+const pillarScanRingGeo = new THREE.TorusGeometry(0.24, 0.022, 6, 28);
+const pillarApexFlareGeo = new THREE.RingGeometry(0.06, 0.3, 20);
+const pillarApexBeamGeo = new THREE.ConeGeometry(0.26, 2.0, 16, 1, true);
+const energyWellSocketGeo = new THREE.RingGeometry(0.26, 0.44, 24);
+const energySocketInnerDiscGeo = new THREE.CircleGeometry(0.25, 16);
 
 // 01 - Litree Overview (微服务与数据底座)
 const corePillarMainGeo = new THREE.BoxGeometry(0.38, 1.95, 0.38);
@@ -366,6 +374,169 @@ function ZoneBase({ intensity, accent = SIGNAL, motionEnabled = true }: { intens
 }
 
 // ==========================================
+// 展区空间环境全息悬浮数据光子微粒 (Zone Atmospheric Quantum Sparks)
+// ==========================================
+function ZoneAtmosphericMotes({
+  accent = CYAN,
+  intensity,
+  motionEnabled = true,
+  count = 14,
+}: {
+  accent?: string;
+  intensity: number;
+  motionEnabled?: boolean;
+  count?: number;
+}) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const helper = useMemo(() => new THREE.Object3D(), []);
+  const motes = useMemo(() => Array.from({ length: count }, (_, i) => ({
+    angle: (i / count) * Math.PI * 2,
+    radius: 0.95 + (i % 4) * 0.38,
+    baseY: 0.7 + (i % 5) * 0.35,
+    speedY: 0.7 + (i % 3) * 0.3,
+    speedRot: (i % 2 === 0 ? 1 : -1) * (0.35 + (i % 4) * 0.12),
+    phase: i * 1.4,
+  })), [count]);
+
+  const moteMat = useMemo(
+    () => new THREE.MeshBasicMaterial({ color: accent, toneMapped: false, transparent: true, opacity: 0.7 }),
+    [accent]
+  );
+
+  useFrame(({ clock }) => {
+    if (!meshRef.current || !motionEnabled) return;
+    const t = clock.elapsedTime;
+    motes.forEach((mote, i) => {
+      const curAngle = mote.angle + t * mote.speedRot;
+      const x = Math.cos(curAngle) * mote.radius;
+      const z = Math.sin(curAngle) * mote.radius;
+      const y = mote.baseY + Math.sin(t * mote.speedY + mote.phase) * 0.28;
+      const scale = 0.65 + Math.sin(t * 2.2 + mote.phase) * 0.35;
+      helper.position.set(x, y, z);
+      helper.scale.setScalar(scale * (intensity > 1 ? 1.45 : 1));
+      helper.updateMatrix();
+      meshRef.current?.setMatrixAt(i, helper.matrix);
+    });
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return <instancedMesh ref={meshRef} args={[ambientMoteGeo, moteMat, count]} />;
+}
+
+// ==========================================
+// 高精重工业全息高能立柱 (Cyber Dual-Core Holo Pillar)
+// ==========================================
+function CyberIndustrialPillar({
+  position,
+  accent = CYAN,
+  secondaryAccent = SAFETY,
+  intensity,
+  motionEnabled = true,
+  height = 1.95,
+  withBeam = true,
+}: {
+  position: [number, number, number];
+  accent?: string;
+  secondaryAccent?: string;
+  intensity: number;
+  motionEnabled?: boolean;
+  height?: number;
+  withBeam?: boolean;
+}) {
+  const scanRingRef = useRef<THREE.Mesh>(null);
+  const flareRef = useRef<THREE.Mesh>(null);
+  const beamMatRef = useRef<THREE.MeshBasicMaterial>(null);
+
+  useFrame(({ clock }) => {
+    if (!motionEnabled) return;
+    const t = clock.elapsedTime;
+    if (scanRingRef.current) {
+      // 沿立柱上下往复穿梭的能量扫描光环
+      scanRingRef.current.position.y = 0.35 + (0.5 + 0.5 * Math.sin(t * 2.8 + position[0] * 2.5 + position[2])) * (height - 0.65);
+      scanRingRef.current.rotation.z += 0.035;
+    }
+    if (flareRef.current) {
+      flareRef.current.rotation.z -= 0.025;
+    }
+    if (beamMatRef.current) {
+      beamMatRef.current.opacity = 0.22 + (0.5 + 0.5 * Math.sin(t * 3.2 + position[0])) * 0.22 * (intensity > 1 ? 1.6 : 1);
+    }
+  });
+
+  return (
+    <group position={position}>
+      {/* 1. 黑色深钛金重型立柱主体（带高光金属层次） */}
+      <mesh position={[0, height / 2, 0]} castShadow geometry={corePillarMainGeo} material={matTitaniumDark} />
+
+      {/* 2. 散热鳍片 (Cooling Fins) */}
+      {[0.32, 0.75, 1.18, 1.6].map((y, fIdx) => (
+        <group key={fIdx} position={[0, y, 0]}>
+          <mesh geometry={corePillarFinGeo} material={matSteelLight} />
+          {/* 散热片缝隙微型呼吸霓虹光片 */}
+          <mesh geometry={corePillarFinSlotNeonGeo}>
+            <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.65 + intensity * 0.3} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* 3. 4 面嵌入式全方位高亮激光总线 */}
+      {[
+        [0, height / 2, 0.194, 0],
+        [0, height / 2, -0.194, 0],
+        [0.194, height / 2, 0, Math.PI / 2],
+        [-0.194, height / 2, 0, Math.PI / 2],
+      ].map(([lx, ly, lz, rot], lIdx) => (
+        <mesh key={lIdx} position={[lx, ly, lz]} rotation={[0, rot, 0]}>
+          <boxGeometry args={[0.065, height - 0.1, 0.015]} />
+          <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.88 + intensity * 0.12} />
+        </mesh>
+      ))}
+
+      {/* 4. 4 角高亮棱角导光条 */}
+      {[-0.19, 0.19].flatMap((ex) => [-0.19, 0.19].map((ez) => (
+        <mesh key={`edge-${ex}-${ez}`} position={[ex, height / 2, ez]} geometry={corePillarSideNeonGeo}>
+          <meshBasicMaterial color={secondaryAccent} toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
+        </mesh>
+      )))}
+
+      {/* 5. 动态上下扫描能量环 (Vertical Scanner Ring) */}
+      <mesh ref={scanRingRef} position={[0, height / 2, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={pillarScanRingGeo}>
+        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.88 + intensity * 0.12} />
+      </mesh>
+
+      {/* 6. 柱脚地表聚能井 (Ground Energy Socket) */}
+      <mesh position={[0, 0.018, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={energyWellSocketGeo}>
+        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
+      </mesh>
+      <mesh position={[0, 0.022, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={energySocketInnerDiscGeo}>
+        <meshBasicMaterial color="#ffffff" toneMapped={false} transparent opacity={0.35 + intensity * 0.3} />
+      </mesh>
+
+      {/* 7. 柱顶尖塔与全息聚能透镜 */}
+      <mesh position={[0, height + 0.12, 0]} geometry={corePillarSpireGeo} material={matChromeBright} />
+      <mesh ref={flareRef} position={[0, height + 0.02, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={pillarApexFlareGeo}>
+        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.85} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* 8. 柱顶向上投射的柔和体积光锥 (Apex Volumetric Beam) */}
+      {withBeam && (
+        <mesh position={[0, height + 0.95, 0]} geometry={pillarApexBeamGeo}>
+          <meshBasicMaterial
+            ref={beamMatRef}
+            color={accent}
+            toneMapped={false}
+            transparent
+            opacity={0.25 + intensity * 0.3}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
+// ==========================================
 // 1. Litree 架构底座与微服务治理 (Core Zone)
 // ==========================================
 function LitreeOverviewCoreZone({ intensity, motionEnabled }: ZoneProps) {
@@ -391,55 +562,20 @@ function LitreeOverviewCoreZone({ intensity, motionEnabled }: ZoneProps) {
   return (
     <group>
       <ZoneBase intensity={intensity} accent={CYAN} motionEnabled={motionEnabled} />
+      <ZoneAtmosphericMotes accent={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={16} />
 
-      {/* 4角高耸多租户服务计算立柱（精密工业机柜 + 4面全方位垂直激光导光槽与柱脚灯） */}
+      {/* 4角高耸多租户服务计算立柱（搭载双核高能立柱光效体系） */}
       {[-1, 1].flatMap((x) => [-1, 1].map((z) => (
-        <group key={`${x}-${z}`} position={[x * 1.38, 0.24, z * 1.12]}>
-          {/* 黑色立柱主体 */}
-          <mesh position={[0, 0.97, 0]} castShadow geometry={corePillarMainGeo} material={matTitaniumDark} />
-
-          {/* 散热片与立柱顶盖 */}
-          {[0.32, 0.75, 1.18, 1.6].map((y, fIdx) => (
-            <group key={fIdx} position={[0, y, 0]}>
-              <mesh geometry={corePillarFinGeo} material={matSteelLight} />
-              {/* 散热片缝隙微型呼吸霓虹光片 */}
-              <mesh geometry={corePillarFinSlotNeonGeo}>
-                <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.65 + intensity * 0.3} />
-              </mesh>
-            </group>
-          ))}
-
-          {/* 立柱 4 垂直面嵌入式全方位高亮激光总线（告别暗面盲区） */}
-          {[
-            [0, 0.97, 0.192, 0],
-            [0, 0.97, -0.192, 0],
-            [0.192, 0.97, 0, Math.PI / 2],
-            [-0.192, 0.97, 0, Math.PI / 2],
-          ].map(([lx, ly, lz, rot], lIdx) => (
-            <mesh key={lIdx} position={[lx, ly, lz]} rotation={[0, rot, 0]}>
-              <boxGeometry args={[0.06, 1.82, 0.015]} />
-              <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.85 + intensity * 0.15} />
-            </mesh>
-          ))}
-
-          {/* 立柱 4 角发光棱角导光条 */}
-          {[-0.19, 0.19].flatMap((ex) => [-0.19, 0.19].map((ez) => (
-            <mesh key={`edge-${ex}-${ez}`} position={[ex, 0.97, ez]} geometry={corePillarSideNeonGeo}>
-              <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.6 + intensity * 0.35} />
-            </mesh>
-          )))}
-
-          {/* 柱脚地表发光环 */}
-          <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={corePillarBaseRingGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.75 + intensity * 0.25} />
-          </mesh>
-
-          {/* 柱顶尖塔与发光聚能环 */}
-          <mesh position={[0, 2.08, 0]} geometry={corePillarSpireGeo} material={matChromeBright} />
-          <mesh position={[0, 1.96, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={corePillarTopHaloGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} />
-          </mesh>
-        </group>
+        <CyberIndustrialPillar
+          key={`${x}-${z}`}
+          position={[x * 1.38, 0.24, z * 1.12]}
+          accent={CYAN}
+          secondaryAccent={SAFETY}
+          intensity={intensity}
+          motionEnabled={motionEnabled}
+          height={1.95}
+          withBeam={true}
+        />
       )))}
 
       {/* 中央悬浮超导八面体晶核（Seata 事务与两级缓存协调中枢） */}
@@ -529,6 +665,7 @@ function LitreeAiotZone({ intensity, motionEnabled }: ZoneProps) {
   return (
     <group>
       <ZoneBase intensity={intensity} accent={SIGNAL} motionEnabled={motionEnabled} />
+      <ZoneAtmosphericMotes accent={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={14} />
 
       {/* GIS 空间六边形蜂窝多层网格底盘 */}
       <mesh position={[0, 0.25, 0]} receiveShadow geometry={gisHexPlateGeo}>
@@ -580,7 +717,7 @@ function LitreeAiotZone({ intensity, motionEnabled }: ZoneProps) {
         );
       })}
 
-      {/* AIoT 工业协议网关机柜列（多层 LED 状态面板 + 四周包边霓虹灯条） */}
+      {/* AIoT 工业协议网关机柜列（多层 LED 状态面板 + 四周包边霓虹灯条 + 顶部全息投射） */}
       {[-1.45, 1.45].map((x) => (
         <group key={x} position={[x, 0.24, 0]}>
           <mesh position={[0, 0.95, 0]} castShadow geometry={aiotServerCabinetGeo} material={matTitaniumDark} />
@@ -670,21 +807,26 @@ function LitreeAgentZone({ intensity, motionEnabled }: ZoneProps) {
   return (
     <group>
       <ZoneBase intensity={intensity} accent={PURPLE} motionEnabled={motionEnabled} />
+      <ZoneAtmosphericMotes accent={PURPLE} intensity={intensity} motionEnabled={motionEnabled} count={16} />
 
       {/* 4 座全息投射发射立柱（提供柱体灯效与向上能量投射） */}
       {[-1.35, 1.35].flatMap((px) => [-1.35, 1.35].map((pz) => (
         <group key={`emitter-${px}-${pz}`} position={[px, 0.24, pz]}>
           <mesh position={[0, 0.42, 0]} geometry={agentEmitterPillarGeo} material={matTitaniumDark} />
-          {/* 柱身发光环 */}
+          {/* 柱身双发光环 */}
           <mesh position={[0, 0.65, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={agentEmitterRingGeo}>
             <meshBasicMaterial color={PURPLE} toneMapped={false} />
           </mesh>
           <mesh position={[0, 0.35, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={agentEmitterRingGeo}>
             <meshBasicMaterial color={CYAN} toneMapped={false} />
           </mesh>
+          {/* 柱脚能量光环 */}
+          <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={gisPillarBaseDiscGeo}>
+            <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.7} />
+          </mesh>
           {/* 柱顶向上投射微光锥 */}
           <mesh position={[0, 1.55, 0]} geometry={agentEmitterBeamGeo}>
-            <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.25 + intensity * 0.25} side={THREE.DoubleSide} />
+            <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.3 + intensity * 0.3} side={THREE.DoubleSide} depthWrite={false} />
           </mesh>
         </group>
       )))}
@@ -759,6 +901,7 @@ function LitreeOaZone({ intensity, motionEnabled }: ZoneProps) {
   return (
     <group>
       <ZoneBase intensity={intensity} accent={SIGNAL} motionEnabled={motionEnabled} />
+      <ZoneAtmosphericMotes accent={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={14} />
 
       {/* 四座业务立柱（增加四角导光条与柱脚环） */}
       {[[-1.35, -1.1], [1.35, -1.1], [-1.35, 1.1], [1.35, 1.1]].map(([x, z], idx) => (
@@ -776,6 +919,10 @@ function LitreeOaZone({ intensity, motionEnabled }: ZoneProps) {
           {/* 柱脚发光底盘 */}
           <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={oaPedestalRingGeo}>
             <meshBasicMaterial color={idx % 2 === 0 ? SIGNAL : GOLD} toneMapped={false} transparent opacity={0.8} />
+          </mesh>
+          {/* 柱身发光环 */}
+          <mesh position={[0, 0.55, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={oaPillarMidRingGeo}>
+            <meshBasicMaterial color={idx % 2 === 0 ? SIGNAL : GOLD} toneMapped={false} />
           </mesh>
           <mesh position={[0, 1.25, 0]} geometry={agentFloatingGemGeo}>
             <meshBasicMaterial color={idx % 2 === 0 ? CYAN : GOLD} toneMapped={false} />
@@ -837,6 +984,7 @@ function WelinkSearchZone({ intensity, motionEnabled }: ZoneProps) {
   return (
     <group>
       <ZoneBase intensity={intensity} accent={SAFETY} motionEnabled={motionEnabled} />
+      <ZoneAtmosphericMotes accent={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={16} />
 
       {/* 4联分布式 ES 搜索服务器机柜阵列（带抽屉导轨、指示灯与机柜轮廓灯条） */}
       {[-1.4, -0.48, 0.48, 1.4].map((x, index) => (
@@ -912,6 +1060,7 @@ function WelinkDataLakeZone({ intensity, motionEnabled }: ZoneProps) {
   return (
     <group>
       <ZoneBase intensity={intensity} accent={CYAN} motionEnabled={motionEnabled} />
+      <ZoneAtmosphericMotes accent={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={16} />
 
       {/* 左柱：Flink 实时流式管道反应柱（透明防护管 + 内部双螺旋 + 柱底光晕环 + 顶部高亮环） */}
       <group position={[-1.05, 0.24, 0]}>
@@ -1004,6 +1153,7 @@ function SengeGatewayZone({ intensity, motionEnabled }: ZoneProps) {
   return (
     <group>
       <ZoneBase intensity={intensity} accent={SAFETY} motionEnabled={motionEnabled} />
+      <ZoneAtmosphericMotes accent={SAFETY} intensity={intensity} motionEnabled={motionEnabled} count={16} />
 
       {/* Netty 高并发通信矩阵底座节点（环形 6 节点集群） */}
       {[0, 1, 2, 3, 4, 5].map((idx) => {
@@ -1108,6 +1258,7 @@ function SengePlatformZone({ intensity, motionEnabled }: ZoneProps) {
   return (
     <group>
       <ZoneBase intensity={intensity} accent={SIGNAL} motionEnabled={motionEnabled} />
+      <ZoneAtmosphericMotes accent={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={16} />
 
       {/* 3层阶梯式云原生容器 Pod 集群模块（设备中台 / 告警引擎 / 运维中枢 + 发光边框与机柜底圈） */}
       {[

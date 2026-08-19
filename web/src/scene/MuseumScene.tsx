@@ -134,11 +134,11 @@ function IntegratedCameraController({
   const walkPitch = useRef(0);
 
   // 聚焦环绕状态
-  const orbitRadius = useRef({ current: 5.4, target: 5.4 });
-  const orbitTheta = useRef({ current: 0.2, target: 0.2 });
-  const orbitPhi = useRef({ current: 1.12, target: 1.12 });
-  const orbitCenter = useRef(new THREE.Vector3(0, 1.25, 0));
-  const targetCenter = useRef(new THREE.Vector3(0, 1.25, 0));
+  const orbitRadius = useRef({ current: 7.6, target: 7.6 });
+  const orbitTheta = useRef({ current: 0.25, target: 0.25 });
+  const orbitPhi = useRef({ current: 1.16, target: 1.16 });
+  const orbitCenter = useRef(new THREE.Vector3(0, 1.28, 0));
+  const targetCenter = useRef(new THREE.Vector3(0, 1.28, 0));
   const panOffset = useRef(new THREE.Vector3(0, 0, 0));
   const sideShift = useRef(0);
   const idleTime = useRef(0);
@@ -151,10 +151,10 @@ function IntegratedCameraController({
     if (activeExhibit) {
       const exhibit = EXHIBITS.find((item) => item.id === activeExhibit);
       if (exhibit) {
-        targetCenter.current.set(exhibit.position[0], 1.25, exhibit.position[2]);
+        targetCenter.current.set(exhibit.position[0], 1.28, exhibit.position[2]);
         panOffset.current.set(0, 0, 0);
-        orbitRadius.current.target = 5.0;
-        orbitPhi.current.target = 1.12;
+        orbitRadius.current.target = 7.6;
+        orbitPhi.current.target = 1.16;
 
         if (lastActiveExhibit.current !== activeExhibit) {
           orbitTheta.current.target = 0.25;
@@ -177,7 +177,7 @@ function IntegratedCameraController({
     const zoomIn = () => {
       idleTime.current = 0;
       if (activeExhibit) {
-        orbitRadius.current.target = Math.max(1.6, orbitRadius.current.target - 0.75);
+        orbitRadius.current.target = Math.max(3.2, orbitRadius.current.target - 0.75);
       } else {
         const forward = new THREE.Vector3(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
         camera.position.add(forward.multiplyScalar(1.8));
@@ -187,7 +187,7 @@ function IntegratedCameraController({
     const zoomOut = () => {
       idleTime.current = 0;
       if (activeExhibit) {
-        orbitRadius.current.target = Math.min(16.0, orbitRadius.current.target + 0.75);
+        orbitRadius.current.target = Math.min(18.0, orbitRadius.current.target + 0.75);
       } else {
         const forward = new THREE.Vector3(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
         camera.position.sub(forward.multiplyScalar(1.8));
@@ -197,12 +197,12 @@ function IntegratedCameraController({
     const zoomReset = () => {
       idleTime.current = 0;
       if (activeExhibit) {
-        orbitRadius.current.target = 5.0;
-        orbitPhi.current.target = 1.12;
+        orbitRadius.current.target = 7.6;
+        orbitPhi.current.target = 1.16;
         panOffset.current.set(0, 0, 0);
       } else {
         walkHeight.current = 2.45;
-        camera.position.set(0, 2.45, 14);
+        camera.position.set(0, 2.45, 15);
         walkYaw.current = 0;
         walkPitch.current = 0;
       }
@@ -287,8 +287,8 @@ function IntegratedCameraController({
       if (activeExhibit) {
         orbitRadius.current.target = THREE.MathUtils.clamp(
           orbitRadius.current.target + event.deltaY * 0.005,
-          1.6,
-          16.0
+          3.2,
+          18.0
         );
       } else {
         // 漫游模式下滚轮推进/拉远
@@ -309,8 +309,8 @@ function IntegratedCameraController({
           if (activeExhibit) {
             orbitRadius.current.target = THREE.MathUtils.clamp(
               orbitRadius.current.target - delta * 0.015,
-              1.6,
-              16.0
+              3.2,
+              18.0
             );
           }
         }
@@ -399,8 +399,8 @@ function IntegratedCameraController({
       const fovRad = THREE.MathUtils.degToRad(persCam.fov || 45);
       const halfWidthAtDistance = r * Math.tan(fovRad / 2) * aspect;
 
-      // 抽屉展开时，将模型精准偏置到左侧剩余可用视口的黄金中心（偏置半屏宽度的 46%）
-      const targetRatio = activeExhibit && panelOpen ? 0.46 : 0;
+      // 抽屉展开时，将模型精准偏置到左侧剩余可用视口的黄金中心（偏置半屏宽度的 42%）
+      const targetRatio = activeExhibit && panelOpen ? 0.42 : 0;
       sideShift.current = THREE.MathUtils.lerp(
         sideShift.current,
         targetRatio,
@@ -422,7 +422,7 @@ function IntegratedCameraController({
       camera.position.set(camX + shiftX, camY, camZ + shiftZ);
       camera.lookAt(
         orbitCenter.current.x + shiftX,
-        orbitCenter.current.y + 0.15,
+        orbitCenter.current.y + 0.12,
         orbitCenter.current.z + shiftZ
       );
     } else {
@@ -536,9 +536,9 @@ function FloorSystem() {
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow geometry={floorPlaneGeo} material={floorPlaneMat} />
 
       {/* 2. 中央核心区发光能源圆盘与多层霓虹光环 */}
-      <mesh position={[0, 0.035, -8]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow geometry={floorCenterDiscGeo} material={floorCenterDiscMat} />
-      <mesh position={[0, 0.085, -8]} rotation={[Math.PI / 2, 0, 0]} geometry={floorCenterRingGeo} material={floorCenterRingMat} />
-      <mesh position={[0, 0.09, -8]} rotation={[Math.PI / 2, 0, 0]} geometry={floorInnerRingGeo} material={floorInnerRingMat} />
+      <mesh position={[0, 0.035, -10.5]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow geometry={floorCenterDiscGeo} material={floorCenterDiscMat} />
+      <mesh position={[0, 0.085, -10.5]} rotation={[Math.PI / 2, 0, 0]} geometry={floorCenterRingGeo} material={floorCenterRingMat} />
+      <mesh position={[0, 0.09, -10.5]} rotation={[Math.PI / 2, 0, 0]} geometry={floorInnerRingGeo} material={floorInnerRingMat} />
 
       {/* 3. 中央主走廊钛合金发光轨道 */}
       <mesh position={[0, 0.06, 2]} geometry={mainTrackGeo} material={mainTrackMat} />
