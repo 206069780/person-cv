@@ -27,6 +27,7 @@ Files created by this plan:
 
 ```text
 web/src/scene/scene-types.ts
+web/src/scene/architecture-boundaries.test.ts
 web/src/scene/camera/IntegratedCameraController.tsx
 web/src/scene/environment/FloorSystem.tsx
 web/src/scene/environment/StructuralFrames.tsx
@@ -58,6 +59,7 @@ web/src/styles/loading.css
 web/src/styles/mobile-resume.css
 web/src/styles/resume-modal.css
 web/src/styles/responsive.css
+web/src/styles/structure.test.ts
 ```
 
 Files modified by this plan:
@@ -241,6 +243,7 @@ git commit -m "refactor: define typed scene contracts"
 ### Task 2: Extract Shared Exhibit Effects And Resources
 
 **Files:**
+- Create: `web/src/scene/architecture-boundaries.test.ts`
 - Create: `web/src/scene/exhibits/exhibit-types.ts`
 - Create: `web/src/scene/exhibits/shared/resources.ts`
 - Create: `web/src/scene/exhibits/shared/FlowPulses.tsx`
@@ -254,7 +257,40 @@ git commit -m "refactor: define typed scene contracts"
 - Produces: `IndustrialAssetsProps`, palette/resource exports, `FlowPulses`, `ZoneBase`, `ZoneAtmosphericMotes`, and `CyberIndustrialPillar`.
 - Dependency rule: files in `shared/` never import from `zones/`.
 
-- [ ] **Step 1: Add explicit exhibit component interfaces**
+- [ ] **Step 1: Write and run the failing shared-module boundary test**
+
+Create `web/src/scene/architecture-boundaries.test.ts`:
+
+```ts
+import { existsSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+
+const missingModules = (paths: readonly string[]) => paths.filter(
+  (path) => !existsSync(new URL(path, import.meta.url)),
+);
+
+describe('scene module boundaries', () => {
+  it('keeps shared exhibit effects in focused modules', () => {
+    expect(missingModules([
+      './exhibits/shared/resources.ts',
+      './exhibits/shared/FlowPulses.tsx',
+      './exhibits/shared/ZoneBase.tsx',
+      './exhibits/shared/ZoneAtmosphericMotes.tsx',
+      './exhibits/shared/CyberIndustrialPillar.tsx',
+    ])).toEqual([]);
+  });
+});
+```
+
+Run:
+
+```powershell
+npm test -- --run src/scene/architecture-boundaries.test.ts
+```
+
+Expected: FAIL listing the five missing shared modules.
+
+- [ ] **Step 2: Add explicit exhibit component interfaces**
 
 Create `web/src/scene/exhibits/exhibit-types.ts`:
 
@@ -297,7 +333,7 @@ export interface CyberIndustrialPillarProps extends Partial<MotionProps> {
 }
 ```
 
-- [ ] **Step 2: Move only genuinely shared resources**
+- [ ] **Step 3: Move only genuinely shared resources**
 
 Create `web/src/scene/exhibits/shared/resources.ts`. Export the current values without changing constructor arguments:
 
@@ -356,7 +392,7 @@ matAcrylicPurple
 
 Resources used by one zone only remain in that zone during Task 3.
 
-- [ ] **Step 3: Extract each shared effect with its current body**
+- [ ] **Step 4: Extract each shared effect with its current body**
 
 Move the complete implementations from `IndustrialAssets.tsx` and expose the signatures below. The declarations use TypeScript declaration notation to specify the final API. Keep every `useFrame`, `useMemo`, mesh, geometry, material, opacity, scale, and timing expression unchanged.
 
@@ -369,7 +405,7 @@ export function CyberIndustrialPillar(props: CyberIndustrialPillarProps): React.
 
 Default values remain `count = 3` for `FlowPulses`, `accent = SIGNAL` and `motionEnabled = true` for `ZoneBase`, `count = 12` for `ZoneAtmosphericMotes`, and the current accent, height, beam, and motion defaults for `CyberIndustrialPillar`.
 
-- [ ] **Step 4: Rewire the current monolith to the extracted exports**
+- [ ] **Step 5: Rewire the current monolith to the extracted exports**
 
 Delete the moved declarations from `IndustrialAssets.tsx`, remove now-unused React/Three imports, and import the new modules directly:
 
@@ -393,7 +429,7 @@ type ZoneProps = ExhibitVisualProps & { exhibit: ExhibitLayout };
 
 This temporary `ZoneProps` keeps Task 2 compiling. Task 3 removes `exhibit` from visual components.
 
-- [ ] **Step 5: Verify and commit shared extraction**
+- [ ] **Step 6: Verify and commit shared extraction**
 
 Run:
 
@@ -408,7 +444,7 @@ Expected: all existing tests pass, TypeScript exits `0`, and Vite builds success
 Commit:
 
 ```powershell
-git add web/src/scene/IndustrialAssets.tsx web/src/scene/exhibits web/src/scene/scene-types.ts
+git add web/src/scene/IndustrialAssets.tsx web/src/scene/architecture-boundaries.test.ts web/src/scene/exhibits web/src/scene/scene-types.ts
 git commit -m "refactor: extract shared exhibit effects"
 ```
 
@@ -608,6 +644,7 @@ git commit -m "refactor: split industrial exhibit visuals"
 ### Task 4: Extract Camera And Environment Systems
 
 **Files:**
+- Modify: `web/src/scene/architecture-boundaries.test.ts`
 - Create: `web/src/scene/camera/IntegratedCameraController.tsx`
 - Create: `web/src/scene/environment/FloorSystem.tsx`
 - Create: `web/src/scene/environment/StructuralFrames.tsx`
@@ -619,7 +656,30 @@ git commit -m "refactor: split industrial exhibit visuals"
 - Produces: `IntegratedCameraController`, `FloorSystem`, `StructuralFrames`, and `DataStreams`.
 - Keeps `SceneBoundary` and `SceneContent` in `MuseumScene.tsx` because they define scene composition and fallback ownership.
 
-- [ ] **Step 1: Extract the camera controller unchanged**
+- [ ] **Step 1: Extend and run the failing environment boundary test**
+
+Add this case to `architecture-boundaries.test.ts`:
+
+```ts
+it('keeps camera and environment systems in focused modules', () => {
+  expect(missingModules([
+    './camera/IntegratedCameraController.tsx',
+    './environment/FloorSystem.tsx',
+    './environment/StructuralFrames.tsx',
+    './environment/DataStreams.tsx',
+  ])).toEqual([]);
+});
+```
+
+Run:
+
+```powershell
+npm test -- --run src/scene/architecture-boundaries.test.ts
+```
+
+Expected: FAIL listing the four missing camera/environment modules while the shared-module case passes.
+
+- [ ] **Step 2: Extract the camera controller unchanged**
 
 Move the four reusable camera vectors and the complete current `IntegratedCameraController` body to `camera/IntegratedCameraController.tsx`. Its final exported signature is:
 
@@ -639,7 +699,7 @@ export function IntegratedCameraController(
 
 The implementation keeps `panelOpen = false` during destructuring. The extraction includes `_camFinalTarget`, `_camMovement`, `_camForward`, and `_camRight` at module scope. It preserves all eleven event registrations and their matching removals, plus the existing bounds, camera constants, formulas, effect dependencies, and cleanup calls.
 
-- [ ] **Step 2: Extract each environment visual with its resources**
+- [ ] **Step 3: Extract each environment visual with its resources**
 
 Move each function and the exact module-scope resources it uses:
 
@@ -661,7 +721,7 @@ FloorSystem.tsx: floorPlaneGeo through floorGridMatOrange
 DataStreams.tsx: streamParticleGeo, streamParticleMatFocus, streamParticleMatNormal
 ```
 
-- [ ] **Step 3: Reduce `MuseumScene.tsx` to composition**
+- [ ] **Step 4: Reduce `MuseumScene.tsx` to composition**
 
 Replace local implementations with direct imports:
 
@@ -674,7 +734,7 @@ import { StructuralFrames } from './environment/StructuralFrames';
 
 Retain the current `SceneBoundary`, `SceneContent`, `<Canvas>` settings, lights, fog, child order, `onCreated`, and fallback callback unchanged.
 
-- [ ] **Step 4: Verify the scene composition boundary**
+- [ ] **Step 5: Verify the scene composition boundary**
 
 Run:
 
@@ -690,7 +750,7 @@ Expected: all commands pass and `MuseumScene.tsx` contains no more than 300 phys
 Commit:
 
 ```powershell
-git add web/src/scene/MuseumScene.tsx web/src/scene/camera web/src/scene/environment
+git add web/src/scene/MuseumScene.tsx web/src/scene/architecture-boundaries.test.ts web/src/scene/camera web/src/scene/environment
 git commit -m "refactor: split camera and scene environment"
 ```
 
@@ -699,6 +759,7 @@ git commit -m "refactor: split camera and scene environment"
 ### Task 5: Extract Canvas Texture Generators And Wall Lifecycle
 
 **Files:**
+- Modify: `web/src/scene/architecture-boundaries.test.ts`
 - Create: `web/src/scene/textures/profile-hologram-texture.ts`
 - Create: `web/src/scene/textures/billboard-texture.ts`
 - Create: `web/src/scene/environment/NeonWalls.tsx`
@@ -709,7 +770,29 @@ git commit -m "refactor: split camera and scene environment"
 - Produces: `createProfileHologramCanvas(content, coverImage)`, `createBillboardTexture(options)`, and `NeonWalls`.
 - Preserves: Canvas dimensions, font strings, text, metrics, colors, filters, wall geometry, material settings, and animation timing.
 
-- [ ] **Step 1: Extract the profile Canvas generator with explicit data**
+- [ ] **Step 1: Extend and run the failing texture boundary test**
+
+Add this case to `architecture-boundaries.test.ts`:
+
+```ts
+it('keeps wall rendering and texture generators in focused modules', () => {
+  expect(missingModules([
+    './environment/NeonWalls.tsx',
+    './textures/profile-hologram-texture.ts',
+    './textures/billboard-texture.ts',
+  ])).toEqual([]);
+});
+```
+
+Run:
+
+```powershell
+npm test -- --run src/scene/architecture-boundaries.test.ts
+```
+
+Expected: FAIL listing the three missing wall/texture modules while the first two cases pass.
+
+- [ ] **Step 2: Extract the profile Canvas generator with explicit data**
 
 Create `profile-hologram-texture.ts` by moving lines from the start of `createProfileHologramCanvas` through its `return canvas`. Replace only the three `resumeData.profile` reads with fields from the explicit content argument. Its final interface is:
 
@@ -728,7 +811,7 @@ export function createProfileHologramCanvas(
 
 The texture module must not import `resumeData`.
 
-- [ ] **Step 2: Extract the billboard generator with one options object**
+- [ ] **Step 3: Extract the billboard generator with one options object**
 
 Create `billboard-texture.ts` by moving the full `createBillboardTexture` function and replacing its four positional arguments with this options interface:
 
@@ -752,7 +835,7 @@ export function createBillboardTexture({
 
 The implementation uses `subtitle` where the source function uses `sub`; every Canvas size, coordinate, font, color, filter, and draw call remains unchanged.
 
-- [ ] **Step 3: Move wall rendering and make texture ownership explicit**
+- [ ] **Step 4: Move wall rendering and make texture ownership explicit**
 
 Move the existing geometry pool, refs, `useFrame`, and JSX to `environment/NeonWalls.tsx`. Keep `resumeData` in this rendering adapter and call:
 
@@ -778,7 +861,7 @@ useEffect(() => {
 
 For the profile texture effect, retain the currently assigned texture in a local variable, dispose the previous texture before replacement, null `img.onload` and `img.onerror` during cleanup, and dispose the final texture on unmount.
 
-- [ ] **Step 4: Point scene composition to the replacement module**
+- [ ] **Step 5: Point scene composition to the replacement module**
 
 Update `MuseumScene.tsx`:
 
@@ -788,7 +871,7 @@ import { NeonWalls } from './environment/NeonWalls';
 
 Delete the old `web/src/scene/NeonWalls.tsx` only after type checking passes.
 
-- [ ] **Step 5: Verify texture extraction and build**
+- [ ] **Step 6: Verify texture extraction and build**
 
 Run:
 
@@ -803,7 +886,7 @@ Expected: all commands pass with no new TypeScript or Vite warnings.
 Commit:
 
 ```powershell
-git add web/src/scene/MuseumScene.tsx web/src/scene/environment/NeonWalls.tsx web/src/scene/textures web/src/scene/NeonWalls.tsx
+git add web/src/scene/MuseumScene.tsx web/src/scene/architecture-boundaries.test.ts web/src/scene/environment/NeonWalls.tsx web/src/scene/textures web/src/scene/NeonWalls.tsx
 git commit -m "refactor: isolate scene texture generation"
 ```
 
@@ -812,6 +895,7 @@ git commit -m "refactor: isolate scene texture generation"
 ### Task 6: Split The Stylesheet Without Changing Cascade Order
 
 **Files:**
+- Create: `web/src/styles/structure.test.ts`
 - Create: `web/src/styles/base.css`
 - Create: `web/src/styles/museum.css`
 - Create: `web/src/styles/panels.css`
@@ -825,7 +909,47 @@ git commit -m "refactor: isolate scene texture generation"
 - Preserves: `main.tsx` importing only `./styles.css`.
 - Produces: a seven-import CSS manifest whose concatenated rule order matches the current 2,721-line file.
 
-- [ ] **Step 1: Capture the exact pre-split stylesheet**
+- [ ] **Step 1: Write and run the failing stylesheet boundary test**
+
+Create `web/src/styles/structure.test.ts`:
+
+```ts
+import { existsSync, readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+
+const imports = [
+  "@import './styles/base.css';",
+  "@import './styles/museum.css';",
+  "@import './styles/panels.css';",
+  "@import './styles/loading.css';",
+  "@import './styles/mobile-resume.css';",
+  "@import './styles/resume-modal.css';",
+  "@import './styles/responsive.css';",
+];
+
+describe('stylesheet boundaries', () => {
+  it('keeps the stylesheet entry point as an ordered feature manifest', () => {
+    const entry = new URL('../styles.css', import.meta.url);
+    const filesExist = imports.every((line) => {
+      const path = line.match(/'(.+)'/)?.[1];
+      return path ? existsSync(new URL(`../${path}`, import.meta.url)) : false;
+    });
+
+    expect(readFileSync(entry, 'utf8').trim().split(/\r?\n/)).toEqual(imports);
+    expect(filesExist).toBe(true);
+  });
+});
+```
+
+Run:
+
+```powershell
+npm test -- --run src/styles/structure.test.ts
+```
+
+Expected: FAIL because `styles.css` still contains the monolithic rules and the seven target files do not exist.
+
+- [ ] **Step 2: Capture the exact pre-split stylesheet**
 
 Before editing, record its line count and hash:
 
@@ -836,7 +960,7 @@ Before editing, record its line count and hash:
 
 Expected line count: `2721`. Keep the hash in the task notes for audit only; split files naturally have a different hash.
 
-- [ ] **Step 2: Move contiguous source sections in order**
+- [ ] **Step 3: Move contiguous source sections in order**
 
 Move complete rules, never partial rule blocks, using these current anchors:
 
@@ -852,7 +976,7 @@ responsive.css:       @media (max-width:1180px) through the final prefers-reduce
 
 After moving, verify no selector, declaration, or keyframe exists in two files.
 
-- [ ] **Step 3: Replace `styles.css` with the ordered manifest**
+- [ ] **Step 4: Replace `styles.css` with the ordered manifest**
 
 The entire file becomes:
 
@@ -866,7 +990,7 @@ The entire file becomes:
 @import './styles/responsive.css';
 ```
 
-- [ ] **Step 4: Check structural invariants**
+- [ ] **Step 5: Check structural invariants**
 
 Run from `web/`:
 
@@ -880,7 +1004,7 @@ npm run build
 
 Expected: one `:root`, every previous keyframe and media query appears once, TypeScript exits `0`, and the production CSS build succeeds.
 
-- [ ] **Step 5: Commit the CSS split**
+- [ ] **Step 6: Commit the CSS split**
 
 ```powershell
 git add web/src/styles.css web/src/styles
@@ -909,7 +1033,7 @@ npm run check
 npm run build
 ```
 
-Expected: 6 test files and 25 tests pass after the two new tests, TypeScript exits `0`, and Vite builds successfully. If Vitest reports a different total because a test file groups cases differently, require every discovered test to pass and record the actual total.
+Expected: 8 test files and 29 tests pass after the six new characterization cases, TypeScript exits `0`, and Vite builds successfully. If Vitest reports a different total because a test file groups cases differently, require every discovered test to pass and record the actual total.
 
 - [ ] **Step 2: Verify file-size acceptance criteria**
 
