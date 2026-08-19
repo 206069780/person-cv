@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -94,5 +95,19 @@ describe('mobile scroll effects', () => {
     const html = renderToStaticMarkup(createElement(ScrollProgress, { markers: 5 }));
 
     expect(html.match(/scroll-progress__node/g)).toHaveLength(5);
+  });
+
+  it('keeps the mobile resume on the document scroller', () => {
+    const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
+    const match = css.match(/\.fallback-shell\s*\{([^}]+)\}/);
+
+    expect(match).not.toBeNull();
+    const rule = match![1];
+
+    // overflow-x:hidden 会把 overflow-y 计算成 auto，形成一个没有可滚距离的内部滚动容器；
+    // 再叠加 overscroll-behavior:none，触摸手势被截住且无法冒泡到文档，页面彻底锁死。
+    expect(rule).not.toMatch(/overflow-x\s*:\s*hidden/);
+    expect(rule).not.toMatch(/overscroll-behavior/);
+    expect(rule).not.toMatch(/-webkit-overflow-scrolling/);
   });
 });

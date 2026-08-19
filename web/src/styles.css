@@ -16,7 +16,11 @@
 
 * { box-sizing: border-box; }
 
-html { min-width: 320px; background: var(--museum-bg); }
+html {
+  min-width: 320px;
+  background: var(--museum-bg);
+  overflow-x: hidden;
+}
 
 body {
   margin: 0;
@@ -1210,10 +1214,6 @@ a:focus-visible {
   min-height: 100vh;
   background-color: #070b0d;
   color: var(--museum-text);
-  overflow-x: hidden;
-  overscroll-behavior: none;
-  overscroll-behavior-y: none;
-  -webkit-overflow-scrolling: touch;
 }
 
 .fallback-shell::before {
