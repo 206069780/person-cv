@@ -2,55 +2,42 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+import { CyberIndustrialPillar } from './exhibits/shared/CyberIndustrialPillar';
+import { FlowPulses } from './exhibits/shared/FlowPulses';
+import {
+  COLOR_STEEL_DARK,
+  COLOR_STEEL_LIGHT,
+  COLOR_STEEL_MID,
+  CYAN,
+  EMERALD,
+  GOLD,
+  matAcrylicCyan,
+  matAcrylicOrange,
+  matAcrylicPurple,
+  matChromeBright,
+  matGoldAlloy,
+  matSteelLight,
+  matSteelMid,
+  matTitaniumDark,
+  PURPLE,
+  SAFETY,
+  SIGNAL,
+} from './exhibits/shared/resources';
+import { ZoneAtmosphericMotes } from './exhibits/shared/ZoneAtmosphericMotes';
+import { ZoneBase } from './exhibits/shared/ZoneBase';
+import type { IndustrialAssetsProps } from './exhibits/exhibit-types';
 import { EXHIBITS, ExhibitLayout, getZoneFocus } from './scene-layout';
-
-// 调色盘与高级材质配色
-const SIGNAL = '#00a89d';
-const CYAN = '#28d7e5';
-const SAFETY = '#ff6b3d';
-const PURPLE = '#c084fc';
-const GOLD = '#f5a623';
-const EMERALD = '#34d399';
-
-// 精密工业金属色彩定义（优化暗部自发光与金属层次）
-const COLOR_STEEL_DARK = '#0e1b22';
-const COLOR_STEEL_MID = '#162832';
-const COLOR_STEEL_LIGHT = '#2b4452';
-const COLOR_STEEL_CHROME = '#7e9cb0';
-const COLOR_GOLD_ALLOY = '#d4941e';
+import type { ExhibitVisualProps } from './scene-types';
 
 // ==========================================
 // 1. 全局静态共享几何体池（零 GC 静态复用）
 // ==========================================
 
 // 通用重型基座
-const baseOctagonGeo = new THREE.CylinderGeometry(2.45, 2.75, 0.22, 8);
-const baseTopPlateGeo = new THREE.CylinderGeometry(2.25, 2.25, 0.06, 8);
-const baseRingInnerGeo = new THREE.RingGeometry(1.65, 1.88, 32);
-const baseRingOuterGeo = new THREE.RingGeometry(2.0, 2.22, 8);
-const baseGearTorusGeo = new THREE.TorusGeometry(2.38, 0.026, 6, 64);
-const baseAuraHaloGeo = new THREE.RingGeometry(2.55, 2.82, 48);
-const baseCornerBlockGeo = new THREE.BoxGeometry(0.32, 0.24, 0.32);
-const baseCornerBoltGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.06, 6);
-const baseVentGeo = new THREE.BoxGeometry(0.65, 0.045, 0.14);
-const pulseSphereGeo = new THREE.SphereGeometry(0.065, 8, 8);
-const baseUplightConeGeo = new THREE.ConeGeometry(0.16, 0.85, 12, 1, true);
-const baseUndercarriageRingGeo = new THREE.RingGeometry(2.65, 2.78, 8);
-const ambientMoteGeo = new THREE.SphereGeometry(0.032, 6, 6);
 
 // 通用全息高能立柱光效几何体 (Cyber Pillar Optics)
-const pillarScanRingGeo = new THREE.TorusGeometry(0.24, 0.022, 6, 28);
-const pillarApexFlareGeo = new THREE.RingGeometry(0.06, 0.3, 20);
-const pillarApexBeamGeo = new THREE.ConeGeometry(0.26, 2.0, 16, 1, true);
-const energyWellSocketGeo = new THREE.RingGeometry(0.26, 0.44, 24);
-const energySocketInnerDiscGeo = new THREE.CircleGeometry(0.25, 16);
 
 // 01 - Litree Overview (微服务与数据底座)
-const corePillarMainGeo = new THREE.BoxGeometry(0.38, 1.95, 0.38);
-const corePillarFinGeo = new THREE.BoxGeometry(0.46, 0.04, 0.46);
-const corePillarSpireGeo = new THREE.ConeGeometry(0.1, 0.32, 4);
-const corePillarSideNeonGeo = new THREE.BoxGeometry(0.035, 1.88, 0.035);
-const corePillarFinSlotNeonGeo = new THREE.BoxGeometry(0.48, 0.018, 0.48);
 const corePillarBaseRingGeo = new THREE.RingGeometry(0.24, 0.34, 16);
 const corePillarTopHaloGeo = new THREE.TorusGeometry(0.18, 0.016, 6, 24);
 const coreOctaOuterGeo = new THREE.OctahedronGeometry(0.72, 0);
@@ -162,379 +149,7 @@ const platformDualRing1Geo = new THREE.TorusGeometry(1.65, 0.032, 8, 56);
 const platformDualRing2Geo = new THREE.TorusGeometry(1.42, 0.026, 8, 48);
 const platformTelemetryScreenGeo = new THREE.PlaneGeometry(0.68, 0.44);
 
-// ==========================================
-// 2. 静态 PBR 材质池（零 GC 静态复用）
-// ==========================================
-const matTitaniumDark = new THREE.MeshStandardMaterial({
-  color: COLOR_STEEL_DARK,
-  metalness: 0.92,
-  roughness: 0.2,
-  emissive: new THREE.Color('#0a242f'),
-  emissiveIntensity: 0.3,
-});
-
-const matSteelMid = new THREE.MeshStandardMaterial({
-  color: COLOR_STEEL_MID,
-  metalness: 0.9,
-  roughness: 0.22,
-  emissive: new THREE.Color('#0c202a'),
-  emissiveIntensity: 0.25,
-});
-
-const matSteelLight = new THREE.MeshStandardMaterial({
-  color: COLOR_STEEL_LIGHT,
-  metalness: 0.88,
-  roughness: 0.22,
-  emissive: new THREE.Color('#102d3a'),
-  emissiveIntensity: 0.2,
-});
-
-const matChromeBright = new THREE.MeshStandardMaterial({
-  color: COLOR_STEEL_CHROME,
-  metalness: 0.98,
-  roughness: 0.06,
-  emissive: new THREE.Color('#1b3a4a'),
-  emissiveIntensity: 0.2,
-});
-
-const matGoldAlloy = new THREE.MeshStandardMaterial({
-  color: COLOR_GOLD_ALLOY,
-  metalness: 0.94,
-  roughness: 0.12,
-  emissive: new THREE.Color(GOLD),
-  emissiveIntensity: 0.45,
-});
-
-const matAcrylicCyan = new THREE.MeshStandardMaterial({
-  color: '#0a232b',
-  metalness: 0.9,
-  roughness: 0.08,
-  transparent: true,
-  opacity: 0.62,
-  emissive: new THREE.Color(CYAN),
-  emissiveIntensity: 0.25,
-});
-
-const matAcrylicOrange = new THREE.MeshStandardMaterial({
-  color: '#28130a',
-  metalness: 0.9,
-  roughness: 0.08,
-  transparent: true,
-  opacity: 0.62,
-  emissive: new THREE.Color(SAFETY),
-  emissiveIntensity: 0.25,
-});
-
-const matAcrylicPurple = new THREE.MeshStandardMaterial({
-  color: '#210e2d',
-  metalness: 0.9,
-  roughness: 0.08,
-  transparent: true,
-  opacity: 0.62,
-  emissive: new THREE.Color(PURPLE),
-  emissiveIntensity: 0.25,
-});
-
-interface ZoneProps {
-  exhibit: ExhibitLayout;
-  intensity: number;
-  motionEnabled: boolean;
-}
-
-// 动态脉冲能量流
-function FlowPulses({
-  start,
-  end,
-  color,
-  intensity,
-  motionEnabled,
-  count = 3,
-}: {
-  start: readonly [number, number, number];
-  end: readonly [number, number, number];
-  color: string;
-  intensity: number;
-  motionEnabled: boolean;
-  count?: number;
-}) {
-  const ref = useRef<THREE.InstancedMesh>(null);
-  const helper = useMemo(() => new THREE.Object3D(), []);
-  const progress = useRef(Array.from({ length: count }, (_, index) => index / count));
-  const material = useMemo(
-    () => new THREE.MeshBasicMaterial({ color, toneMapped: false, transparent: true, opacity: 0.35 + intensity * 0.55 }),
-    [color, intensity]
-  );
-
-  useFrame((_, delta) => {
-    if (!ref.current || !motionEnabled || intensity < 0.25) return;
-    progress.current.forEach((value, index) => {
-      const next = (value + delta * (0.2 + index * 0.015)) % 1;
-      progress.current[index] = next;
-      helper.position.set(
-        THREE.MathUtils.lerp(start[0], end[0], next),
-        THREE.MathUtils.lerp(start[1], end[1], next),
-        THREE.MathUtils.lerp(start[2], end[2], next),
-      );
-      helper.scale.setScalar(index % 2 === 0 ? 1.1 : 0.8);
-      helper.updateMatrix();
-      ref.current?.setMatrixAt(index, helper.matrix);
-    });
-    ref.current.instanceMatrix.needsUpdate = true;
-  });
-
-  return (
-    <instancedMesh ref={ref} args={[pulseSphereGeo, material, count]} />
-  );
-}
-
-// ==========================================
-// 升级版重工业高精度多层展台基座与动态全息投影圈
-// ==========================================
-function ZoneBase({ intensity, accent = SIGNAL, motionEnabled = true }: { intensity: number; accent?: string; motionEnabled?: boolean }) {
-  const gearRingRef = useRef<THREE.Mesh>(null);
-  const haloRef = useRef<THREE.Mesh>(null);
-
-  useFrame(({ clock }, delta) => {
-    if (gearRingRef.current && motionEnabled) {
-      gearRingRef.current.rotation.z += delta * 0.22 * (intensity > 1 ? 1.6 : 1);
-    }
-    if (haloRef.current && motionEnabled && intensity > 1) {
-      haloRef.current.rotation.z -= delta * 0.35;
-      const mat = haloRef.current.material as THREE.MeshBasicMaterial;
-      if (mat) {
-        mat.opacity = 0.4 + Math.sin(clock.elapsedTime * 3.5) * 0.25;
-      }
-    }
-  });
-
-  return (
-    <group>
-      {/* 1. 八角重型合金主基台 */}
-      <mesh position={[0, 0.11, 0]} receiveShadow geometry={baseOctagonGeo}>
-        <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.96} roughness={0.16} emissive={accent} emissiveIntensity={0.18 * intensity} />
-      </mesh>
-
-      {/* 2. 顶部钛合金防滑精密切削台面 */}
-      <mesh position={[0, 0.22, 0]} receiveShadow geometry={baseTopPlateGeo}>
-        <meshStandardMaterial color={COLOR_STEEL_MID} metalness={0.94} roughness={0.18} />
-      </mesh>
-
-      {/* 3. 内嵌双发光刻度环 */}
-      <mesh position={[0, 0.255, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={baseRingInnerGeo}>
-        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.42 + intensity * 0.48} />
-      </mesh>
-      <mesh position={[0, 0.26, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={baseRingOuterGeo}>
-        <meshBasicMaterial color={accent} wireframe toneMapped={false} transparent opacity={0.25 + intensity * 0.35} />
-      </mesh>
-
-      {/* 4. 缓慢旋转外圈刻度齿轮环 */}
-      <mesh ref={gearRingRef} position={[0, 0.265, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={baseGearTorusGeo}>
-        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.5 + intensity * 0.45} />
-      </mesh>
-
-      {/* 5. 展台底部下沉式全息氛围环 */}
-      <mesh position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={baseUndercarriageRingGeo}>
-        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.35 + intensity * 0.45} />
-      </mesh>
-
-      {/* 6. 选中时的地面高科技全息能量投影光晕 */}
-      {intensity > 1 && (
-        <mesh ref={haloRef} position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={baseAuraHaloGeo}>
-          <meshBasicMaterial color={accent} wireframe toneMapped={false} transparent opacity={0.55} />
-        </mesh>
-      )}
-
-      {/* 7. 四角减震定位角标与高亮镀铬螺栓 + 向上发光打光锥 */}
-      {[-1.85, 1.85].flatMap((x) => [-1.85, 1.85].map((z) => (
-        <group key={`${x}-${z}`} position={[x * 0.8, 0.23, z * 0.8]}>
-          <mesh geometry={baseCornerBlockGeo}>
-            <meshStandardMaterial color={COLOR_STEEL_LIGHT} metalness={0.94} roughness={0.15} emissive={accent} emissiveIntensity={0.45 * intensity} />
-          </mesh>
-          <mesh position={[0, 0.14, 0]} geometry={baseCornerBoltGeo} material={matChromeBright} />
-          {/* 四角向上柔和微光锥（自下而上为展台立柱提供立体打光） */}
-          <mesh position={[0, 0.45, 0]} geometry={baseUplightConeGeo}>
-            <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.25 + intensity * 0.35} side={THREE.DoubleSide} />
-          </mesh>
-        </group>
-      )))}
-
-      {/* 8. 四边发光散热格栅条 */}
-      {[
-        [0, 0.16, 2.35, 0],
-        [0, 0.16, -2.35, 0],
-        [2.35, 0.16, 0, Math.PI / 2],
-        [-2.35, 0.16, 0, Math.PI / 2],
-      ].map(([x, y, z, rot], idx) => (
-        <mesh key={idx} position={[x, y, z]} rotation={[0, rot, 0]} geometry={baseVentGeo}>
-          <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.6 + intensity * 0.38} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-// ==========================================
-// 展区空间环境全息悬浮数据光子微粒 (Zone Atmospheric Quantum Sparks)
-// ==========================================
-function ZoneAtmosphericMotes({
-  accent = CYAN,
-  intensity,
-  motionEnabled = true,
-  count = 14,
-}: {
-  accent?: string;
-  intensity: number;
-  motionEnabled?: boolean;
-  count?: number;
-}) {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const helper = useMemo(() => new THREE.Object3D(), []);
-  const motes = useMemo(() => Array.from({ length: count }, (_, i) => ({
-    angle: (i / count) * Math.PI * 2,
-    radius: 0.95 + (i % 4) * 0.38,
-    baseY: 0.7 + (i % 5) * 0.35,
-    speedY: 0.7 + (i % 3) * 0.3,
-    speedRot: (i % 2 === 0 ? 1 : -1) * (0.35 + (i % 4) * 0.12),
-    phase: i * 1.4,
-  })), [count]);
-
-  const moteMat = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: accent, toneMapped: false, transparent: true, opacity: 0.7 }),
-    [accent]
-  );
-
-  useFrame(({ clock }) => {
-    if (!meshRef.current || !motionEnabled) return;
-    const t = clock.elapsedTime;
-    motes.forEach((mote, i) => {
-      const curAngle = mote.angle + t * mote.speedRot;
-      const x = Math.cos(curAngle) * mote.radius;
-      const z = Math.sin(curAngle) * mote.radius;
-      const y = mote.baseY + Math.sin(t * mote.speedY + mote.phase) * 0.28;
-      const scale = 0.65 + Math.sin(t * 2.2 + mote.phase) * 0.35;
-      helper.position.set(x, y, z);
-      helper.scale.setScalar(scale * (intensity > 1 ? 1.45 : 1));
-      helper.updateMatrix();
-      meshRef.current?.setMatrixAt(i, helper.matrix);
-    });
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  });
-
-  return <instancedMesh ref={meshRef} args={[ambientMoteGeo, moteMat, count]} />;
-}
-
-// ==========================================
-// 高精重工业全息高能立柱 (Cyber Dual-Core Holo Pillar)
-// ==========================================
-function CyberIndustrialPillar({
-  position,
-  accent = CYAN,
-  secondaryAccent = SAFETY,
-  intensity,
-  motionEnabled = true,
-  height = 1.95,
-  withBeam = true,
-}: {
-  position: [number, number, number];
-  accent?: string;
-  secondaryAccent?: string;
-  intensity: number;
-  motionEnabled?: boolean;
-  height?: number;
-  withBeam?: boolean;
-}) {
-  const scanRingRef = useRef<THREE.Mesh>(null);
-  const flareRef = useRef<THREE.Mesh>(null);
-  const beamMatRef = useRef<THREE.MeshBasicMaterial>(null);
-
-  useFrame(({ clock }) => {
-    if (!motionEnabled) return;
-    const t = clock.elapsedTime;
-    if (scanRingRef.current) {
-      // 沿立柱上下往复穿梭的能量扫描光环
-      scanRingRef.current.position.y = 0.35 + (0.5 + 0.5 * Math.sin(t * 2.8 + position[0] * 2.5 + position[2])) * (height - 0.65);
-      scanRingRef.current.rotation.z += 0.035;
-    }
-    if (flareRef.current) {
-      flareRef.current.rotation.z -= 0.025;
-    }
-    if (beamMatRef.current) {
-      beamMatRef.current.opacity = 0.22 + (0.5 + 0.5 * Math.sin(t * 3.2 + position[0])) * 0.22 * (intensity > 1 ? 1.6 : 1);
-    }
-  });
-
-  return (
-    <group position={position}>
-      {/* 1. 黑色深钛金重型立柱主体（带高光金属层次） */}
-      <mesh position={[0, height / 2, 0]} castShadow geometry={corePillarMainGeo} material={matTitaniumDark} />
-
-      {/* 2. 散热鳍片 (Cooling Fins) */}
-      {[0.32, 0.75, 1.18, 1.6].map((y, fIdx) => (
-        <group key={fIdx} position={[0, y, 0]}>
-          <mesh geometry={corePillarFinGeo} material={matSteelLight} />
-          {/* 散热片缝隙微型呼吸霓虹光片 */}
-          <mesh geometry={corePillarFinSlotNeonGeo}>
-            <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.65 + intensity * 0.3} />
-          </mesh>
-        </group>
-      ))}
-
-      {/* 3. 4 面嵌入式全方位高亮激光总线 */}
-      {[
-        [0, height / 2, 0.194, 0],
-        [0, height / 2, -0.194, 0],
-        [0.194, height / 2, 0, Math.PI / 2],
-        [-0.194, height / 2, 0, Math.PI / 2],
-      ].map(([lx, ly, lz, rot], lIdx) => (
-        <mesh key={lIdx} position={[lx, ly, lz]} rotation={[0, rot, 0]}>
-          <boxGeometry args={[0.065, height - 0.1, 0.015]} />
-          <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.88 + intensity * 0.12} />
-        </mesh>
-      ))}
-
-      {/* 4. 4 角高亮棱角导光条 */}
-      {[-0.19, 0.19].flatMap((ex) => [-0.19, 0.19].map((ez) => (
-        <mesh key={`edge-${ex}-${ez}`} position={[ex, height / 2, ez]} geometry={corePillarSideNeonGeo}>
-          <meshBasicMaterial color={secondaryAccent} toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
-        </mesh>
-      )))}
-
-      {/* 5. 动态上下扫描能量环 (Vertical Scanner Ring) */}
-      <mesh ref={scanRingRef} position={[0, height / 2, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={pillarScanRingGeo}>
-        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.88 + intensity * 0.12} />
-      </mesh>
-
-      {/* 6. 柱脚地表聚能井 (Ground Energy Socket) */}
-      <mesh position={[0, 0.018, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={energyWellSocketGeo}>
-        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
-      </mesh>
-      <mesh position={[0, 0.022, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={energySocketInnerDiscGeo}>
-        <meshBasicMaterial color="#ffffff" toneMapped={false} transparent opacity={0.35 + intensity * 0.3} />
-      </mesh>
-
-      {/* 7. 柱顶尖塔与全息聚能透镜 */}
-      <mesh position={[0, height + 0.12, 0]} geometry={corePillarSpireGeo} material={matChromeBright} />
-      <mesh ref={flareRef} position={[0, height + 0.02, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={pillarApexFlareGeo}>
-        <meshBasicMaterial color={accent} toneMapped={false} transparent opacity={0.85} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* 8. 柱顶向上投射的柔和体积光锥 (Apex Volumetric Beam) */}
-      {withBeam && (
-        <mesh position={[0, height + 0.95, 0]} geometry={pillarApexBeamGeo}>
-          <meshBasicMaterial
-            ref={beamMatRef}
-            color={accent}
-            toneMapped={false}
-            transparent
-            opacity={0.25 + intensity * 0.3}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-          />
-        </mesh>
-      )}
-    </group>
-  );
-}
+type ZoneProps = ExhibitVisualProps & { exhibit: ExhibitLayout };
 
 // ==========================================
 // 1. Litree 架构底座与微服务治理 (Core Zone)
@@ -1344,11 +959,7 @@ export function IndustrialAssets({
   activeExhibit,
   motionEnabled,
   onSelectExhibit,
-}: {
-  activeExhibit: string | null;
-  motionEnabled: boolean;
-  onSelectExhibit?: (id: string) => void;
-}) {
+}: IndustrialAssetsProps) {
   return (
     <>
       {EXHIBITS.map((exhibit) => {
