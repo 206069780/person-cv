@@ -109,9 +109,23 @@ export function MuseumHud({
         <div className="museum-hud__3d-hint" aria-live="polite">
           <span className="live-dot" />
           <div className="museum-hud__3d-hint-text">
-            <strong>MODEL [{activeModel.order}] {active.label}</strong>
-            <span className="hint-entity">代表：{activeModel.entityName}</span>
-            <span className="hint-action">左键 360° 旋转 · 滚轮或 [+/-] 缩放视野 · ESC 复位</span>
+            <div className="hint-header">
+              <strong>MODEL [{activeModel.order}] {active.label}</strong>
+              <span className="hint-tag">{activeModel.shortLabel}</span>
+            </div>
+            <div className="hint-entity">
+              <span className="hint-label">代表实际架构：</span>
+              <span className="hint-name">{activeModel.entityName}</span>
+            </div>
+            <div className="hint-components">
+              {activeModel.components.slice(0, 3).map((comp) => (
+                <div key={comp.name} className="hint-comp-item">
+                  <span className="comp-tag">{comp.name}</span>
+                  <span className="comp-text">{comp.metaphor}</span>
+                </div>
+              ))}
+            </div>
+            <span className="hint-action">左键 360° 空间旋转 · 滚轮或 [+/-] 缩放视野 · 右侧查看案例详情</span>
           </div>
         </div>
       ) : (

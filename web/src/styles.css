@@ -245,16 +245,16 @@ a:focus-visible {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 10px 16px;
-  max-width: 480px;
-  border-radius: 4px;
+  padding: 14px 18px;
+  max-width: 520px;
+  border-radius: 5px;
   border: 1px solid rgba(40, 215, 229, 0.45);
-  background: rgba(7, 16, 21, 0.92);
-  backdrop-filter: blur(10px);
+  background: rgba(7, 16, 21, 0.94);
+  backdrop-filter: blur(12px);
   color: var(--museum-text);
   font-family: "IBM Plex Mono", Consolas, monospace;
   font-size: 11px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 0 16px rgba(40, 215, 229, 0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), inset 0 0 20px rgba(40, 215, 229, 0.08);
   animation: hud-hint-fade 280ms ease-out;
   pointer-events: none;
 }
@@ -262,34 +262,100 @@ a:focus-visible {
 .museum-hud__3d-hint-text {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 8px;
+}
+
+.hint-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .museum-hud__3d-hint-text strong {
   color: var(--museum-cyan);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
-.museum-hud__3d-hint-text .hint-entity {
-  color: #e2eff5;
-  font-size: 12px;
+.hint-tag {
+  padding: 2px 7px;
+  border-radius: 2px;
+  background: rgba(255, 107, 61, 0.15);
+  border: 1px solid var(--museum-safety);
+  color: var(--museum-safety);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.hint-entity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid var(--museum-cyan);
+  border-radius: 2px;
+}
+
+.hint-label {
+  color: var(--museum-cyan);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.hint-name {
+  color: #ffffff;
+  font-size: 13px;
   font-family: "Noto Sans SC", "PingFang SC", sans-serif;
   font-weight: 600;
+  line-height: 1.45;
+}
+
+.hint-components {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hint-comp-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
   line-height: 1.4;
+}
+
+.hint-comp-item .comp-tag {
+  flex-shrink: 0;
+  padding: 1px 5px;
+  background: rgba(40, 215, 229, 0.1);
+  border: 1px solid rgba(40, 215, 229, 0.25);
+  color: var(--museum-cyan);
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.hint-comp-item .comp-text {
+  color: #b0c4ce;
+  font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+  font-size: 11.5px;
 }
 
 .museum-hud__3d-hint-text .hint-action {
   color: var(--museum-muted);
   font-size: 10px;
   margin-top: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 6px;
 }
 
 .museum-hud__zoom-controls {
   position: absolute;
   left: 34px;
-  bottom: 195px;
+  bottom: 255px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -822,6 +888,9 @@ a:focus-visible {
   background: rgba(7, 16, 21, 0.97);
   box-shadow: -26px 0 70px rgba(0, 0, 0, 0.38);
   animation: panel-enter 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  isolation: isolate;
 }
 
 .exhibit-panel__rail {
@@ -868,6 +937,11 @@ a:focus-visible {
   overflow-y: auto;
   padding: 6px 32px 46px 36px;
   scrollbar-color: var(--museum-steel) transparent;
+  transform: translate3d(0, 0, 0);
+  will-change: scroll-position;
+  contain: content;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .exhibit-panel__body section {
@@ -1172,16 +1246,25 @@ a:focus-visible {
 }
 
 .fallback-shell {
+  position: relative;
   min-height: 100dvh;
   background-color: #070b0d;
+  color: var(--museum-text);
+  overflow-x: hidden;
+}
+
+.fallback-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
   background-image:
     linear-gradient(rgba(40, 215, 229, 0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(40, 215, 229, 0.025) 1px, transparent 1px);
-  background-position:
-    0 var(--mobile-grid-offset, 0),
-    var(--mobile-grid-offset, 0) 0;
   background-size: 32px 32px;
-  color: var(--museum-text);
+  pointer-events: none;
+  content: "";
+  transform: translate3d(0, var(--mobile-grid-offset, 0), 0);
+  will-change: transform;
 }
 
 .mobile-notice {
@@ -1474,7 +1557,7 @@ a:focus-visible {
   border-bottom: 1px solid var(--museum-line);
   opacity: var(--mobile-hero-opacity, 1);
   transform: translateY(var(--mobile-hero-offset, 0));
-  transition: opacity 120ms linear, transform 120ms linear;
+  will-change: transform, opacity;
 }
 
 .mobile-resume__continuation {
@@ -1597,6 +1680,7 @@ a:focus-visible {
   position: relative;
   padding: 28px 0;
   border-bottom: 1px solid var(--museum-line);
+  contain: layout style;
 }
 
 .experience-list {
@@ -1849,6 +1933,10 @@ a:focus-visible {
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-left: 3px solid var(--museum-cyan);
+  contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 90px;
+  transform: translateZ(0);
 }
 
 .strength-card:nth-child(4) {
@@ -1900,14 +1988,17 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(4, 8, 11, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(5, 11, 16, 0.94);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   pointer-events: auto;
-  animation: modal-fade-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: modal-fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform: translateZ(0);
+  will-change: opacity;
 }
 
 @keyframes modal-fade-in {
-  from { opacity: 0; transform: scale(0.98); }
+  from { opacity: 0; transform: scale(0.985); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -1921,10 +2012,13 @@ a:focus-visible {
   flex-direction: column;
   background: #091217;
   border: 1px solid rgba(40, 215, 229, 0.28);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
   border-radius: 6px;
   overflow: hidden;
   pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  isolation: isolate;
 }
 
 .resume-overview-card__header {
@@ -1935,7 +2029,8 @@ a:focus-visible {
   gap: 16px;
   padding: 24px 28px 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(14, 25, 33, 0.85);
+  background: rgba(14, 25, 33, 0.95);
+  transform: translateZ(0);
 }
 
 .resume-overview-card__header h2 {
@@ -1962,13 +2057,18 @@ a:focus-visible {
   min-height: 0;
   padding: 24px 28px;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
   gap: 24px;
   scrollbar-width: thin;
   scrollbar-color: var(--museum-steel) transparent;
+  transform: translate3d(0, 0, 0);
+  will-change: scroll-position;
+  contain: content;
 }
 
 .resume-overview-card__body::-webkit-scrollbar {
@@ -1986,6 +2086,10 @@ a:focus-visible {
 
 .resume-overview-card__body::-webkit-scrollbar-thumb:hover {
   background: var(--museum-cyan);
+}
+
+.overview-section {
+  contain: layout style;
 }
 
 .overview-section__title {
@@ -2012,6 +2116,9 @@ a:focus-visible {
   color: #d1dde2;
   font-size: 14px;
   line-height: 1.7;
+  contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 60px;
 }
 
 .overview-strengths-grid {
@@ -2032,6 +2139,10 @@ a:focus-visible {
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-left: 3px solid var(--museum-cyan);
   border-radius: 3px;
+  contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 90px;
+  transform: translateZ(0);
 }
 
 .overview-strength-box[data-accent="safety"] {
@@ -2062,6 +2173,10 @@ a:focus-visible {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 4px;
+  contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 150px;
+  transform: translateZ(0);
 }
 
 .overview-experience-header {

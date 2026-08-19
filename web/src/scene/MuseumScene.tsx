@@ -214,6 +214,7 @@ function IntegratedCameraController({
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (document.documentElement.dataset.modalOpen === 'true') return;
       if (['INPUT', 'TEXTAREA', 'BUTTON'].includes((event.target as HTMLElement)?.tagName)) return;
       if (event.key === 'Escape' && activeExhibit) {
         onDeselect();
@@ -245,6 +246,7 @@ function IntegratedCameraController({
     };
 
     const onPointerDown = (event: PointerEvent) => {
+      if (document.documentElement.dataset.modalOpen === 'true') return;
       dragging.current = true;
       dragButton.current = event.button;
       lastPointer.current = { x: event.clientX, y: event.clientY };
@@ -259,7 +261,7 @@ function IntegratedCameraController({
     };
 
     const onPointerMove = (event: PointerEvent) => {
-      if (!dragging.current) return;
+      if (document.documentElement.dataset.modalOpen === 'true' || !dragging.current) return;
       const dx = event.clientX - lastPointer.current.x;
       const dy = event.clientY - lastPointer.current.y;
       lastPointer.current = { x: event.clientX, y: event.clientY };
@@ -284,6 +286,7 @@ function IntegratedCameraController({
     };
 
     const onWheel = (event: WheelEvent) => {
+      if (document.documentElement.dataset.modalOpen === 'true') return;
       event.preventDefault();
       idleTime.current = 0;
       if (activeExhibit) {
@@ -360,7 +363,7 @@ function IntegratedCameraController({
   }, [activeExhibit, camera, gl, introActive, onDeselect]);
 
   useFrame((_, delta) => {
-    if (introActive) return;
+    if (introActive || document.documentElement.dataset.modalOpen === 'true') return;
 
     if (activeExhibit) {
       const smoothFactor = motionEnabled ? 1 - Math.exp(-delta * 7.5) : 1;
@@ -435,7 +438,7 @@ function StructuralFrames({ motionEnabled }: { motionEnabled: boolean }) {
   const orangeStripRef = useRef<THREE.MeshBasicMaterial>(null);
 
   useFrame(({ clock }) => {
-    if (!motionEnabled) return;
+    if (!motionEnabled || document.documentElement.dataset.modalOpen === 'true') return;
     const time = clock.elapsedTime;
     if (cyanStripRef.current) {
       cyanStripRef.current.opacity = 0.7 + Math.sin(time * 2.5) * 0.25;
@@ -601,7 +604,7 @@ function CentralCore({ motionEnabled, intensity }: { motionEnabled: boolean; int
   const innerRef = useRef<THREE.Group>(null);
 
   useFrame((_, delta) => {
-    if (!motionEnabled) return;
+    if (!motionEnabled || document.documentElement.dataset.modalOpen === 'true') return;
     if (outerRef.current) outerRef.current.rotation.y += delta * 0.18;
     if (innerRef.current) innerRef.current.rotation.y -= delta * 0.32;
   });
@@ -634,7 +637,7 @@ function DataStreams({ motionEnabled, focused }: { motionEnabled: boolean; focus
   const helper = useMemo(() => new THREE.Object3D(), []);
 
   useFrame((_, delta) => {
-    if (!meshRef.current || !motionEnabled) return;
+    if (!meshRef.current || !motionEnabled || document.documentElement.dataset.modalOpen === 'true') return;
     particles.forEach((particle, index) => {
       particle.z -= delta * particle.speed;
       if (particle.z < -12) particle.z = 18;

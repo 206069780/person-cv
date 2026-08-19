@@ -12,6 +12,8 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
   useEffect(() => {
     if (!isOpen) return;
 
+    document.documentElement.dataset.modalOpen = 'true';
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
@@ -19,7 +21,10 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      delete document.documentElement.dataset.modalOpen;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
