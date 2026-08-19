@@ -8,6 +8,7 @@ import { IntroSequence } from './IntroSequence';
 import { ModelHologramTags } from './ModelHologramTag';
 import { NeonWalls } from './NeonWalls';
 import { EXHIBITS, getZoneFocus, SCENE_BOUNDS } from './scene-layout';
+import type { MuseumSceneProps } from './scene-types';
 
 // 共享几何体池与材质池
 const framePillarGeo = new THREE.BoxGeometry(0.28, 7.2, 0.32);
@@ -74,17 +75,6 @@ const _camFinalTarget = new THREE.Vector3();
 const _camMovement = new THREE.Vector3();
 const _camForward = new THREE.Vector3();
 const _camRight = new THREE.Vector3();
-
-interface MuseumSceneProps {
-  activeExhibit: string | null;
-  panelOpen?: boolean;
-  introActive: boolean;
-  motionEnabled: boolean;
-  onIntroComplete: () => void;
-  onReady: () => void;
-  onFallback: () => void;
-  onSelectExhibit: (id: string | null) => void;
-}
 
 interface BoundaryProps {
   children: ReactNode;
