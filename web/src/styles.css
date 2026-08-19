@@ -767,8 +767,8 @@ a:focus-visible {
   top: 0;
   bottom: 0;
   z-index: 50;
-  width: min(560px, 42vw);
-  min-width: 380px;
+  width: min(480px, 34vw);
+  min-width: 340px;
   overflow: hidden;
   border-left: 1px solid rgba(40, 215, 229, 0.46);
   background: rgba(7, 16, 21, 0.96);
@@ -1207,10 +1207,12 @@ a:focus-visible {
 
 .fallback-shell {
   position: relative;
-  min-height: 100dvh;
+  min-height: 100vh;
   background-color: #070b0d;
   color: var(--museum-text);
   overflow-x: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1306,13 +1308,13 @@ a:focus-visible {
   border: 1px solid rgba(143, 162, 171, 0.72);
   background: #071015;
   transform: translate(-50%, -50%) rotate(45deg) scale(0.68);
-  transition: border-color 220ms ease, background 220ms ease, transform 220ms ease;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
 .scroll-progress__node[data-passed="true"] {
   border-color: var(--museum-safety);
   background: var(--museum-safety);
-  animation: mobile-progress-pulse 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform: translate(-50%, -50%) rotate(45deg) scale(1.05);
 }
 
 .mobile-resume {
@@ -1401,7 +1403,7 @@ a:focus-visible {
   position: absolute;
   inset: 0 0 auto;
   z-index: 0;
-  height: min(220px, 55dvh);
+  height: 200px;
   overflow: hidden;
   pointer-events: none;
 }
@@ -1514,7 +1516,7 @@ a:focus-visible {
 }
 
 .mobile-resume__hero {
-  min-height: 92dvh;
+  min-height: auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1803,7 +1805,7 @@ a:focus-visible {
 }
 
 .museum-shell:has(.exhibit-panel) .project-index {
-  right: calc(min(640px, 48vw) + 16px);
+  right: calc(min(480px, 34vw) + 16px);
 }
 
 .museum-shell:has(.exhibit-panel) .museum-hud__metric,
@@ -2212,8 +2214,8 @@ a:focus-visible {
   .terminal-window__output p { font-size: 9px; }
   .project-index__title { display: none; }
   .project-index__items button { padding: 0 7px; }
-  .exhibit-panel { width: 52vw; min-width: 430px; }
-  .museum-shell:has(.exhibit-panel) .project-index { right: calc(52vw + 16px); }
+  .exhibit-panel { width: min(440px, 38vw); min-width: 320px; }
+  .museum-shell:has(.exhibit-panel) .project-index { right: calc(min(440px, 38vw) + 16px); }
 }
 
 @media (max-height: 700px) and (min-width: 768px) {
@@ -2255,7 +2257,7 @@ a:focus-visible {
   .mobile-resume { padding-inline: 20px; }
   .mobile-module { scroll-margin-top: 16px; }
   .mobile-module__rail { right: -12px; }
-  .mobile-resume__hero { min-height: 88dvh; }
+  .mobile-resume__hero { min-height: auto; padding: 56px 0 36px; }
   .mobile-resume__hero h1 { font-size: 44px; }
   .mobile-resume__hero h2 { font-size: 18px; }
   .mobile-resume__metric strong { font-size: 34px; }

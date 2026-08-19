@@ -17,7 +17,8 @@ export function ScrollProgress({ markers = 0 }: ScrollProgressProps) {
     const update = () => {
       frame = 0;
       const root = document.documentElement;
-      const progress = calculateScrollProgress(root.scrollTop, root.scrollHeight, root.clientHeight);
+      const scrollTop = Math.max(0, root.scrollTop);
+      const progress = calculateScrollProgress(scrollTop, root.scrollHeight, root.clientHeight);
 
       // 直接操作进度条变换，零全局 Style Recalculation 开销
       if (barRef.current) {
@@ -30,7 +31,12 @@ export function ScrollProgress({ markers = 0 }: ScrollProgressProps) {
         lastPassedIndex = currentPassedIndex;
         const nodes = markersRef.current.children;
         for (let i = 0; i < nodes.length; i++) {
-          (nodes[i] as HTMLElement).dataset.passed = i <= currentPassedIndex ? 'true' : 'false';
+          const isPassed = i <= currentPassedIndex;
+          const targetPassedStr = isPassed ? 'true' : 'false';
+          const node = nodes[i] as HTMLElement;
+          if (node.dataset.passed !== targetPassedStr) {
+            node.dataset.passed = targetPassedStr;
+          }
         }
       }
     };

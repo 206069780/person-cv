@@ -398,17 +398,25 @@ function IntegratedCameraController({
       _camFinalTarget.copy(targetCenter.current).add(panOffset.current);
       orbitCenter.current.lerp(_camFinalTarget, smoothFactor);
 
-      // 右侧抽屉展开时，相机视口焦点向右偏置（使 3D 模型居中在屏幕左侧剩余可用视口，绝不被右侧抽屉遮挡）
-      const sideShiftTarget = activeExhibit && panelOpen ? 1.05 : 0;
-      sideShift.current = THREE.MathUtils.lerp(
-        sideShift.current,
-        sideShiftTarget,
-        smoothFactor
-      );
-
       const r = orbitRadius.current.current;
       const phi = orbitPhi.current.current;
       const theta = orbitTheta.current.current;
+
+      // 透视投影几何补偿：根据相机的 fov 与宽高比，精准将模型投影中心平移至左侧可用视口中央
+      const persCam = camera as THREE.PerspectiveCamera;
+      const aspect = persCam.aspect || (window.innerWidth / Math.max(1, window.innerHeight));
+      const fovRad = THREE.MathUtils.degToRad(persCam.fov || 45);
+      const halfWidthAtDistance = r * Math.tan(fovRad / 2) * aspect;
+
+      // 抽屉展开时，将模型精准偏置到左侧剩余可用视口的黄金中心（偏置半屏宽度的 46%）
+      const targetRatio = activeExhibit && panelOpen ? 0.46 : 0;
+      sideShift.current = THREE.MathUtils.lerp(
+        sideShift.current,
+        targetRatio,
+        smoothFactor
+      );
+
+      const worldShiftDist = sideShift.current * halfWidthAtDistance;
 
       const camX = orbitCenter.current.x + r * Math.sin(phi) * Math.sin(theta);
       const camY = orbitCenter.current.y + r * Math.cos(phi);
@@ -417,8 +425,8 @@ function IntegratedCameraController({
       // 相机水平右向量
       const rightX = Math.cos(theta);
       const rightZ = -Math.sin(theta);
-      const shiftX = rightX * sideShift.current;
-      const shiftZ = rightZ * sideShift.current;
+      const shiftX = rightX * worldShiftDist;
+      const shiftZ = rightZ * worldShiftDist;
 
       camera.position.set(camX + shiftX, camY, camZ + shiftZ);
       camera.lookAt(

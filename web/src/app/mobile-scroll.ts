@@ -64,8 +64,8 @@ export function observeRevealOnce(
           }
         }
       }, {
-        rootMargin: '50px 0px 50px 0px', // 提前 50px 预加载，避免滑动到底部等待
-        threshold: 0.02,
+        rootMargin: '120px 0px 120px 0px', // 提前 120px 预加载，确保到达底部或顶部边缘时已静默就绪
+        threshold: 0.01,
       });
     }
 
