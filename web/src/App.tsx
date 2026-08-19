@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { detectExperienceMode, ExperienceMode } from './app/experience';
+import { CyberLoadingScreen } from './components/CyberLoadingScreen';
 import { ExhibitPanel } from './components/ExhibitPanel';
 import { MobileNotice } from './components/MobileNotice';
 import { MobileResume } from './components/MobileResume';
@@ -18,37 +19,6 @@ function initialMode(): ExperienceMode {
 // 提前触发 3D 展馆 chunk 预加载，打破网络瀑布流
 if (typeof window !== 'undefined' && initialMode() !== 'fallback') {
   loadMuseumScene();
-}
-
-function LoadingScreen({ ready, onFinish }: { ready: boolean; onFinish: () => void }) {
-  const [stage, setStage] = useState('初始化孪生引擎...');
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    const t1 = setTimeout(() => setStage('构建水务数字展馆...'), 180);
-    const t2 = setTimeout(() => setStage('编译着色器与就绪...'), 380);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (ready) {
-      setFading(true);
-      const timer = setTimeout(onFinish, 350);
-      return () => clearTimeout(timer);
-    }
-  }, [ready, onFinish]);
-
-  return (
-    <div className={`loading-screen ${fading ? 'is-fading' : ''}`} role="status" aria-live="polite">
-      <div className="loading-screen__mark" aria-hidden="true"><i /><i /><i /></div>
-      <p className="eyebrow">LITREE DIGITAL TWIN</p>
-      <strong>{ready ? '展馆就绪 · 进入场景' : stage}</strong>
-      <div className="loading-screen__track"><span /></div>
-    </div>
-  );
 }
 
 export default function App() {
@@ -135,7 +105,7 @@ export default function App() {
           onClose={() => setActiveExhibit(null)}
         />
       )}
-      {loading && <LoadingScreen ready={sceneReady} onFinish={handleLoadingFinish} />}
+      {loading && <CyberLoadingScreen ready={sceneReady} onFinish={handleLoadingFinish} />}
     </main>
   );
 }

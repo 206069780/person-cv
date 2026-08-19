@@ -23,16 +23,17 @@ export function IntroSequence({ active, onComplete }: IntroSequenceProps) {
     if (!active) {
       camera.position.set(0, 2.6, 16.5);
       target.x = 0;
-      target.y = 1.3;
+      target.y = 1.35;
       target.z = -2;
       lookAt();
       return;
     }
 
-    camera.position.set(0, 3.8, 30);
+    // 初始高位全景机位：俯瞰全场天顶桁架与全息地面光轨
+    camera.position.set(0, 6.2, 34);
     target.x = 0;
-    target.y = 1.1;
-    target.z = 1;
+    target.y = 0.8;
+    target.z = -6;
     lookAt();
 
     const timeline = gsap.timeline({
@@ -40,12 +41,48 @@ export function IntroSequence({ active, onComplete }: IntroSequenceProps) {
       onComplete,
     });
 
-    // 优化后的紧凑镜头：总时长约 2.2 秒，兼顾全景张力与快速就绪
+    // 电影级多阶复合运镜：高空俯冲 -> 侧翼穿梭流光 -> 中轴回正就绪
     timeline
-      .to(camera.position, { x: -2.8, y: 2.6, z: 21, duration: 0.9, ease: 'power2.inOut', onUpdate: lookAt })
-      .to(target, { x: 0, y: 1.6, z: -4, duration: 0.9, ease: 'power2.inOut', onUpdate: lookAt }, '<')
-      .to(camera.position, { x: 0, y: 2.6, z: 16.5, duration: 1.3, ease: 'expo.out', onUpdate: lookAt })
-      .to(target, { x: 0, y: 1.3, z: -2, duration: 1.3, ease: 'expo.out', onUpdate: lookAt }, '<');
+      .to(camera.position, {
+        x: -4.2,
+        y: 3.2,
+        z: 24,
+        duration: 1.0,
+        ease: 'power3.inOut',
+        onUpdate: lookAt,
+      })
+      .to(
+        target,
+        {
+          x: 1.2,
+          y: 1.8,
+          z: -6.5,
+          duration: 1.0,
+          ease: 'power3.inOut',
+          onUpdate: lookAt,
+        },
+        '<'
+      )
+      .to(camera.position, {
+        x: 0,
+        y: 2.6,
+        z: 16.5,
+        duration: 1.4,
+        ease: 'expo.out',
+        onUpdate: lookAt,
+      })
+      .to(
+        target,
+        {
+          x: 0,
+          y: 1.35,
+          z: -2,
+          duration: 1.4,
+          ease: 'expo.out',
+          onUpdate: lookAt,
+        },
+        '<'
+      );
 
     return () => {
       timeline.kill();

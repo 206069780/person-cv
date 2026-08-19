@@ -1145,64 +1145,479 @@ a:focus-visible {
   font-size: 10px;
 }
 
-.loading-screen {
+.loading-screen,
+.cyber-loading-screen {
   position: absolute;
   inset: 0;
-  z-index: 100;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  background: var(--museum-bg);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(20px, env(safe-area-inset-top)) 28px max(20px, env(safe-area-inset-bottom));
+  background: radial-gradient(circle at center, #0c1c24 0%, #050d12 60%, #020608 100%);
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s ease;
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.55s ease;
   pointer-events: auto;
+  overflow: hidden;
+  user-select: none;
 }
 
-.loading-screen.is-fading {
+.cyber-loading-screen.is-warping {
+  filter: brightness(1.25) contrast(1.15);
+}
+
+.cyber-loading-screen.is-fading {
   opacity: 0;
+  transform: scale(1.06);
   visibility: hidden;
   pointer-events: none;
 }
 
-.loading-screen__mark {
-  position: relative;
-  width: 128px;
-  height: 128px;
-  margin-bottom: 35px;
-}
-
-.loading-screen__mark i {
+/* 赛博网格与扫描线背景 */
+.cyber-loading__bg-grid {
   position: absolute;
   inset: 0;
-  border: 1px solid rgba(40, 215, 229, 0.5);
-  transform: rotate(45deg);
-  animation: loading-rotate 3.6s linear infinite;
+  background-image:
+    linear-gradient(rgba(40, 215, 229, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(40, 215, 229, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.loading-screen__mark i:nth-child(2) { inset: 20px; border-color: rgba(255, 107, 61, 0.75); animation-direction: reverse; }
-.loading-screen__mark i:nth-child(3) { inset: 40px; border-color: var(--museum-signal); }
-
-.loading-screen strong {
-  margin-top: 11px;
-  font-size: 22px;
+.cyber-loading__scanline {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(40, 215, 229, 0.05) 50%, transparent 100%);
+  background-size: 100% 8px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.6;
 }
 
-.loading-screen__track {
-  width: 240px;
-  height: 2px;
-  margin-top: 22px;
-  overflow: hidden;
-  background: var(--museum-steel);
+.cyber-loading__ambient-glow {
+  position: absolute;
+  width: 550px;
+  height: 550px;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(40, 215, 229, 0.16) 0%, rgba(255, 107, 61, 0.08) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(40px);
+  animation: cyber-glow-pulse 3.5s ease-in-out infinite;
 }
 
-.loading-screen__track span {
-  display: block;
-  width: 42%;
+/* 四角赛博定位瞄准标角 */
+.cyber-loading__corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(40, 215, 229, 0.65);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.cyber-loading__corner.top-left {
+  top: 18px;
+  left: 18px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.cyber-loading__corner.top-right {
+  top: 18px;
+  right: 18px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.cyber-loading__corner.bottom-left {
+  bottom: 18px;
+  left: 18px;
+  border-right: none;
+  border-top: none;
+}
+
+.cyber-loading__corner.bottom-right {
+  bottom: 18px;
+  right: 18px;
+  border-left: none;
+  border-top: none;
+}
+
+/* 顶部与底部遥测栏 */
+.cyber-loading__header,
+.cyber-loading__footer {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 11px;
+  color: var(--museum-muted);
+  letter-spacing: 0.5px;
+}
+
+.cyber-loading__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cyber-loading__pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--museum-cyan);
+  box-shadow: 0 0 10px var(--museum-cyan);
+  animation: cyber-dot-blink 1.2s ease-in-out infinite;
+}
+
+.cyber-loading__brand-title {
+  color: var(--museum-text);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.cyber-loading__badge {
+  padding: 2px 6px;
+  border: 1px solid rgba(40, 215, 229, 0.45);
+  background: rgba(40, 215, 229, 0.1);
+  color: var(--museum-cyan);
+  font-size: 10px;
+  border-radius: 2px;
+}
+
+.cyber-loading__sysinfo {
+  display: flex;
+  gap: 18px;
+  opacity: 0.8;
+}
+
+.cyber-loading__footer {
+  font-size: 10px;
+  opacity: 0.7;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+/* 中央核心舞台 */
+.cyber-loading__center-stage {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 580px;
+  margin: auto;
+}
+
+/* 全息自旋量子反应炉 */
+.cyber-loading__reactor {
+  position: relative;
+  width: 154px;
+  height: 154px;
+  margin-bottom: 24px;
+  display: grid;
+  place-items: center;
+}
+
+.cyber-loading__ring {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.cyber-loading__ring.ring-outer {
+  inset: 0;
+  border: 2px dashed rgba(40, 215, 229, 0.55);
+  box-shadow: 0 0 24px rgba(40, 215, 229, 0.25), inset 0 0 16px rgba(40, 215, 229, 0.12);
+  animation: cyber-spin 12s linear infinite;
+}
+
+.cyber-loading__ring.ring-mid-rev {
+  inset: 16px;
+  border: 2px solid transparent;
+  border-top-color: var(--museum-safety);
+  border-bottom-color: var(--museum-cyan);
+  border-radius: 38%;
+  animation: cyber-spin-reverse 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.cyber-loading__ring.ring-inner {
+  inset: 32px;
+  border: 1.5px solid rgba(0, 168, 157, 0.6);
+  border-left-color: #fff;
+  animation: cyber-spin 2.4s linear infinite;
+}
+
+.cyber-loading__emitters span {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--museum-cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--museum-cyan);
+}
+
+.cyber-loading__emitters .emitter-n { top: -3px; left: calc(50% - 3px); }
+.cyber-loading__emitters .emitter-s { bottom: -3px; left: calc(50% - 3px); }
+.cyber-loading__emitters .emitter-w { left: -3px; top: calc(50% - 3px); }
+.cyber-loading__emitters .emitter-e { right: -3px; top: calc(50% - 3px); }
+
+.cyber-loading__core {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+}
+
+.cyber-loading__percent-val {
+  font-size: 38px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 18px var(--museum-cyan), 0 0 32px var(--museum-signal);
+  letter-spacing: -1px;
+}
+
+.cyber-loading__percent-sym {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--museum-cyan);
+  margin-left: 2px;
+}
+
+/* 主标题 */
+.cyber-loading__title-wrap {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.cyber-loading__sub-label {
+  font-size: 11px;
+  color: var(--museum-cyan);
+  margin-bottom: 6px;
+  letter-spacing: 1.5px;
+}
+
+.cyber-loading__main-title {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.8px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* 16段矩阵式能量进度条 */
+.cyber-loading__meter-wrap {
+  width: 100%;
+  max-width: 440px;
+  margin-bottom: 22px;
+}
+
+.cyber-loading__meter-info {
+  display: flex;
+  justify-content: space-between;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 10px;
+  color: var(--museum-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.cyber-loading__segments-track {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+  height: 10px;
+  padding: 2px;
+  background: rgba(14, 28, 34, 0.85);
+  border: 1px solid rgba(40, 215, 229, 0.25);
+  border-radius: 2px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.cyber-loading__segment {
+  flex: 1;
   height: 100%;
-  background: var(--museum-signal);
-  box-shadow: 0 0 16px var(--museum-signal);
-  animation: loading-track 1.2s ease-in-out infinite;
+  background: rgba(40, 215, 229, 0.08);
+  border-radius: 1px;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cyber-loading__segment.is-active {
+  background: linear-gradient(180deg, #67e8f9 0%, var(--museum-signal) 100%);
+  box-shadow: 0 0 8px rgba(40, 215, 229, 0.65);
+}
+
+.cyber-loading__segment.is-current {
+  background: #ffffff;
+  box-shadow: 0 0 12px #ffffff, 0 0 20px var(--museum-cyan);
+  animation: cyber-segment-flash 0.6s ease-in-out infinite alternate;
+}
+
+/* 终端诊断流水终端窗 */
+.cyber-loading__terminal {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(5, 13, 17, 0.92);
+  border: 1px solid rgba(40, 215, 229, 0.28);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(40, 215, 229, 0.04);
+}
+
+.cyber-loading__terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(14, 28, 34, 0.95);
+  border-bottom: 1px solid rgba(40, 215, 229, 0.18);
+}
+
+.terminal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.terminal-dot.red { background: #ff5f56; }
+.terminal-dot.yellow { background: #ffbd2e; }
+.terminal-dot.green { background: #27c93f; }
+
+.terminal-title {
+  margin-left: 6px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 9px;
+  color: var(--museum-muted);
+  letter-spacing: 0.5px;
+}
+
+.cyber-loading__terminal-body {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.cyber-loading__log-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.cyber-loading__log-line.is-pending {
+  color: rgba(143, 162, 171, 0.35);
+  opacity: 0.4;
+}
+
+.cyber-loading__log-line.is-active {
+  color: var(--museum-safety);
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(255, 107, 61, 0.5);
+  animation: cyber-log-pulse 0.8s ease-in-out infinite alternate;
+}
+
+.cyber-loading__log-line.is-done {
+  color: #a7f3d0;
+}
+
+.cyber-loading__log-line .log-prefix {
+  color: var(--museum-cyan);
+  font-weight: 700;
+}
+
+.cyber-loading__log-line .log-tag {
+  color: var(--museum-cyan);
+  font-size: 10px;
+}
+
+.cyber-loading__log-line .log-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cyber-loading__log-line .log-status {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cyber-loading__log-line.is-done .log-status {
+  color: #34d399;
+}
+
+.cyber-loading__log-line.is-active .log-status {
+  color: var(--museum-safety);
+}
+
+/* 关键帧动画集 */
+@keyframes cyber-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cyber-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes cyber-glow-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+  50% { transform: translate(-50%, -50%) scale(1.18); opacity: 1; }
+}
+
+@keyframes cyber-dot-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+
+@keyframes cyber-segment-flash {
+  from { opacity: 0.7; }
+  to { opacity: 1; filter: drop-shadow(0 0 6px #fff); }
+}
+
+@keyframes cyber-log-pulse {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .cyber-loading__header .cyber-loading__sysinfo,
+  .cyber-loading__footer span:last-child {
+    display: none;
+  }
+  .cyber-loading__reactor {
+    width: 128px;
+    height: 128px;
+    margin-bottom: 18px;
+  }
+  .cyber-loading__percent-val {
+    font-size: 30px;
+  }
+  .cyber-loading__main-title {
+    font-size: 19px;
+  }
+  .cyber-loading__terminal-body {
+    font-size: 10px;
+  }
 }
 
 .fallback-shell {
