@@ -100,7 +100,10 @@
   "console": {
     "title": "Engineering console",
     "stamp": "Career evidence / static demo",
-    "channelsAria": "Engineering console channels"
+    "channelsAria": "Engineering console channels",
+    "focusAria": "Focus {{title}}",
+    "commandsAria": "{{shortTitle}} preset commands",
+    "viewExhibit": "View exhibit"
   },
   "exhibits": {
     "litree-overview": "Microservices & Data Foundation",

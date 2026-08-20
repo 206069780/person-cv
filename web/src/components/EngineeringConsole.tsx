@@ -85,7 +85,7 @@ export function EngineeringConsole({ variant, motionEnabled, onSelectExhibit }: 
                 className="terminal-window__titlebar"
                 tabIndex={isFocused ? 0 : -1}
                 onClick={() => dispatch({ type: 'focus', terminalId: terminal.id })}
-                aria-label={`聚焦 ${terminal.title}`}
+                aria-label={t('console.focusAria', { title: terminal.title })}
               >
                 <span className="terminal-window__controls" aria-hidden="true"><i /><i /><i /></span>
                 <strong><Terminal size={14} /> {terminal.title}</strong>
@@ -93,7 +93,7 @@ export function EngineeringConsole({ variant, motionEnabled, onSelectExhibit }: 
               </button>
 
               <div className="terminal-window__body">
-                <div className="terminal-window__commands" role="group" aria-label={`${terminal.shortTitle} 预设命令`}>
+                <div className="terminal-window__commands" role="group" aria-label={t('console.commandsAria', { shortTitle: terminal.shortTitle })}>
                   {terminal.commands.map((command) => {
                     const isActive = command.id === activeCommand.id;
                     return (
@@ -135,7 +135,7 @@ export function EngineeringConsole({ variant, motionEnabled, onSelectExhibit }: 
                       tabIndex={isFocused ? 0 : -1}
                       onClick={() => onSelectExhibit(activeCommand.exhibitId)}
                     >
-                      查看对应展区 <ArrowUpRight size={14} />
+                      {t('console.viewExhibit')} <ArrowUpRight size={14} />
                     </button>
                   )}
                 </footer>

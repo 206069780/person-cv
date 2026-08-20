@@ -100,7 +100,10 @@
   "console": {
     "title": "工程终端",
     "stamp": "履历证据 / 静态演示",
-    "channelsAria": "工程终端频道"
+    "channelsAria": "工程终端频道",
+    "focusAria": "聚焦 {{title}}",
+    "commandsAria": "{{shortTitle}} 预设命令",
+    "viewExhibit": "查看对应展区"
   },
   "exhibits": {
     "litree-overview": "微服务与数据底座",
