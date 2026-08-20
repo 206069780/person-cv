@@ -98,7 +98,10 @@ describe('mobile scroll effects', () => {
   });
 
   it('keeps the mobile resume on the document scroller', () => {
-    const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
+    const entry = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
+    const css = [...entry.matchAll(/@import '(.+)';/g)]
+      .map(([, path]) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'))
+      .join('');
     const rules = [
       css.match(/^html\s*\{([^}]+)\}/m)?.[1],
       css.match(/^body\s*\{([^}]+)\}/m)?.[1],

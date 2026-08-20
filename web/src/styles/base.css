@@ -1,0 +1,49 @@
+:root {
+  color-scheme: dark;
+  font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --museum-bg: #081117;
+  --museum-surface: #0c1a20;
+  --museum-steel: #304149;
+  --museum-signal: #00a89d;
+  --museum-cyan: #28d7e5;
+  --museum-safety: #ff6b3d;
+  --museum-text: #f5f8f9;
+  --museum-muted: #8fa2ab;
+  --museum-line: rgba(98, 114, 125, 0.38);
+}
+
+* { box-sizing: border-box; }
+
+html { min-width: 320px; background: var(--museum-bg); }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--museum-bg);
+  color: var(--museum-text);
+}
+
+button,
+a { font: inherit; letter-spacing: 0; }
+
+button { color: inherit; }
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--museum-signal);
+  outline-offset: 3px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--museum-signal);
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
