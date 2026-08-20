@@ -557,10 +557,10 @@ def paragraph_gap(size: float) -> float:
 
 
 def wrap_pdf_text(text: str, font: str, size: float, max_width: float) -> list[str]:
-    no_line_start = set("，。！？；：、）》】〕」』”’％%)]},.;:!?")
+    no_line_start = set("，。！？；：、）》】〕」』”’％%)]},.;:!?/\\")
     no_line_end = set("（《【〔「『“‘([{")
     tokens = re.findall(
-        r"[A-Za-z0-9][A-Za-z0-9_./:+#-]*(?:[ \t]+[A-Za-z0-9][A-Za-z0-9_./:+#-]*)*|[ \t]+|\n|.",
+        r"[A-Za-z0-9_+#’'-]+|[ \t]+|\n|/|[^\s\w]|\w",
         text,
     )
     lines: list[str] = []
@@ -576,7 +576,7 @@ def wrap_pdf_text(text: str, font: str, size: float, max_width: float) -> list[s
         if current and pdf_text_width(candidate, font, size) > max_width:
             stripped_token = token.lstrip()
             if stripped_token and stripped_token[0] in no_line_start:
-                # A closing mark may use the right inset, but never starts a line.
+                # 避头符号（如 / 、逗号、句号）优先依附在上一行末尾
                 current = candidate
                 continue
             if current[-1] in no_line_end and len(current) > 1:
@@ -812,14 +812,21 @@ class PdfPage:
         c.setFillColor(HexColor(f"#{accent}"))
         c.rect(x + 1, y + height - 3, width - 2, 3, fill=1, stroke=0)
         pad_x = 12
-        label_size = 7.5
         text_width = width - pad_x * 2
         available_h = height - 3.0
         label_gap = 4.5
 
+        # 动态自适应标题字号与折行，杜绝长英文标题溢出卡片右侧
+        label_size = 7.5
+        while label_size >= 6.2 and pdf_text_width(label, FONT_BOLD, label_size) > text_width:
+            label_size = round(label_size - 0.2, 2)
+        label_lines = wrap_pdf_text(label, FONT_BOLD, label_size, text_width)
+        label_lead = round(label_size * 1.3, 2)
+        label_block_h = (len(label_lines) - 1) * label_lead + label_size * 0.72
+
         # 严格自适应拟合：同时调节字号与行间距，确保内容绝对不溢出且留有上下安全边距
         preferred_size = 8.1 if width > 300 else 7.8
-        min_size = 6.2
+        min_size = 6.0
         ratio = WIDE_LINE_RATIO
         min_ratio = 1.36
         fitted = False
@@ -836,8 +843,8 @@ class PdfPage:
                 lines = wrap_pdf_text(text, FONT_REGULAR, size, text_width)
                 if len(lines) <= max_allowed_lines:
                     text_block_h = (len(lines) - 1) * lead + size * 0.72
-                    total_content_h = label_size * 0.72 + label_gap + text_block_h
-                    if total_content_h + 6.0 <= available_h:
+                    total_content_h = label_block_h + label_gap + text_block_h
+                    if total_content_h + 5.0 <= available_h:
                         fitted = True
                         break
                 size = round(size - 0.1, 2)
@@ -850,17 +857,19 @@ class PdfPage:
             lead = round(size * min_ratio, 2)
             lines = wrap_pdf_text(text, FONT_REGULAR, size, text_width)
             text_block_h = (len(lines) - 1) * lead + size * 0.72
-            total_content_h = label_size * 0.72 + label_gap + text_block_h
+            total_content_h = label_block_h + label_gap + text_block_h
 
         # 垂直绝对居中计算
-        pad_top = max(3.0, (available_h - total_content_h) / 2)
+        pad_top = max(2.5, (available_h - total_content_h) / 2)
 
-        label_y = y + height - 3.0 - pad_top - label_size * 0.72
+        cur_label_y = y + height - 3.0 - pad_top - label_size * 0.72
         c.setFont(FONT_BOLD, label_size)
         c.setFillColor(HexColor(f"#{NAVY}"))
-        c.drawString(x + pad_x, label_y, label)
+        for l_line in label_lines:
+            c.drawString(x + pad_x, cur_label_y, l_line)
+            cur_label_y -= label_lead
 
-        text_y = label_y - label_gap - size * 0.72
+        text_y = cur_label_y + label_lead - label_gap - size * 0.72
         c.setFont(FONT_REGULAR, size)
         c.setFillColor(HexColor(f"#{INK}"))
         for line in lines:
@@ -872,12 +881,22 @@ class PdfPage:
         draw_round_card(c, x, y, width, height, accent)
         pad_x = 12
         header_y = y + height - 14
+        period_str = exp["period"]
         c.setFont(FONT_BOLD, 7.8)
         c.setFillColor(HexColor(f"#{ORANGE}" if accent == ORANGE else f"#{TEAL}"))
-        c.drawString(x + pad_x, header_y, exp["period"])
-        c.setFont(FONT_BOLD, 9.8)
+        c.drawString(x + pad_x, header_y, period_str)
+
+        period_w = pdf_text_width(period_str, FONT_BOLD, 7.8)
+        comp_x = x + pad_x + max(92.0, period_w + 12.0)
+        comp_w = (x + width - pad_x) - comp_x
+        comp_title_str = f"{exp['company']}  |  {exp['title']}"
+        title_font_size = 9.8
+        while title_font_size >= 7.8 and pdf_text_width(comp_title_str, FONT_BOLD, title_font_size) > comp_w:
+            title_font_size = round(title_font_size - 0.2, 2)
+
+        c.setFont(FONT_BOLD, title_font_size)
         c.setFillColor(HexColor(f"#{GRAPHITE}"))
-        c.drawString(x + pad_x + 96, header_y, f"{exp['company']}  |  {exp['title']}")
+        c.drawString(comp_x, header_y, comp_title_str)
 
         size = 8.0
         lead = round(size * 1.45, 2)
@@ -942,9 +961,13 @@ class PdfPage:
         preferred_size: float = 8.0,
         min_size: float = 6.4,
     ) -> None:
-        label_width = 54
-        text_x = x + label_width + 10
-        text_width = width - label_width - 20
+        label_size = 7.5
+        # 动态测量当前所有 label 的最大实际宽度，绝不硬编码 54pt，彻底杜绝中英文重合与挤压
+        max_label_w = max((pdf_text_width(label, FONT_BOLD, label_size) for label, _, _ in rows), default=40.0)
+        label_col_w = max(52.0, max_label_w + 5.0)
+        text_x = x + 10 + label_col_w + 5.0
+        text_width = width - (10 + label_col_w + 5.0) - 10
+
         n_rows = len(rows)
         size = preferred_size
         ratio = WIDE_LINE_RATIO
@@ -959,7 +982,7 @@ class PdfPage:
                 leading = round(size * ratio, 2)
                 measured = [wrap_pdf_text(text, FONT_REGULAR, size, text_width) for _, text, _ in rows]
                 h_list = [(len(lines) - 1) * leading + size * 0.72 for lines in measured]
-                min_row_pad = 6.0 * n_rows
+                min_row_pad = 5.0 * n_rows
                 if sum(h_list) + min_row_pad <= available_h:
                     fitted = True
                     break
@@ -969,10 +992,15 @@ class PdfPage:
             ratio = round(ratio - 0.02, 2)
 
         if not fitted:
-            labels = " / ".join(label for label, _, _ in rows)
-            raise ValueError(
-                f"PDF page {self.page_no} labeled rows overflow: {labels} in {height}"
-            )
+            size = min_size
+            leading = round(size * MIN_LINE_RATIO, 2)
+            measured = [wrap_pdf_text(text, FONT_REGULAR, size, text_width) for _, text, _ in rows]
+            h_list = [(len(lines) - 1) * leading + size * 0.72 for lines in measured]
+            if sum(h_list) + 3.0 * n_rows > available_h:
+                labels = " / ".join(label for label, _, _ in rows)
+                raise ValueError(
+                    f"PDF page {self.page_no} labeled rows overflow: {labels} in {height}"
+                )
 
         c = self.c
         c.setFillColor(HexColor("#FFFFFF"))
@@ -994,7 +1022,7 @@ class PdfPage:
             row_pad = slot_extra / 2.0
             baseline_1 = current_top - row_pad - size * 0.72
 
-            c.setFont(FONT_BOLD, 7.5)
+            c.setFont(FONT_BOLD, label_size)
             c.setFillColor(HexColor(f"#{accent}"))
             c.drawString(x + 10, baseline_1, label)
 
@@ -1155,7 +1183,17 @@ class PdfPage:
             meta_rows = []
             meta_limit = 2
 
-        outcome_size, outcome_lines = fit_pdf_lines(topic["outcome"], FONT_REGULAR, 7.2, 6.4, inner_width - 24, 3)
+        # 动态测量 meta 标签最大宽度，防止如英文 "Boundary" 与正文重叠
+        meta_label_w = max((pdf_text_width(l, FONT_BOLD, 6.6) for l, _ in meta_rows), default=14.0)
+        meta_text_x = x + 12 + meta_label_w + 4.5
+        meta_wrap_w = inner_width - (meta_label_w + 4.5) - 4.0
+
+        # 动态测量 outcome 结果栏标签宽度，防止与正文挨挤或重叠
+        result_label_w = pdf_text_width(chrome["result"], FONT_BOLD, 6.8)
+        result_text_x = x + 12 + result_label_w + 4.5
+        result_wrap_w = (width - 16) - (12 + result_label_w + 4.5) - 4.0
+
+        outcome_size, outcome_lines = fit_pdf_lines(topic["outcome"], FONT_REGULAR, 7.2, 6.4, result_wrap_w, 3)
         outcome_lead = line_leading(outcome_size) if tall else round(outcome_size * 1.4, 2)
         outcome_block = 8 + len(outcome_lines) * outcome_lead
         top = title_y - 4
@@ -1176,7 +1214,7 @@ class PdfPage:
             impl_lines = [wrap_pdf_text(item, FONT_REGULAR, size_impl, wrap_w) for item in topic["implementation"]]
             challenge_lines = [wrap_pdf_text(item, FONT_REGULAR, size_challenge, wrap_w) for item in topic["challenges"]]
             meta_wrapped = [
-                (label, wrap_pdf_text(text, FONT_REGULAR, size_meta, inner_width - 28)[:meta_limit])
+                (label, wrap_pdf_text(text, FONT_REGULAR, size_meta, meta_wrap_w)[:meta_limit])
                 for label, text in meta_rows
             ]
 
@@ -1242,7 +1280,7 @@ class PdfPage:
             c.setFillColor(HexColor(f"#{INK}"))
             line_y = cursor
             for line in lines:
-                c.drawString(x + 36, line_y, line)
+                c.drawString(meta_text_x, line_y, line)
                 line_y -= meta_lead
             cursor = line_y - meta_gap
 
@@ -1299,7 +1337,7 @@ class PdfPage:
         c.setFont(FONT_REGULAR, outcome_size)
         c.setFillColor(HexColor(f"#{INK}"))
         for line in outcome_lines:
-            c.drawString(x + 36, text_y, line)
+            c.drawString(result_text_x, text_y, line)
             text_y -= outcome_lead
 
     def pipeline(self, y: float, flow: str, height: float = 32) -> None:
@@ -1342,6 +1380,51 @@ class PdfPage:
         self.c.setFont(FONT_REGULAR, 7.2)
         self.c.setFillColor(HexColor(f"#{MUTED}"))
         self.c.drawRightString(self.right, 17, f"CASEBOOK  /  {self.page_no:02d} OF {TOTAL_PAGES:02d}")
+
+
+def draw_cover_chip_card(
+    c: canvas.Canvas,
+    x: float,
+    y: float,
+    box_w: float,
+    box_h: float,
+    text: str,
+    accent: str,
+) -> None:
+    # 1. 绘制卡片背景矩形与边框
+    c.setFillColor(HexColor("#102027"))
+    c.setStrokeColor(HexColor("#264750"))
+    c.setLineWidth(0.9)
+    c.rect(x, y, box_w, box_h, fill=1, stroke=1)
+
+    # 2. 左侧高亮竖条
+    c.setFillColor(HexColor(f"#{accent}"))
+    c.rect(x, y, 4.5, box_h, fill=1, stroke=0)
+
+    # 3. 文本排版：优先单行，若超长自适应折行与字号拟合，垂直绝对居中，绝不溢出卡片
+    avail_w = box_w - 20
+    preferred_size = 8.4
+    min_size = 6.2
+
+    if pdf_text_width(text, FONT_BOLD, preferred_size) <= avail_w:
+        size = preferred_size
+        lines = [text]
+    else:
+        try:
+            size, lines = fit_pdf_lines(text, FONT_BOLD, 8.0, 6.4, avail_w, 2)
+        except ValueError:
+            size, lines = fit_pdf_lines(text, FONT_BOLD, 7.0, min_size, avail_w, 3)
+
+    lead = line_leading(size)
+    text_block_h = (len(lines) - 1) * lead + size * 0.72
+    pad_y = (box_h - text_block_h) / 2
+    cur_y = y + box_h - pad_y - size * 0.72
+
+    c.setFont(FONT_BOLD, size)
+    c.setFillColor(HexColor(f"#{COLD_WHITE}"))
+    for line in lines:
+        c.drawString(x + 14, cur_y, line)
+        cur_y -= lead
 
 
 def draw_pdf_cover(c: canvas.Canvas, data: dict, lang: str) -> None:
@@ -1429,9 +1512,13 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict, lang: str) -> None:
     c.setFillColor(HexColor(f"#{CYAN}"))
     c.drawString(54, h - 134, data["profile"]["title"])
 
-    c.setFont(FONT_REGULAR, 9.5)
+    sub_font_size = 9.5
+    sub_text = f"{data['profile']['experience']}  ·  {chrome['cover_domains']}"
+    while sub_font_size >= 7.8 and pdf_text_width(sub_text, FONT_REGULAR, sub_font_size) > 487:
+        sub_font_size = round(sub_font_size - 0.2, 2)
+    c.setFont(FONT_REGULAR, sub_font_size)
     c.setFillColor(HexColor("#9EB3BA"))
-    c.drawString(54, h - 153, f"{data['profile']['experience']}  ·  {chrome['cover_domains']}")
+    c.drawString(54, h - 153, sub_text)
 
     # 分割线
     c.setStrokeColor(HexColor("#213E47"))
@@ -1464,21 +1551,7 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict, lang: str) -> None:
         x = 54 + col * (box_w + col_gap)
         y = start_y - row * (box_h + row_gap)
         accent = accent_colors[index % len(accent_colors)]
-
-        # 线框主体
-        c.setFillColor(HexColor("#102027"))
-        c.setStrokeColor(HexColor("#264750"))
-        c.setLineWidth(0.9)
-        c.rect(x, y, box_w, box_h, fill=1, stroke=1)
-
-        # 左侧高亮竖条
-        c.setFillColor(HexColor(f"#{accent}"))
-        c.rect(x, y, 4.5, box_h, fill=1, stroke=0)
-
-        # 文字渲染
-        c.setFont(FONT_BOLD, 8.4)
-        c.setFillColor(HexColor(f"#{COLD_WHITE}"))
-        c.drawString(x + 14, y + 17, item)
+        draw_cover_chip_card(c, x, y, box_w, box_h, item, accent)
 
     # 4. 中间件基础设施矩阵 (Middleware Fabric - 2行2列)
     middleware_items = (
@@ -1494,18 +1567,7 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict, lang: str) -> None:
         row = index // 2
         x = 54 + col * (box_w + col_gap)
         y = middleware_start_y - row * (box_h + row_gap)
-
-        c.setFillColor(HexColor("#102027"))
-        c.setStrokeColor(HexColor("#264750"))
-        c.setLineWidth(0.9)
-        c.rect(x, y, box_w, box_h, fill=1, stroke=1)
-
-        c.setFillColor(HexColor(f"#{accent}"))
-        c.rect(x, y, 4.5, box_h, fill=1, stroke=0)
-
-        c.setFont(FONT_BOLD, 8.4)
-        c.setFillColor(HexColor(f"#{COLD_WHITE}"))
-        c.drawString(x + 14, y + 17, technology)
+        draw_cover_chip_card(c, x, y, box_w, box_h, technology, accent)
 
     # 5. 职业定位与工程准则终端框 (Engineering Statement Terminal)
     stmt_y = 120
@@ -1519,6 +1581,37 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict, lang: str) -> None:
     c.setFont(FONT_BOLD, 7.8)
     c.setFillColor(HexColor(f"#{ORANGE}"))
     c.drawString(68, stmt_y + stmt_h - 18, chrome["cover_statement"])
+
+    c.setFont(FONT_REGULAR, 8.8)
+    c.setFillColor(HexColor("#CCDCE0"))
+    summary_lines = wrap_pdf_text(data["profile"]["summary"], FONT_REGULAR, 8.8, 458)
+    for s_idx, s_line in enumerate(summary_lines):
+        c.drawString(68, stmt_y + stmt_h - 35 - s_idx * 14, s_line)
+
+    c.setFont(FONT_REGULAR, 7.6)
+    c.setFillColor(HexColor("#7E9BA4"))
+    c.drawString(68, stmt_y + 16, chrome["cover_statement_body"])
+
+    # 6. 底部联络与状态栏 (Footer & Contact Terminal)
+    c.setStrokeColor(HexColor(f"#{TEAL}"))
+    c.setLineWidth(0.8)
+    c.line(54, 88, 541, 88)
+
+    c.setFont(FONT_BOLD, 8.2)
+    c.setFillColor(HexColor(f"#{COLD_WHITE}"))
+    c.drawString(54, 69, f"TEL: {data['profile']['phone']}")
+    c.drawString(175, 69, f"EMAIL: {data['profile']['email']}")
+    c.drawString(380, 69, chrome["cover_base"])
+
+    c.setFont(FONT_BOLD, 8.2)
+    c.setFillColor(HexColor(f"#{CYAN}"))
+    c.drawString(54, 51, f"3D PORTFOLIO SITE: {website}")
+    c.linkURL(website, (54, 46, 320, 58))
+
+    c.setFont(FONT_REGULAR, 7.0)
+    c.setFillColor(HexColor("#5D7881"))
+    c.drawString(54, 28, chrome["cover_confidential"].format(name=data["profile"]["name"]))
+    c.drawRightString(541, 28, f"01 / {TOTAL_PAGES:02d} · JAVA BACKEND · AIOT · GIS · AGENT")
 
     c.setFont(FONT_REGULAR, 8.8)
     c.setFillColor(HexColor("#CCDCE0"))
@@ -1711,10 +1804,6 @@ def draw_pdf_system_overview(c: canvas.Canvas, page_no: int, project: dict, lang
     draw_stack_line(page, project["stack"])
     page.footer(lang)
 
-    draw_outcome_bar(page, project["outcome"], lang)
-    draw_stack_line(page, project["stack"])
-    page.footer(lang)
-
 
 def draw_pdf_system_modules(c: canvas.Canvas, page_no: int, project: dict, lang: str, name: str) -> None:
     chrome = CHROME[lang]
@@ -1807,10 +1896,6 @@ def draw_pdf_system_onepager(c: canvas.Canvas, page_no: int, project: dict, lang
                 accents[index % len(accents)],
                 lang,
             )
-
-    draw_outcome_bar(page, project["outcome"], lang)
-    draw_stack_line(page, project["stack"])
-    page.footer(lang)
 
     draw_outcome_bar(page, project["outcome"], lang)
     draw_stack_line(page, project["stack"])
