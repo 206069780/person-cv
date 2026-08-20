@@ -268,13 +268,7 @@ export function IntegratedCameraController({
     if (activeExhibit) {
       const smoothFactor = motionEnabled ? 1 - Math.exp(-delta * 7.5) : 1;
 
-      if (!dragging.current && motionEnabled) {
-        idleTime.current += delta;
-        if (idleTime.current > 1.2) {
-          orbitTheta.current.target += delta * 0.14;
-        }
-      }
-
+      // 定点聚焦：彻底移除相机自动公转（Auto Orbit），背景展厅保持绝对静止，仅保留用户手动 360° 检视
       orbitTheta.current.current = THREE.MathUtils.lerp(
         orbitTheta.current.current,
         orbitTheta.current.target,

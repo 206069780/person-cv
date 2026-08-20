@@ -18,13 +18,11 @@ import {
 } from '../shared/resources';
 
 // 05 - WeLink Search (统一搜索与个性化打分)
-const searchCabinetRackGeo = new THREE.BoxGeometry(0.48, 1.88, 0.72);
-const searchServerTrayGeo = new THREE.BoxGeometry(0.44, 0.16, 0.025);
-const searchRackSideStripGeo = new THREE.BoxGeometry(0.03, 1.84, 0.03);
-const searchCabinetTrimGeo = new THREE.BoxGeometry(0.03, 1.88, 0.03);
-const searchCabinetTopTrimGeo = new THREE.BoxGeometry(0.5, 0.03, 0.74);
-const searchPrismCrystalGeo = new THREE.ConeGeometry(0.58, 0.92, 4);
-const searchBeamConeGeo = new THREE.ConeGeometry(1.25, 1.45, 16, 1, true);
+const searchCabinetRackGeo = new THREE.BoxGeometry(0.44, 1.82, 0.68);
+const searchServerTrayGeo = new THREE.BoxGeometry(0.4, 0.15, 0.025);
+const searchRackSideStripGeo = new THREE.BoxGeometry(0.025, 1.78, 0.025);
+const searchPrismCrystalGeo = new THREE.ConeGeometry(0.72, 1.15, 4);
+const searchBeamConeGeo = new THREE.ConeGeometry(1.45, 1.65, 16, 1, true);
 const searchScannerBarGeo = new THREE.BoxGeometry(2.9, 0.04, 0.04);
 const searchIndexCubeGeo = new THREE.BoxGeometry(0.28, 0.19, 0.24);
 
@@ -88,8 +86,8 @@ export function WelinkSearchZone({ intensity, motionEnabled }: ExhibitVisualProp
         <meshBasicMaterial color={GOLD} transparent opacity={0.25} toneMapped={false} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* 动态水平切片扫描激光 */}
-      <group ref={scannerRef} position={[0, 0.9, 0]}>
+      {/* 动态水平切片扫描激光（位于机柜正面读数盘前方，呈现表面红外切片扫描效果） */}
+      <group ref={scannerRef} position={[0, 0.9, 0.42]}>
         <mesh geometry={searchScannerBarGeo}>
           <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.85 + intensity * 0.15} />
         </mesh>
