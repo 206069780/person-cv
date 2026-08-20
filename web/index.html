@@ -83,6 +83,16 @@
         100% { transform: translateX(250%); }
       }
     </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="initial-loader" aria-live="polite">
+        <div class="init-mark"><i /><i /><i /></div>
+        <p class="init-eyebrow">LITREE DIGITAL TWIN</p>
+        <div class="init-title">初始化展馆资源...</div>
+        <div class="init-track"><span></span></div>
+      </div>
+    </div>
     <script>
       (function () {
         var params = new URLSearchParams(location.search);
@@ -99,16 +109,6 @@
         if (title) title.textContent = 'Initializing museum assets...';
       })();
     </script>
-  </head>
-  <body>
-    <div id="root">
-      <div id="initial-loader" aria-live="polite">
-        <div class="init-mark"><i /><i /><i /></div>
-        <p class="init-eyebrow">LITREE DIGITAL TWIN</p>
-        <div class="init-title">初始化展馆资源...</div>
-        <div class="init-track"><span></span></div>
-      </div>
-    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

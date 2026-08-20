@@ -142,7 +142,7 @@ python tools/generate_resume.py
 | 范围 | 说明 |
 |------|------|
 | **源代码** | 可自由使用、修改、分发，需保留版权与许可声明 |
-| **简历内容** | `resume-data.json`、PDF、Word 中的个人经历与表述版权归作者所有；Fork 作模板使用时请替换为你的个人信息 |
+| **简历内容** | `resume-data.zh.json` / `resume-data.en.json`、PDF、Word 中的个人经历与表述版权归作者所有；Fork 作模板使用时请替换为你的个人信息 |
 | **第三方依赖** | 见 `web/package.json`，各依赖遵循其自身开源协议（如 React/Three.js 等多为 MIT） |
 
 ```text
