@@ -122,6 +122,27 @@
   gap: 8px;
 }
 
+.language-switcher {
+  display: inline-flex;
+  gap: 0;
+}
+
+.language-switcher .text-command {
+  min-width: 44px;
+  padding: 0 12px;
+}
+
+.language-switcher .text-command:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.language-switcher .text-command:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+
 .icon-command,
 .text-command,
 .primary-command {
