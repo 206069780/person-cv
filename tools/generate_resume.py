@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import shutil
@@ -21,9 +22,21 @@ from reportlab.pdfgen import canvas
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_PATH = ROOT / "web" / "src" / "data" / "resume-data.json"
-DOCX_PATH = ROOT / "付道品-高级Java开发工程师.docx"
-PDF_PATH = ROOT / "付道品-高级Java开发工程师.pdf"
+
+OUTPUT_STEMS = {
+    "zh": "付道品-高级Java开发工程师",
+    "en": "Daopin-Fu-Senior-Java-Engineer",
+}
+
+
+def resume_bundle(lang: str) -> dict:
+    stem = OUTPUT_STEMS[lang]
+    return {
+        "data": ROOT / "web" / "src" / "data" / f"resume-data.{lang}.json",
+        "pdf": ROOT / f"{stem}.pdf",
+        "docx": ROOT / f"{stem}.docx",
+    }
+
 
 FONT_REGULAR_PATH = Path(r"C:\Windows\Fonts\msyh.ttc")
 FONT_BOLD_PATH = Path(r"C:\Windows\Fonts\msyhbd.ttc")
@@ -59,9 +72,116 @@ WIDE_LINE_RATIO = 1.64
 MIN_LINE_RATIO = 1.52
 TOTAL_PAGES = 7
 
+CHROME = {
+    "zh": {
+        "page_before": "第 ",
+        "page_after": f" / {TOTAL_PAGES:02d} 页",
+        "stack": "技术栈  ",
+        "museum": "3D 展馆",
+        "overview": "核心简历",
+        "overview_sub": "面向普通投递的能力概览与工作经历",
+        "strengths": "核心能力",
+        "experience": "工作经历",
+        "position": "项目定位",
+        "business": "业务场景",
+        "pain": "现有痛点",
+        "goals": "建设目标",
+        "role": "本人角色",
+        "flow": "业务链路",
+        "boundary": "工程边界",
+        "modules": "核心业务模块",
+        "module": "模块",
+        "outcome": "落地结果",
+        "practice": "核心技术实践",
+        "implementation": "核心实现",
+        "challenges": "技术难点",
+        "module_outcome": "模块结果",
+        "bg": "背景",
+        "role_short": "角色",
+        "flow_short": "链路",
+        "boundary_short": "边界",
+        "result": "结果",
+        "cover_domains": "分布式微服务 / 智慧水务 / AIoT & GIS / Agent 工程化",
+        "cover_water": "国内外水站 / GLOBAL WATER STATIONS",
+        "cover_statement": "> ENGINEERING STATEMENT // 职业定位与工程准则",
+        "cover_statement_body": "★ 严谨工程边界意识 · 注重系统可恢复性、数据一致性与生产可观测性 · 具备端到端落地交付经验",
+        "cover_base": "BASE: 深圳 / 广州 · 全职",
+        "cover_confidential": "CONFIDENTIAL / {name} 个人技术经历与工程案例集",
+        "overview_kicker": "高级 Java 开发工程师 · 3D 展馆: {website} · 微服务 / AIoT / GIS / Agent",
+        "overview_position": "职业定位",
+        "overview_strengths": "核心能力矩阵",
+        "overview_experience": "工作经历",
+        "overview_stack": "技术域索引",
+        "system_arch": "系统架构",
+        "system_position": "项目定位 / 系统边界",
+        "system_background": "系统背景：业务场景 → 现有痛点 → 建设目标",
+        "heading_flow": "总体业务链路",
+        "heading_duty": "职责与工程边界",
+        "system_practice": "系统实践",
+        "impl_challenges": "核心实现与技术难点",
+        "module_impl": "核心实现",
+        "pdf_subject": "高级 Java 开发工程师简历",
+        "item_join": "；",
+        "item_stop": "。",
+        "item_strip": "。；",
+    },
+    "en": {
+        "page_before": "Page ",
+        "page_after": f" / {TOTAL_PAGES:02d}",
+        "stack": "Stack  ",
+        "museum": "3D museum",
+        "overview": "Core resume",
+        "overview_sub": "Competency overview and work history for general applications",
+        "strengths": "Core skills",
+        "experience": "Work experience",
+        "position": "Positioning",
+        "business": "Business context",
+        "pain": "Pain points",
+        "goals": "Build goals",
+        "role": "Role",
+        "flow": "Flow",
+        "boundary": "Engineering boundary",
+        "modules": "Core modules",
+        "module": "Module",
+        "outcome": "Outcome",
+        "practice": "Core technical practice",
+        "implementation": "Implementation",
+        "challenges": "Challenges",
+        "module_outcome": "Module outcome",
+        "bg": "Background",
+        "role_short": "Role",
+        "flow_short": "Flow",
+        "boundary_short": "Boundary",
+        "result": "Result",
+        "cover_domains": "Distributed microservices / smart water / AIoT & GIS / Agent engineering",
+        "cover_water": "Water stations worldwide / GLOBAL WATER STATIONS",
+        "cover_statement": "> ENGINEERING STATEMENT // positioning and engineering bar",
+        "cover_statement_body": "★ Strict ownership boundaries · recoverability, consistency, and production observability · end-to-end delivery",
+        "cover_base": "BASE: Shenzhen / Guangzhou · full-time",
+        "cover_confidential": "CONFIDENTIAL / {name} engineering casebook",
+        "overview_kicker": "Senior Java Engineer · 3D museum: {website} · microservices / AIoT / GIS / Agent",
+        "overview_position": "Positioning",
+        "overview_strengths": "Core competency matrix",
+        "overview_experience": "Work experience",
+        "overview_stack": "Technology index",
+        "system_arch": "System architecture",
+        "system_position": "Positioning / system boundary",
+        "system_background": "Background: context → pain points → goals",
+        "heading_flow": "End-to-end flow",
+        "heading_duty": "Role and engineering boundary",
+        "system_practice": "System practice",
+        "impl_challenges": "Implementation and challenges",
+        "module_impl": "Implementation",
+        "pdf_subject": "Senior Java Engineer resume",
+        "item_join": "; ",
+        "item_strip": ".;",
+        "item_stop": ".",
+    },
+}
 
-def load_data() -> dict:
-    return json.loads(DATA_PATH.read_text(encoding="utf-8"))
+
+def load_data(lang: str) -> dict:
+    return json.loads(resume_bundle(lang)["data"].read_text(encoding="utf-8"))
 
 
 def set_run_font(run, size: float, bold: bool = False, color: str = INK) -> None:
@@ -91,9 +211,10 @@ def set_repeatable_cell_margins(cell, top=70, start=100, bottom=70, end=100) -> 
         node.set(qn("w:type"), "dxa")
 
 
-def add_page_number(paragraph) -> None:
+def add_page_number(paragraph, lang: str) -> None:
+    chrome = CHROME[lang]
     paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = paragraph.add_run("第 ")
+    run = paragraph.add_run(chrome["page_before"])
     set_run_font(run, 8, color=MUTED)
     fld_char_1 = OxmlElement("w:fldChar")
     fld_char_1.set(qn("w:fldCharType"), "begin")
@@ -103,11 +224,11 @@ def add_page_number(paragraph) -> None:
     fld_char_2 = OxmlElement("w:fldChar")
     fld_char_2.set(qn("w:fldCharType"), "end")
     run._r.extend([fld_char_1, instr, fld_char_2])
-    end = paragraph.add_run(f" / {TOTAL_PAGES:02d} 页")
+    end = paragraph.add_run(chrome["page_after"])
     set_run_font(end, 8, color=MUTED)
 
 
-def configure_docx(doc: Document) -> None:
+def configure_docx(doc: Document, data: dict, lang: str) -> None:
     section = doc.sections[0]
     section.page_width = Cm(21)
     section.page_height = Cm(29.7)
@@ -176,11 +297,11 @@ def configure_docx(doc: Document) -> None:
     p = header.paragraphs[0]
     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p.paragraph_format.space_after = Pt(0)
-    r = p.add_run("付道品  |  高级 Java 开发工程师")
+    r = p.add_run(f"{data['profile']['name']}  |  {data['profile']['title']}")
     set_run_font(r, 8, bold=True, color=MUTED)
 
     footer = section.footer
-    add_page_number(footer.paragraphs[0])
+    add_page_number(footer.paragraphs[0], lang)
 
 
 def add_docx_title(doc: Document, kicker: str, title: str, subtitle: str | None = None) -> None:
@@ -218,17 +339,19 @@ def add_docx_bullets(doc: Document, items: Iterable[str]) -> None:
         set_run_font(r, 8.5, color=INK)
 
 
-def add_stack(doc: Document, stack: list[str]) -> None:
+def add_stack(doc: Document, stack: list[str], lang: str) -> None:
+    chrome = CHROME[lang]
     p = doc.add_paragraph()
     p.paragraph_format.space_before = Pt(4)
     p.paragraph_format.space_after = Pt(0)
-    r = p.add_run("技术栈  ")
+    r = p.add_run(chrome["stack"])
     set_run_font(r, 8.5, bold=True, color=ORANGE)
     r = p.add_run(" · ".join(stack))
     set_run_font(r, 8.2, color=MUTED)
 
 
-def add_docx_cover(doc: Document, data: dict) -> None:
+def add_docx_cover(doc: Document, data: dict, lang: str) -> None:
+    chrome = CHROME[lang]
     for _ in range(5):
         doc.add_paragraph()
     p = doc.add_paragraph()
@@ -281,20 +404,21 @@ def add_docx_cover(doc: Document, data: dict) -> None:
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     website = data["profile"].get("website", "http://cv.bookfree.online/")
-    r = p.add_run(f"{data['profile']['phone']}  |  {data['profile']['email']}  |  3D 展馆: {website}")
+    r = p.add_run(f"{data['profile']['phone']}  |  {data['profile']['email']}  |  {chrome['museum']}: {website}")
     set_run_font(r, 9.5, bold=True, color=TEAL)
 
 
-def add_docx_overview(doc: Document, data: dict) -> None:
-    add_docx_title(doc, f"02 / {TOTAL_PAGES:02d}", "核心简历", "面向普通投递的能力概览与工作经历")
+def add_docx_overview(doc: Document, data: dict, lang: str) -> None:
+    chrome = CHROME[lang]
+    add_docx_title(doc, f"02 / {TOTAL_PAGES:02d}", chrome["overview"], chrome["overview_sub"])
     p = doc.add_paragraph(style="Resume Lead")
     p.add_run(data["profile"]["summary"])
 
-    doc.add_paragraph("核心能力", style="Heading 2")
+    doc.add_paragraph(chrome["strengths"], style="Heading 2")
     for strength in data["strengths"]:
         add_labeled_paragraph(doc, strength["title"], strength["evidence"])
 
-    doc.add_paragraph("工作经历", style="Heading 2")
+    doc.add_paragraph(chrome["experience"], style="Heading 2")
     for exp in data["experiences"]:
         p = doc.add_paragraph()
         p.paragraph_format.space_before = Pt(3)
@@ -317,82 +441,86 @@ def add_docx_overview(doc: Document, data: dict) -> None:
             for item in topic["stack"]:
                 if item not in stack:
                     stack.append(item)
-    add_stack(doc, stack[:24])
+    add_stack(doc, stack[:24], lang)
 
 
-def join_items(items: list[str]) -> str:
-    return "；".join(item.rstrip("。；") for item in items) + "。"
+def join_items(items: list[str], lang: str) -> str:
+    chrome = CHROME[lang]
+    return chrome["item_join"].join(item.rstrip(chrome["item_strip"]) for item in items) + chrome["item_stop"]
 
 
-def add_docx_system_overview(doc: Document, page_no: int, project: dict) -> None:
+def add_docx_system_overview(doc: Document, page_no: int, project: dict, lang: str) -> None:
+    chrome = CHROME[lang]
     add_docx_title(
         doc,
         f"{page_no:02d} / {TOTAL_PAGES:02d} · {project['company']}",
         project["name"],
         project["period"],
     )
-    add_labeled_paragraph(doc, "项目定位", project["summary"])
-    add_labeled_paragraph(doc, "业务场景", project["businessContext"])
-    add_labeled_paragraph(doc, "现有痛点", join_items(project["painPoints"]))
-    add_labeled_paragraph(doc, "建设目标", join_items(project["buildGoals"]))
-    add_labeled_paragraph(doc, "本人角色", project["role"])
-    add_labeled_paragraph(doc, "业务链路", project["flow"])
-    add_labeled_paragraph(doc, "工程边界", project["engineeringBoundary"])
-    doc.add_paragraph("核心业务模块", style="Heading 2")
+    add_labeled_paragraph(doc, chrome["position"], project["summary"])
+    add_labeled_paragraph(doc, chrome["business"], project["businessContext"])
+    add_labeled_paragraph(doc, chrome["pain"], join_items(project["painPoints"], lang))
+    add_labeled_paragraph(doc, chrome["goals"], join_items(project["buildGoals"], lang))
+    add_labeled_paragraph(doc, chrome["role"], project["role"])
+    add_labeled_paragraph(doc, chrome["flow"], project["flow"])
+    add_labeled_paragraph(doc, chrome["boundary"], project["engineeringBoundary"])
+    doc.add_paragraph(chrome["modules"], style="Heading 2")
     for index, topic in enumerate(project["topics"], start=1):
-        add_labeled_paragraph(doc, f"模块 {index:02d}  {topic['title']}", topic["background"])
-    add_labeled_paragraph(doc, "落地结果", project["outcome"])
-    add_stack(doc, project["stack"])
+        add_labeled_paragraph(doc, f"{chrome['module']} {index:02d}  {topic['title']}", topic["background"])
+    add_labeled_paragraph(doc, chrome["outcome"], project["outcome"])
+    add_stack(doc, project["stack"], lang)
 
 
-def add_docx_system_modules(doc: Document, page_no: int, project: dict) -> None:
+def add_docx_system_modules(doc: Document, page_no: int, project: dict, lang: str) -> None:
+    chrome = CHROME[lang]
     add_docx_title(
         doc,
         f"{page_no:02d} / {TOTAL_PAGES:02d} · {project['company']}",
-        f"{project['name']} · 核心技术实践",
+        f"{project['name']} · {chrome['practice']}",
         project["period"],
     )
     for index, topic in enumerate(project["topics"], start=1):
-        doc.add_paragraph(f"模块 {index:02d}  {topic['title']}", style="Heading 2")
-        add_labeled_paragraph(doc, "本人角色", topic["role"])
-        add_labeled_paragraph(doc, "业务链路", topic["flow"])
-        doc.add_paragraph("核心实现", style="Heading 3")
+        doc.add_paragraph(f"{chrome['module']} {index:02d}  {topic['title']}", style="Heading 2")
+        add_labeled_paragraph(doc, chrome["role"], topic["role"])
+        add_labeled_paragraph(doc, chrome["flow"], topic["flow"])
+        doc.add_paragraph(chrome["implementation"], style="Heading 3")
         add_docx_bullets(doc, topic["implementation"])
-        doc.add_paragraph("技术难点", style="Heading 3")
+        doc.add_paragraph(chrome["challenges"], style="Heading 3")
         add_docx_bullets(doc, topic["challenges"])
-        add_labeled_paragraph(doc, "落地结果", topic["outcome"])
-    add_stack(doc, project["stack"])
+        add_labeled_paragraph(doc, chrome["outcome"], topic["outcome"])
+    add_stack(doc, project["stack"], lang)
 
 
-def add_docx_system_onepager(doc: Document, page_no: int, project: dict) -> None:
+def add_docx_system_onepager(doc: Document, page_no: int, project: dict, lang: str) -> None:
+    chrome = CHROME[lang]
     add_docx_title(
         doc,
         f"{page_no:02d} / {TOTAL_PAGES:02d} · {project['company']}",
         project["name"],
         project["period"],
     )
-    add_labeled_paragraph(doc, "项目定位", project["summary"])
-    add_labeled_paragraph(doc, "业务场景", project["businessContext"])
-    add_labeled_paragraph(doc, "现有痛点", join_items(project["painPoints"]))
-    add_labeled_paragraph(doc, "建设目标", join_items(project["buildGoals"]))
-    add_labeled_paragraph(doc, "本人角色", project["role"])
-    add_labeled_paragraph(doc, "业务链路", project["flow"])
-    add_labeled_paragraph(doc, "工程边界", project["engineeringBoundary"])
+    add_labeled_paragraph(doc, chrome["position"], project["summary"])
+    add_labeled_paragraph(doc, chrome["business"], project["businessContext"])
+    add_labeled_paragraph(doc, chrome["pain"], join_items(project["painPoints"], lang))
+    add_labeled_paragraph(doc, chrome["goals"], join_items(project["buildGoals"], lang))
+    add_labeled_paragraph(doc, chrome["role"], project["role"])
+    add_labeled_paragraph(doc, chrome["flow"], project["flow"])
+    add_labeled_paragraph(doc, chrome["boundary"], project["engineeringBoundary"])
     for index, topic in enumerate(project["topics"], start=1):
-        doc.add_paragraph(f"模块 {index:02d}  {topic['title']}", style="Heading 2")
+        doc.add_paragraph(f"{chrome['module']} {index:02d}  {topic['title']}", style="Heading 2")
         add_docx_bullets(doc, topic["implementation"])
-        add_labeled_paragraph(doc, "技术难点", "；".join(topic["challenges"]))
-        add_labeled_paragraph(doc, "模块结果", topic["outcome"])
-    add_labeled_paragraph(doc, "落地结果", project["outcome"])
-    add_stack(doc, project["stack"])
+        add_labeled_paragraph(doc, chrome["challenges"], chrome["item_join"].join(topic["challenges"]))
+        add_labeled_paragraph(doc, chrome["module_outcome"], topic["outcome"])
+    add_labeled_paragraph(doc, chrome["outcome"], project["outcome"])
+    add_stack(doc, project["stack"], lang)
 
 
-def build_docx(data: dict) -> None:
+def build_docx(data: dict, lang: str, out_path: Path) -> None:
     doc = Document()
-    configure_docx(doc)
-    add_docx_cover(doc, data)
+    configure_docx(doc, data, lang)
+    add_docx_cover(doc, data, lang)
     doc.add_page_break()
-    add_docx_overview(doc, data)
+    add_docx_overview(doc, data, lang)
 
     projects = data["projects"]
     if [item["id"] for item in projects] != ["litree", "oa", "welink", "senge"]:
@@ -401,13 +529,13 @@ def build_docx(data: dict) -> None:
         raise ValueError("Expected page spans: 2, 1, 1, 1")
 
     doc.add_page_break()
-    add_docx_system_overview(doc, 3, projects[0])
+    add_docx_system_overview(doc, 3, projects[0], lang)
     doc.add_page_break()
-    add_docx_system_modules(doc, 4, projects[0])
+    add_docx_system_modules(doc, 4, projects[0], lang)
     for page_no, project in enumerate(projects[1:], start=5):
         doc.add_page_break()
-        add_docx_system_onepager(doc, page_no, project)
-    doc.save(DOCX_PATH)
+        add_docx_system_onepager(doc, page_no, project, lang)
+    doc.save(out_path)
 
 
 def register_pdf_fonts() -> None:
@@ -581,10 +709,11 @@ def draw_index_badge(c: canvas.Canvas, x: float, y: float, index: str) -> float:
 
 
 class PdfPage:
-    def __init__(self, c: canvas.Canvas, page_no: int, chapter: str):
+    def __init__(self, c: canvas.Canvas, page_no: int, chapter: str, name: str):
         self.c = c
         self.page_no = page_no
         self.chapter = chapter
+        self.name = name
         self.width, self.height = A4
         self.rail = 42
         self.left = 60
@@ -607,7 +736,8 @@ class PdfPage:
         c.rotate(90)
         c.setFont(FONT_BOLD, 7.0)
         c.setFillColor(HexColor(f"#{RAIL_TEXT}"))
-        c.drawString(0, 0, "FU DAOPIN  ·  JAVA BACKEND  ·  ENGINEERING CASEBOOK")
+        rail_name = " ".join(self.name.upper().split())
+        c.drawString(0, 0, f"{rail_name}  ·  JAVA BACKEND  ·  ENGINEERING CASEBOOK")
         c.restoreState()
         c.setFont(FONT_BOLD, 12)
         c.setFillColor(HexColor("#FFFFFF"))
@@ -948,10 +1078,11 @@ class PdfPage:
             c.drawString(chip_x + 4, chip_y + 1.1, tag)
             chip_x += chip_w + 3.5
 
-    def draw_card_fill(self, x: float, y: float, width: float, height: float, background: str, tags: list[str]) -> None:
+    def draw_card_fill(self, x: float, y: float, width: float, height: float, background: str, tags: list[str], lang: str) -> None:
         if height < 22:
             return
         c = self.c
+        chrome = CHROME[lang]
         c.setFillColor(HexColor("#E8F3F2"))
         c.setStrokeColor(HexColor(f"#{TEAL}"))
         c.setLineWidth(0.55)
@@ -962,7 +1093,7 @@ class PdfPage:
         if background and text_h >= 14:
             c.setFont(FONT_BOLD, 6.3)
             c.setFillColor(HexColor(f"#{TEAL}"))
-            c.drawString(x, cursor, "背景")
+            c.drawString(x, cursor, chrome["bg"])
             cursor -= 11
             size = 6.7
             lines = wrap_pdf_text(background, FONT_REGULAR, size, width - 2)
@@ -989,8 +1120,10 @@ class PdfPage:
         index: int,
         topic: dict,
         accent: str,
+        lang: str,
     ) -> None:
         c = self.c
+        chrome = CHROME[lang]
         c.setFillColor(HexColor("#FFFFFF"))
         c.setStrokeColor(HexColor(f"#{RULE}"))
         c.setLineWidth(0.6)
@@ -1013,9 +1146,9 @@ class PdfPage:
         tall = height >= 400
         if tall:
             meta_rows = [
-                ("角色", topic.get("role", "")),
-                ("链路", topic.get("flow", "")),
-                ("边界", topic.get("engineeringBoundary", "")),
+                (chrome["role_short"], topic.get("role", "")),
+                (chrome["flow_short"], topic.get("flow", "")),
+                (chrome["boundary_short"], topic.get("engineeringBoundary", "")),
             ]
             meta_limit = 3
         else:
@@ -1113,7 +1246,7 @@ class PdfPage:
                 line_y -= meta_lead
             cursor = line_y - meta_gap
 
-        self.section_label(x + 12, cursor, "核心实现")
+        self.section_label(x + 12, cursor, chrome["implementation"])
         cursor -= 13
         for item_lines in impl_lines:
             c.setFillColor(HexColor(f"#{accent}"))
@@ -1127,7 +1260,7 @@ class PdfPage:
 
         c.setFont(FONT_BOLD, TYPE_SECTION)
         c.setFillColor(HexColor(f"#{NAVY}"))
-        c.drawString(x + 12, cursor, "技术难点")
+        c.drawString(x + 12, cursor, chrome["challenges"])
         cursor -= 13
         for item_lines in challenge_lines:
             c.setFillColor(HexColor(f"#{ORANGE}"))
@@ -1149,6 +1282,7 @@ class PdfPage:
                 fill_h,
                 topic.get("background", ""),
                 topic.get("stack", []),
+                lang,
             )
 
         outcome_h = outcome_block + 4
@@ -1161,7 +1295,7 @@ class PdfPage:
         pad_outcome_y = (outcome_h - total_outcome_text_h) / 2
         text_y = y + 6 + outcome_h - pad_outcome_y - outcome_size * 0.72
 
-        c.drawString(x + 12, text_y, "结果")
+        c.drawString(x + 12, text_y, chrome["result"])
         c.setFont(FONT_REGULAR, outcome_size)
         c.setFillColor(HexColor(f"#{INK}"))
         for line in outcome_lines:
@@ -1199,7 +1333,7 @@ class PdfPage:
                 c.line(arrow_x + gap - 5, mid + 2.4, arrow_x + gap - 2, mid)
                 c.line(arrow_x + gap - 5, mid - 2.4, arrow_x + gap - 2, mid)
 
-    def footer(self) -> None:
+    def footer(self, lang: str) -> None:
         website = "http://cv.bookfree.online/"
         self.c.setFont(FONT_BOLD, 7.2)
         self.c.setFillColor(HexColor(f"#{TEAL}"))
@@ -1210,7 +1344,8 @@ class PdfPage:
         self.c.drawRightString(self.right, 17, f"CASEBOOK  /  {self.page_no:02d} OF {TOTAL_PAGES:02d}")
 
 
-def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
+def draw_pdf_cover(c: canvas.Canvas, data: dict, lang: str) -> None:
+    chrome = CHROME[lang]
     w, h = A4
     c.setFillColor(HexColor(f"#{GRAPHITE}"))
     c.rect(0, 0, w, h, fill=1, stroke=0)
@@ -1296,7 +1431,7 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
 
     c.setFont(FONT_REGULAR, 9.5)
     c.setFillColor(HexColor("#9EB3BA"))
-    c.drawString(54, h - 153, f"{data['profile']['experience']}  ·  分布式微服务 / 智慧水务 / AIoT & GIS / Agent 工程化")
+    c.drawString(54, h - 153, f"{data['profile']['experience']}  ·  {chrome['cover_domains']}")
 
     # 分割线
     c.setStrokeColor(HexColor("#213E47"))
@@ -1312,7 +1447,7 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
     c.drawString(54, h - 235, "10w+")
     c.setFont(FONT_BOLD, 10.5)
     c.setFillColor(HexColor(f"#{COLD_WHITE}"))
-    c.drawString(56, h - 256, "国内外水站 / GLOBAL WATER STATIONS")
+    c.drawString(56, h - 256, chrome["cover_water"])
 
     # 3. 核心亮点工业线框矩阵 (Highlight Chip Boxes Matrix - 2列多行)
     box_w = 236
@@ -1383,7 +1518,7 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
 
     c.setFont(FONT_BOLD, 7.8)
     c.setFillColor(HexColor(f"#{ORANGE}"))
-    c.drawString(68, stmt_y + stmt_h - 18, "> ENGINEERING STATEMENT // 职业定位与工程准则")
+    c.drawString(68, stmt_y + stmt_h - 18, chrome["cover_statement"])
 
     c.setFont(FONT_REGULAR, 8.8)
     c.setFillColor(HexColor("#CCDCE0"))
@@ -1393,7 +1528,7 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
 
     c.setFont(FONT_REGULAR, 7.6)
     c.setFillColor(HexColor("#7E9BA4"))
-    c.drawString(68, stmt_y + 16, "★ 严谨工程边界意识 · 注重系统可恢复性、数据一致性与生产可观测性 · 具备端到端落地交付经验")
+    c.drawString(68, stmt_y + 16, chrome["cover_statement_body"])
 
     # 6. 底部联络与状态栏 (Footer & Contact Terminal)
     c.setStrokeColor(HexColor(f"#{TEAL}"))
@@ -1404,7 +1539,7 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
     c.setFillColor(HexColor(f"#{COLD_WHITE}"))
     c.drawString(54, 69, f"TEL: {data['profile']['phone']}")
     c.drawString(175, 69, f"EMAIL: {data['profile']['email']}")
-    c.drawString(380, 69, "BASE: 深圳 / 广州 · 全职")
+    c.drawString(380, 69, chrome["cover_base"])
 
     c.setFont(FONT_BOLD, 8.2)
     c.setFillColor(HexColor(f"#{CYAN}"))
@@ -1413,16 +1548,17 @@ def draw_pdf_cover(c: canvas.Canvas, data: dict) -> None:
 
     c.setFont(FONT_REGULAR, 7.0)
     c.setFillColor(HexColor("#5D7881"))
-    c.drawString(54, 28, "CONFIDENTIAL / 付道品 个人技术经历与工程案例集")
+    c.drawString(54, 28, chrome["cover_confidential"].format(name=data["profile"]["name"]))
     c.drawRightString(541, 28, f"01 / {TOTAL_PAGES:02d} · JAVA BACKEND · AIOT · GIS · AGENT")
 
 
-def draw_pdf_overview(c: canvas.Canvas, data: dict) -> None:
+def draw_pdf_overview(c: canvas.Canvas, data: dict, lang: str) -> None:
+    chrome = CHROME[lang]
     website = data["profile"].get("website", "http://cv.bookfree.online/")
-    page = PdfPage(c, 2, "PROFILE / CAPABILITY MATRIX")
-    page.title("核心简历", f"高级 Java 开发工程师 · 3D 展馆: {website} · 微服务 / AIoT / GIS / Agent")
-    page.info_box(page.left, 694, page.content_width, 48, "职业定位", data["profile"]["summary"], ORANGE)
-    page.section_label(page.left, 678, "核心能力矩阵", "A1")
+    page = PdfPage(c, 2, "PROFILE / CAPABILITY MATRIX", data["profile"]["name"])
+    page.title(chrome["overview"], chrome["overview_kicker"].format(website=website))
+    page.info_box(page.left, 694, page.content_width, 48, chrome["overview_position"], data["profile"]["summary"], ORANGE)
+    page.section_label(page.left, 678, chrome["overview_strengths"], "A1")
     box_gap = 8
     box_width = (page.content_width - box_gap) / 2
     strength_h = 54
@@ -1441,7 +1577,7 @@ def draw_pdf_overview(c: canvas.Canvas, data: dict) -> None:
                 if item not in stack:
                     stack.append(item)
 
-    page.section_label(page.left, 538, "工作经历", "A2")
+    page.section_label(page.left, 538, chrome["overview_experience"], "A2")
     stack_h = 48
     stack_y = 62
     area_top = 526
@@ -1459,12 +1595,13 @@ def draw_pdf_overview(c: canvas.Canvas, data: dict) -> None:
             exp,
             ORANGE if index == 0 else TEAL,
         )
-    page.info_box(page.left, stack_y, page.content_width, stack_h, "技术域索引", " · ".join(stack[:24]), ORANGE)
-    page.footer()
+    page.info_box(page.left, stack_y, page.content_width, stack_h, chrome["overview_stack"], " · ".join(stack[:24]), ORANGE)
+    page.footer(lang)
 
 
-def draw_outcome_bar(page: PdfPage, text: str) -> None:
+def draw_outcome_bar(page: PdfPage, text: str, lang: str) -> None:
     c = page.c
+    chrome = CHROME[lang]
     bar_y = 56
     bar_h = 50
     c.setFillColor(HexColor(f"#{GRAPHITE}"))
@@ -1484,7 +1621,7 @@ def draw_outcome_bar(page: PdfPage, text: str) -> None:
     label_y = bar_y + bar_h - pad_top - label_size * 0.72
     c.setFont(FONT_BOLD, label_size)
     c.setFillColor(HexColor(f"#{CYAN}"))
-    c.drawString(page.left + 14, label_y, "落地结果")
+    c.drawString(page.left + 14, label_y, chrome["outcome"])
 
     text_y = label_y - label_gap - text_size * 0.72
     c.setFont(FONT_REGULAR, text_size)
@@ -1501,42 +1638,43 @@ def draw_stack_line(page: PdfPage, stack: list[str]) -> None:
     page.wrapped("  /  ".join(stack), page.left + 72, 41, page.content_width - 72, size=7.15, leading=line_leading(7.15, wide=True), color=MUTED, max_lines=2)
 
 
-def draw_pdf_system_overview(c: canvas.Canvas, page_no: int, project: dict) -> None:
-    page = PdfPage(c, page_no, f"{project['name'].upper()}  /  系统架构")
+def draw_pdf_system_overview(c: canvas.Canvas, page_no: int, project: dict, lang: str, name: str) -> None:
+    chrome = CHROME[lang]
+    page = PdfPage(c, page_no, f"{project['name'].upper()}  /  {chrome['system_arch']}", name)
     page.title(project["name"], f"{project['company']}  |  {project['period']}")
-    page.info_box(page.left, 694, page.content_width, 48, "项目定位 / 系统边界", project["summary"], ORANGE)
+    page.info_box(page.left, 694, page.content_width, 48, chrome["system_position"], project["summary"], ORANGE)
 
-    page.section_label(page.left, 678, "系统背景：业务场景 → 现有痛点 → 建设目标", "01")
+    page.section_label(page.left, 678, chrome["system_background"], "01")
     page.labeled_rows_box(
         page.left,
         566,
         page.content_width,
         104,
         [
-            ("业务场景", project["businessContext"], TEAL),
-            ("现有痛点", join_items(project["painPoints"]), ORANGE),
-            ("建设目标", join_items(project["buildGoals"]), TEAL),
+            (chrome["business"], project["businessContext"], TEAL),
+            (chrome["pain"], join_items(project["painPoints"], lang), ORANGE),
+            (chrome["goals"], join_items(project["buildGoals"], lang), TEAL),
         ],
     )
 
-    page.section_label(page.left, 550, "总体业务链路", "02")
+    page.section_label(page.left, 550, chrome["heading_flow"], "02")
     page.pipeline(510, project["flow"], 32)
 
-    page.section_label(page.left, 494, "职责与工程边界", "03")
+    page.section_label(page.left, 494, chrome["heading_duty"], "03")
     page.labeled_rows_box(
         page.left,
         432,
         page.content_width,
         54,
         [
-            ("本人角色", project["role"], TEAL),
-            ("工程边界", project["engineeringBoundary"], ORANGE),
+            (chrome["role"], project["role"], TEAL),
+            (chrome["boundary"], project["engineeringBoundary"], ORANGE),
         ],
         preferred_size=8.1,
         min_size=6.4,
     )
 
-    page.section_label(page.left, 416, "核心业务模块", "04")
+    page.section_label(page.left, 416, chrome["modules"], "04")
     gap = 8
     card_width = (page.content_width - gap * (len(project["topics"]) - 1)) / len(project["topics"])
     accents = [TEAL, CYAN, ORANGE]
@@ -1565,22 +1703,23 @@ def draw_pdf_system_overview(c: canvas.Canvas, page_no: int, project: dict) -> N
             c.drawString(x + 10, title_y, line)
             title_y -= round(title_size * MIN_LINE_RATIO, 2)
         after_bg = page.wrapped(topic["background"], x + 10, title_y - 8, card_width - 20, size=7.8, leading=line_leading(7.8), max_lines=6, min_size=6.8)
-        after_role = page.wrapped(f"角色  {topic['role']}", x + 10, after_bg - 8, card_width - 20, size=7.3, leading=line_leading(7.3), color=MUTED, max_lines=4, min_size=6.6)
+        after_role = page.wrapped(f"{chrome['role_short']}  {topic['role']}", x + 10, after_bg - 8, card_width - 20, size=7.3, leading=line_leading(7.3), color=MUTED, max_lines=4, min_size=6.6)
         if topic.get("stack"):
             page.draw_stack_chips(x + 10, y + 10, card_width - 20, max(24.0, after_role - y - 16), topic["stack"])
 
-    draw_outcome_bar(page, project["outcome"])
+    draw_outcome_bar(page, project["outcome"], lang)
     draw_stack_line(page, project["stack"])
-    page.footer()
+    page.footer(lang)
 
-    draw_outcome_bar(page, project["outcome"])
+    draw_outcome_bar(page, project["outcome"], lang)
     draw_stack_line(page, project["stack"])
-    page.footer()
+    page.footer(lang)
 
 
-def draw_pdf_system_modules(c: canvas.Canvas, page_no: int, project: dict) -> None:
-    page = PdfPage(c, page_no, f"{project['name'].upper()}  /  核心技术实践")
-    page.title(f"{project['name']} · 核心技术实践", f"{project['company']}  |  {project['period']}")
+def draw_pdf_system_modules(c: canvas.Canvas, page_no: int, project: dict, lang: str, name: str) -> None:
+    chrome = CHROME[lang]
+    page = PdfPage(c, page_no, f"{project['name'].upper()}  /  {chrome['practice']}", name)
+    page.title(f"{project['name']} · {chrome['practice']}", f"{project['company']}  |  {project['period']}")
     gap = 8
     card_width = (page.content_width - gap * (len(project["topics"]) - 1)) / len(project["topics"])
     accents = [TEAL, CYAN, ORANGE]
@@ -1595,50 +1734,52 @@ def draw_pdf_system_modules(c: canvas.Canvas, page_no: int, project: dict) -> No
             index + 1,
             topic,
             accents[index % len(accents)],
+            lang,
         )
-    draw_outcome_bar(page, project["outcome"])
+    draw_outcome_bar(page, project["outcome"], lang)
     draw_stack_line(page, project["stack"])
-    page.footer()
+    page.footer(lang)
 
 
-def draw_pdf_system_onepager(c: canvas.Canvas, page_no: int, project: dict) -> None:
-    page = PdfPage(c, page_no, f"{project['name'].upper()}  /  系统实践")
+def draw_pdf_system_onepager(c: canvas.Canvas, page_no: int, project: dict, lang: str, name: str) -> None:
+    chrome = CHROME[lang]
+    page = PdfPage(c, page_no, f"{project['name'].upper()}  /  {chrome['system_practice']}", name)
     page.title(project["name"], f"{project['company']}  |  {project['period']}")
-    page.info_box(page.left, 694, page.content_width, 48, "项目定位 / 系统边界", project["summary"], ORANGE)
+    page.info_box(page.left, 694, page.content_width, 48, chrome["system_position"], project["summary"], ORANGE)
 
-    page.section_label(page.left, 678, "系统背景：业务场景 → 现有痛点 → 建设目标", "01")
+    page.section_label(page.left, 678, chrome["system_background"], "01")
     page.labeled_rows_box(
         page.left,
         566,
         page.content_width,
         104,
         [
-            ("业务场景", project["businessContext"], TEAL),
-            ("现有痛点", join_items(project["painPoints"]), ORANGE),
-            ("建设目标", join_items(project["buildGoals"]), TEAL),
+            (chrome["business"], project["businessContext"], TEAL),
+            (chrome["pain"], join_items(project["painPoints"], lang), ORANGE),
+            (chrome["goals"], join_items(project["buildGoals"], lang), TEAL),
         ],
         preferred_size=7.6,
         min_size=6.2,
     )
 
-    page.section_label(page.left, 550, "总体业务链路", "02")
+    page.section_label(page.left, 550, chrome["heading_flow"], "02")
     page.pipeline(510, project["flow"], 32)
 
-    page.section_label(page.left, 494, "职责与工程边界", "03")
+    page.section_label(page.left, 494, chrome["heading_duty"], "03")
     page.labeled_rows_box(
         page.left,
         432,
         page.content_width,
         54,
         [
-            ("本人角色", project["role"], TEAL),
-            ("工程边界", project["engineeringBoundary"], ORANGE),
+            (chrome["role"], project["role"], TEAL),
+            (chrome["boundary"], project["engineeringBoundary"], ORANGE),
         ],
         preferred_size=7.6,
         min_size=6.2,
     )
 
-    page.section_label(page.left, 416, "核心实现与技术难点", "04")
+    page.section_label(page.left, 416, chrome["impl_challenges"], "04")
     gap = 8
     card_y, card_h = 116, 292
     topics = project["topics"]
@@ -1650,8 +1791,8 @@ def draw_pdf_system_onepager(c: canvas.Canvas, page_no: int, project: dict) -> N
             topic["implementation"],
             topic["challenges"],
         )
-        page.bullet_box(page.left, card_y, implementation_width, card_h, f"模块 01  {topic['title']} · 核心实现", topic["implementation"], TEAL)
-        page.bullet_box(page.left + implementation_width + gap, card_y, challenge_width, card_h, "技术难点", topic["challenges"], ORANGE)
+        page.bullet_box(page.left, card_y, implementation_width, card_h, f"{chrome['module']} 01  {topic['title']} · {chrome['implementation']}", topic["implementation"], TEAL)
+        page.bullet_box(page.left + implementation_width + gap, card_y, challenge_width, card_h, chrome["challenges"], topic["challenges"], ORANGE)
     else:
         card_width = (page.content_width - gap * (len(topics) - 1)) / len(topics)
         accents = [TEAL, CYAN, ORANGE]
@@ -1664,49 +1805,57 @@ def draw_pdf_system_onepager(c: canvas.Canvas, page_no: int, project: dict) -> N
                 index + 1,
                 topic,
                 accents[index % len(accents)],
+                lang,
             )
 
-    draw_outcome_bar(page, project["outcome"])
+    draw_outcome_bar(page, project["outcome"], lang)
     draw_stack_line(page, project["stack"])
-    page.footer()
+    page.footer(lang)
 
-    draw_outcome_bar(page, project["outcome"])
+    draw_outcome_bar(page, project["outcome"], lang)
     draw_stack_line(page, project["stack"])
-    page.footer()
+    page.footer(lang)
 
 
-def build_pdf(data: dict) -> None:
+def build_pdf(data: dict, lang: str, out_path: Path) -> None:
+    chrome = CHROME[lang]
+    name = data["profile"]["name"]
     register_pdf_fonts()
-    c = canvas.Canvas(str(PDF_PATH), pagesize=A4, pageCompression=1)
-    c.setTitle("付道品 - 高级 Java 开发工程师")
-    c.setAuthor("付道品")
-    c.setSubject("高级 Java 开发工程师简历")
-    draw_pdf_cover(c, data)
+    c = canvas.Canvas(str(out_path), pagesize=A4, pageCompression=1)
+    c.setTitle(f"{name} - {data['profile']['title']}")
+    c.setAuthor(name)
+    c.setSubject(chrome["pdf_subject"])
+    draw_pdf_cover(c, data, lang)
     c.showPage()
-    draw_pdf_overview(c, data)
+    draw_pdf_overview(c, data, lang)
 
     projects = data["projects"]
     c.showPage()
-    draw_pdf_system_overview(c, 3, projects[0])
+    draw_pdf_system_overview(c, 3, projects[0], lang, name)
     c.showPage()
-    draw_pdf_system_modules(c, 4, projects[0])
+    draw_pdf_system_modules(c, 4, projects[0], lang, name)
     for page_no, project in enumerate(projects[1:], start=5):
         c.showPage()
-        draw_pdf_system_onepager(c, page_no, project)
+        draw_pdf_system_onepager(c, page_no, project, lang, name)
     c.save()
 
 
 def main() -> None:
-    data = load_data()
-    build_docx(data)
-    build_pdf(data)
-    print(DOCX_PATH)
-    print(PDF_PATH)
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--lang", choices=("zh", "en", "all"), default="all")
+    args = parser.parse_args()
+    langs = ("zh", "en") if args.lang == "all" else (args.lang,)
     public_resume_dir = ROOT / "web" / "public" / "resume"
     public_resume_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(PDF_PATH, public_resume_dir / PDF_PATH.name)
-    shutil.copy2(DOCX_PATH, public_resume_dir / DOCX_PATH.name)
+    for lang in langs:
+        data = load_data(lang)
+        bundle = resume_bundle(lang)
+        build_docx(data, lang, bundle["docx"])
+        build_pdf(data, lang, bundle["pdf"])
+        shutil.copy2(bundle["pdf"], public_resume_dir / bundle["pdf"].name)
+        shutil.copy2(bundle["docx"], public_resume_dir / bundle["docx"].name)
+        print(bundle["docx"])
+        print(bundle["pdf"])
     print(f"Copied to {public_resume_dir}")
 
 

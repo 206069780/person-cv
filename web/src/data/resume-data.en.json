@@ -93,7 +93,7 @@
         "Land controllable, recoverable, auditable Agent and AI Coding practice inside the Java stack."
       ],
       "role": "Owned the device ledger, industrial protocol gateway, GIS topology, and water data agent; joined microservice collaboration, cross-module integration, and production incident work.",
-      "flow": "Project space & station → multi-gateway topology → IoT ledger → protocol thing-model → realtime monitor/alarm → GIS topology → water data agent",
+      "flow": "Project & station → Multi-gateway → IoT ledger → Thing-model → Realtime monitor → GIS topology → Water agent",
       "engineeringBoundary": "Owns device ledger, multi-protocol ingest, GIS/DMA, and Agent engineering, covering UsrCloud, MQTT, Modbus TCP/RTU, TCP/UDP meters, FanYi, Maituo, and Gukon OPC/HTTP.",
       "outcome": "Closed the water backend loop from onboarding and ingest through monitoring, alarms, network analysis, and the data agent, supporting 10w+ stations.",
       "stack": ["Java 21", "Spring Boot 3", "Spring Cloud", "Nacos", "OpenFeign", "PostgreSQL/PostGIS", "Redis", "TDengine", "MQTT", "Modbus", "TCP/UDP", "OPC/HTTP", "AgentScope Java 2.0", "Spring AI Graph"],
@@ -103,24 +103,24 @@
           "title": "Microservice foundation and device ledger",
           "background": "Built a multi-tenant microservice foundation for 10w+ stations to keep multi-source ledgers, multi-gateway topology, and bulk validation consistent.",
           "role": "Owned tenant-context propagation, station-gateway-device topology, second-scale bulk ledger import, and cross-service consistency.",
-          "flow": "Project space & station → multi-gateway topology → bulk ledger import → thing-model mapping → runtime stats",
+          "flow": "Project & station → Multi-gateway → Bulk import → Thing-model → Runtime stats",
           "engineeringBoundary": "Built the foundation on unified auth, end-to-end tenant-context propagation, and ID mapping, with row-level isolation and idempotent compensation.",
           "implementation": [
-            "End-to-end multi-tenant isolation via TransmittableThreadLocal, Feign interceptors, and MyBatis plugins, with safe context cleanup.",
-            "Caffeine + Redis cache plus distributed locks to stop stampede, penetration, and avalanches; hot config stays in local L1.",
-            "Compare IoT status by station, drop empty or fully-offline sites, and unify station-gateway-device mapping.",
-            "EasyExcel + JSR-303 row validation for 10k-scale ledgers; failed rows return with locations without aborting the batch.",
-            "Idempotent compensation between local ledger writes and remote IoT registration so retries never duplicate devices.",
-            "Generate thing-model attributes from templates and use Redisson watchdog locks to stop concurrent mock reports and tenant bleed.",
-            "Reconcile station master data with IoT registration on a timer; exceptions enter a compensation queue instead of silent loss."
+            "Multi-tenant isolation via TransmittableThreadLocal, Feign interceptors, and MyBatis plugins, with safe cleanup.",
+            "Caffeine + Redis cache and distributed locks to stop stampede, penetration, and avalanches; hot config in L1.",
+            "Compare IoT status by station, drop empty or offline sites, and unify station-gateway-device mapping.",
+            "EasyExcel + JSR-303 row validation for 10k ledgers; failed rows return with locations, no batch abort.",
+            "Idempotent compensation between ledger writes and IoT registration so retries never duplicate devices.",
+            "Generate thing-model attributes from templates; Redisson watchdog locks stop concurrent mock reports and tenant bleed.",
+            "Reconcile station master data with IoT registration on a timer; exceptions enter a compensation queue."
           ],
           "challenges": [
-            "ThreadLocal is easy to drop or leak across pools and schedulers; wrap the life cycle and always clean up.",
-            "One station may have many gateways, inactive gateways, and stale ledger rows; import failures must isolate by row, not roll back the batch.",
+            "ThreadLocal leaks across pools and schedulers; wrap the life cycle and always clean up.",
+            "Stations have many gateways and stale ledger rows; import failures isolate by row, not roll back the batch.",
             "Cross-service registration can partially succeed; converge with business-key idempotency and compensation jobs.",
             "Cache and lock keys must include tenant, or bulk import and registration will cross-write."
           ],
-          "outcome": "Opened the main path from onboarding, gateway binding, and device registration to monitoring stats, with reconcilable, compensable IoT registration.",
+          "outcome": "Opened onboarding and device registration to monitoring, with reconcilable IoT sync.",
           "stack": ["Java 21", "Spring Boot 3", "Spring Cloud", "Nacos", "OpenFeign", "MyBatis", "PostgreSQL", "Redis", "Redisson", "Quartz", "EasyExcel"]
         },
         {
@@ -128,7 +128,7 @@
           "title": "Industrial AIoT and GIS networks",
           "background": "Field protocols include UsrCloud, MQTT, Modbus, TCP/UDP meters, FanYi, Maituo, and Gukon OPC/HTTP. Thing models must unify before topology and DMA.",
           "role": "Owned UsrCloud/MQTT/Modbus/TCP/UDP/OPC ingest and thing models, plus GIS valve isolation and DMA.",
-          "flow": "UsrCloud/MQTT/Modbus/TCP/UDP/OPC → device identity match → thing-model cleanup → PostGIS topology → pruned BFS → DMA leakage alert",
+          "flow": "Multi-protocol → Device match → Thing-model → PostGIS → Pruned BFS → DMA alert",
           "engineeringBoundary": "Owns full-path ingest and thing-model mapping for UsrCloud, MQTT, Modbus TCP/RTU, TCP/UDP meters, FanYi, Maituo, and Gukon OPC/HTTP.",
           "implementation": [
             "UsrCloud HTTP ingest: Redis dual-token refresh, token-bucket limits, and a bounded pool for paged collection, isolating single-device faults.",
@@ -145,7 +145,7 @@
             "Networks have loops and isolated subgraphs; traversals need cycle detection and pruning.",
             "The same physical device may report over different protocols; merge by thing-model identity."
           ],
-          "outcome": "Brought multi-protocol devices onto one IoT path with a network one-map, valve isolation, and DMA leakage monitoring.",
+          "outcome": "Unified multi-protocol devices on one IoT path with valve isolation and DMA leakage.",
           "stack": ["Java", "Spring Boot", "HTTP", "MQTT", "Modbus TCP/RTU", "TCP/UDP", "OPC/HTTP", "PostgreSQL/PostGIS", "Redis", "TDengine", "Thing model"]
         },
         {
@@ -153,7 +153,7 @@
           "title": "Water data agent and AI Coding",
           "background": "Landed a controllable, recoverable, auditable data agent inside the water microservices, and turned a real water project into an AI Coding workflow.",
           "role": "Drove AgentScope Java adaptation and Spring AI agents, including NL2SQL, HITL, sandbox execution, and AI Coding standards.",
-          "flow": "User intent → StateGraph / schema prune → NL2SQL → HITL → container sandbox → report",
+          "flow": "User intent → StateGraph → NL2SQL → HITL → Sandbox → Report",
           "engineeringBoundary": "Agents always enforce permission checks, human approval, and sandbox isolation; models are never exposed as writable production APIs.",
           "implementation": [
             "Adapted AgentScope Java 2.0 into a HarnessAgent / ReActAgent / Toolkit / Memory / Session runtime.",
@@ -170,7 +170,7 @@
             "Tools can cross tenants; enforce session, tenant, and data permission at the Tool gate.",
             "Oversized schemas must be pruned by permission or Planner picks the wrong table or times out."
           ],
-          "outcome": "Shipped an approvable, sandboxed, auditable water data agent and a durable AI Coding workflow.",
+          "outcome": "Shipped an approvable, sandboxed water data agent and a durable AI Coding workflow.",
           "stack": ["AgentScope Java 2.0", "Spring AI Graph", "NL2SQL", "Docker Sandbox", "SSE", "AGENTS.md"]
         }
       ]
@@ -194,7 +194,7 @@
         "Unify auth and org permissions so water accounts take effect as soon as HR changes."
       ],
       "role": "Owned the attendance rule engine, performance state machine, org master-data sync, and SSO integration.",
-      "flow": "Org/HR → shift attendance → document offset & daily close → performance review → master-data sync → water permissions",
+      "flow": "Org/HR → Shift attendance → Daily close → Performance → Master sync → Water perms",
       "engineeringBoundary": "Focuses on OA/HR rules and master-data sync; water monitoring, protocol ingest, and Agent capabilities belong to Smart Water Cloud.",
       "outcome": "Delivered a closed OA/HR platform and kept people, orgs, and station permissions aligned with the water platform.",
       "stack": ["Spring Boot", "MyBatis-Plus", "PostgreSQL", "Redis", "Quartz", "Spring StateMachine", "OAuth2 SSO"],
@@ -204,15 +204,14 @@
           "title": "Attendance rules and performance",
           "background": "Landed flextime, overnight daily close, and multi-level performance in a standalone OA/HR system without reducing rules to punch-log sums.",
           "role": "Owned the attendance rule engine and performance state machine across shifts, offsets, daily close, and the review loop.",
-          "flow": "Org/HR → shift rules → punch/leave/overtime offset → daily close → performance rollout → multi-level scoring archive",
+          "flow": "Org/HR → Shift rules → Punch offset → Daily close → Performance → Scoring archive",
           "engineeringBoundary": "Focuses on attendance and performance rules; master-data sync and SSO sit on the shared identity service.",
           "implementation": [
-            "Attendance engine supports flextime and overnight shifts, splits attendance by calendar day, and recognizes holiday make-up days.",
+            "Attendance engine supports flextime and overnight shifts, splits by calendar day, and recognizes holiday make-up days.",
             "Document-priority offsets combine punches with leave, overtime, and travel into traceable daily-close lines.",
-            "Performance state machine: plan config, metric rollout, self/manager review, weighted scores, and version snapshots.",
-            "Sharded daily-close batches by person so overnight shifts are neither double-counted nor dropped at day boundaries.",
-            "Hire/transfer/leave drives account and role changes with an audit trail for attendance and performance reads.",
-            "Shift templates stay decoupled from org calendars so holidays and flex windows can override by company/dept.",
+            "Performance state machine: plan config, metric rollout, self/manager review, weighted scores, and snapshots.",
+            "Shard daily-close batches by person so overnight shifts are not double-counted or dropped at day boundaries.",
+            "Hire/transfer/leave drives account and role changes with an audit trail; shift templates stay decoupled from org calendars.",
             "Role-templated metrics support weighting, forced distribution, and read-only archives."
           ],
           "challenges": [
@@ -228,16 +227,14 @@
           "title": "Master-data sync and SSO",
           "background": "Water users, orgs, and station permissions depend on OA master data. People changes must sync idempotently without duplicate accounts or delayed access.",
           "role": "Owned org master-data sync, OAuth2 SSO, and immediate water-side permission updates.",
-          "flow": "Quartz paged pull → xtUserId dedupe → batch upsert → org permission mapping → SSO → water permissions",
+          "flow": "Quartz pull → Dedupe → Batch upsert → Org mapping → SSO → Water perms",
           "engineeringBoundary": "Focuses on idempotent cross-system sync and SSO; water monitoring and the data agent belong to Smart Water Cloud.",
           "implementation": [
-            "Quartz paged pulls of OA people, depts, roles, and stations, including in-batch duplicates.",
-            "Dedupe in memory by xtUserId, then PostgreSQL batch upsert with resume-from-failure.",
-            "Clean fields and employment status; push hire/transfer/leave into water project spaces and station permissions.",
-            "OAuth2 SSO; water accounts and data permissions take effect as soon as org changes.",
-            "Jobs record batch id, success/fail counts, and conflict samples for reconcile and replay.",
-            "Failures split by type: PK conflict overwrites, illegal fields go to DLQ, source deletes become soft disable.",
-            "Invalidate water permission cache by org node so old data rights do not linger after a transfer."
+            "Quartz paged pulls of OA people, depts, roles, and stations, with in-batch duplicates.",
+            "Dedupe by xtUserId in memory, then PostgreSQL batch upsert with resume-from-failure.",
+            "Clean fields and status; push hire/transfer/leave into water spaces and station permissions.",
+            "OAuth2 SSO; water accounts and permissions take effect as soon as org changes.",
+            "Jobs record batch id, success/fail counts, and conflict samples; failures split by type (PK overwrite, DLQ, soft disable); invalidate water permission cache by org node."
           ],
           "challenges": [
             "Duplicate pushes and partial failures coexist; write idempotently by business key and never let ON CONFLICT wreck the batch.",
@@ -268,7 +265,7 @@
         "Keep the path maintainable through design docs, QC/Review/Committer, and production delivery."
       ],
       "role": "Led cross-domain retrieval and affinity scoring, owned Flink realtime and Spark offline dual ingest, and served as QC/Committer for release reviews.",
-      "flow": "Business changes & logs → Flink realtime cleanse → Spark offline reconcile → optimistic-lock write → correction & profile scoring → ES unified search",
+      "flow": "Changes & logs → Flink cleanse → Spark reconcile → Optimistic lock → Profile scoring → ES search",
       "engineeringBoundary": "Focuses on relevance, lake consistency, and engineering gates; field contracts and query SLAs are agreed with producers.",
       "outcome": "Delivered unified search and dual-path pipelines for 10M-scale enterprise users, where realtime increments and offline backfill coexist without overwriting each other.",
       "stack": ["Java", "Spring Boot", "Elasticsearch", "Kafka", "Flink", "Spark", "Hadoop", "Hive", "Redis", "Huawei Cloud"],
@@ -278,15 +275,14 @@
           "title": "Unified retrieval and affinity scoring",
           "background": "Xiaowei Search serves 10M-scale enterprise users across people, groups, and chats, ranked by profile and affinity.",
           "role": "Owned people/group/chat search logic, user profiles, and the affinity scoring engine.",
-          "flow": "Search intent → correction & pinyin → ES hybrid retrieval → profile/affinity boost → rank & highlight",
+          "flow": "Search intent → Pinyin fix → ES hybrid → Affinity boost → Rank & highlight",
           "engineeringBoundary": "Focuses on the retrieval and ranking layer; field contracts are agreed with producers.",
           "implementation": [
-            "Unified people/group/chat indexes with IK + pinyin + N-gram prefix hybrid retrieval.",
+            "Unified people/group/chat indexes with IK + pinyin + N-gram hybrid retrieval and Completion Suggester for typeahead and pinyin correction.",
             "Function Score decay from org-tree distance and interaction frequency to improve first-screen precision.",
-            "Completion Suggester for typeahead and spelling correction, including Chinese pinyin suggestions.",
             "search_after cursors instead of from/size deep paging, plus multi-level query cache on hot keys.",
-            "Tuned bulk size, refresh_interval, and routing to control merges and GC under heavy writes.",
-            "Split people/group/message indexes with aliases so rebuilds stay dark to the query entry.",
+            "Tuned bulk size, refresh_interval, and routing to control merges and GC.",
+            "Split indexes with aliases so rebuilds stay dark to the query entry.",
             "Highlight and snippet rules differ by field type so long chats do not drown person-name hits."
           ],
           "challenges": [
@@ -302,21 +298,20 @@
           "title": "Realtime / offline dual-path lake",
           "background": "Search needs live changes, historical backfill, and missing-link repair without clock races between writers.",
           "role": "Owned Kafka/Flink realtime pipelines and Hadoop/Hive/Spark offline compensation, plus the lake field contract.",
-          "flow": "Binlog/logs → Kafka → Flink cleanse → version_type write to ES ← Spark reconcile backfill",
+          "flow": "Binlog/logs → Kafka → Flink cleanse → ES write ← Spark backfill",
           "engineeringBoundary": "Guarantees life-cycle consistency across increment, stock, backfill, and missing-link repair.",
           "implementation": [
-            "Kafka + Flink consume business changes and cleanse employee, group, and chat index fields near-realtime.",
-            "Hadoop/Hive/Spark jobs handle history backfill, scheduled reconcile, and missing-link repair.",
+            "Kafka + Flink cleanse employee, group, and chat index fields near-realtime.",
+            "Hadoop/Spark handle history backfill, scheduled reconcile, and missing-link repair.",
             "ES version_type=external_gte so offline backfill cannot overwrite newer realtime increments.",
-            "Flink ValueState / BroadcastState holds org dimensions and completes the unified contract before write.",
-            "Dirty data goes to DLQ with alerts; field contracts, partitions, and SLAs are confirmed with producers.",
-            "Reconcile jobs emit increment diffs to drive targeted backfill instead of full overwrites.",
-            "Persist partitions and watermarks so failed jobs resume without duplicate backfill."
+            "Flink ValueState/BroadcastState holds org dimensions and completes the unified contract before write.",
+            "Dirty data goes to DLQ with alerts; field contracts, partitions, and SLAs confirmed with producers.",
+            "Reconcile jobs emit increment diffs for targeted backfill; persist partitions and watermarks so failed jobs resume without duplicate backfill."
           ],
           "challenges": [
-            "Dual writers on one document invert time unless external-version optimistic locks are used.",
-            "Multi-source field contracts diverge; validate schema in the stream before search is polluted.",
-            "Peak traffic requires stable Flink backpressure, checkpoint interval, and operator parallelism."
+            "Dual writers invert time unless external-version optimistic locks are used.",
+            "Field contracts diverge; validate schema in-stream before search is polluted.",
+            "Peak traffic needs stable Flink backpressure, checkpoints, and parallelism."
           ],
           "outcome": "Realtime and offline pipes cover the data life cycle; indexes stay reconcilable and resumable.",
           "stack": ["Kafka", "Flink", "Spark", "Hadoop", "Hive", "Elasticsearch"]
@@ -342,7 +337,7 @@
         "Close a 0-to-1 loop across requirement, design, test, Docker deploy, and production support."
       ],
       "role": "Owned the 0-to-1 platform, spanning the realtime gateway, alarm debounce, auth/reports, and Docker production delivery.",
-      "flow": "Field sensors → Kafka peak-shaving → Redis snapshots → WebSocket dashboards → remote-control checks → alarm debounce & dispatch",
+      "flow": "Field sensors → Kafka → Redis → WebSocket → Remote control → Alarm dispatch",
       "engineeringBoundary": "Led 0-to-1 architecture across realtime channels, business foundation, database tuning, and env-consistent delivery.",
       "outcome": "Delivered a runnable smart-water platform from 0 to 1, connecting monitoring, alarms, reports/archive, and container operations.",
       "stack": ["Java", "Spring Boot", "Netty", "WebSocket", "Kafka", "Redis", "MySQL", "Docker"],
@@ -352,21 +347,20 @@
           "title": "Realtime gateway and alarm control",
           "background": "Plant sensors report densely and need a high-concurrency long-lived channel plus alarm-storm control for jitter.",
           "role": "Led the Netty/WebSocket cluster, field data fan-out, and multi-channel alarm dispatch.",
-          "flow": "Sensor time series → Kafka → WebSocket dashboards; faults → sliding-window debounce → SMS/WeChat/email",
+          "flow": "Sensor → Kafka → WebSocket; Faults → Sliding debounce → SMS/WeChat",
           "engineeringBoundary": "Owns the realtime path from field ingest and long-lived push through alarm debounce and dispatch.",
           "implementation": [
             "Netty/WebSocket session management, heartbeats, and exponential reconnect with snapshot catch-up.",
-            "Kafka decouples dense time series; Redis caches latest device state for high-frequency dashboards.",
-            "Redis sliding windows aggregate jitter alarms and route SMS, WeChat mini program, and email by severity.",
+            "Kafka decouples dense time series; Redis caches latest state for dashboards.",
+            "Redis sliding windows aggregate jitter alarms and route SMS, WeChat, and email by severity.",
             "Remote-control commands carry sequence, signature, and a distributed lock; timeout rolls back so pump/valve commands cannot replay.",
-            "Client heartbeats and incremental catch-up restore dashboards after network jitter.",
-            "Gateway cluster routes sessions in Redis so reconnects land on the node that holds the snapshot.",
-            "Alarm templates version by device type and threshold so field threshold edits do not break the push channel."
+            "Heartbeats and incremental catch-up restore dashboards after jitter.",
+            "Gateway cluster routes sessions in Redis so reconnects land on the node that holds the snapshot."
           ],
           "challenges": [
             "Dense bursts become alarm storms; debounce, dedupe, and batch the push.",
-            "Mass reconnect auth can saturate the gateway; use fast token checks and connection limits.",
-            "Remote control of pumps/valves needs atomicity, anti-replay, and strict timeout rollback."
+            "Mass reconnect can saturate the gateway; use fast token checks and limits.",
+            "Pump/valve remote control needs atomicity, anti-replay, and strict rollback."
           ],
           "outcome": "Dashboards refresh with low delay, jitter alarms are suppressed, and remote-control commands roll back instead of replaying.",
           "stack": ["Netty", "WebSocket", "Kafka", "Redis", "WeChat mini program"]
@@ -376,16 +370,15 @@
           "title": "0-to-1 foundation and container delivery",
           "background": "Built auth, time-series reports, hot/cold archive, and standard Docker delivery so the platform can ship and operate.",
           "role": "Owned layered architecture and stack choices, and led RBAC, the time-series report engine, and Docker deploy.",
-          "flow": "Requirements & stack → RBAC & audit → time-series reports & hot/cold archive → Docker Compose multi-env delivery",
+          "flow": "Requirements → RBAC & audit → Reports & archive → Docker delivery",
           "engineeringBoundary": "Coordinates backend services, database tuning, config, and environment consistency.",
           "implementation": [
             "Spring Boot + MyBatis + MySQL RBAC, unified auth, and audit of sensitive actions.",
-            "Daily/monthly/yearly aggregates and trends for quality, pressure, flow, and power, plus streaming Excel export.",
+            "Daily/monthly/yearly aggregates and trends for quality, pressure, flow, and power.",
             "Time-based hot/cold archive: hot data stays queryable, cold data is compacted, primary stays light.",
-            "Composite indexes and summary tables for multi-join and wide time aggregates.",
-            "Dockerfile and Compose unify dev/test/prod config for one-command deploy.",
-            "Audit covers login, remote control, export, and permission changes.",
-            "Centralize datasource, Kafka, and alarm-channel config; containers inject by environment."
+            "Composite indexes and summary tables for wide time aggregates.",
+            "Dockerfile and Compose unify dev/test/prod config for one-command deploy; containers inject datasource, Kafka, and alarm-channel config by environment.",
+            "Audit covers login, remote control, export, and permission changes."
           ],
           "challenges": [
             "0-to-1 boundaries keep moving; keep layers clear and dependencies tight while still shipping.",
