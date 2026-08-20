@@ -1,11 +1,13 @@
 import { ArrowUpRight, ChevronDown, ChevronRight, Terminal } from 'lucide-react';
 import { useReducer } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   engineeringConsoleReducer,
-  engineeringTerminals,
+  getEngineeringTerminals,
   initialEngineeringConsoleState,
 } from '../data/engineering-console';
+import { useLocale } from '../i18n';
 
 interface EngineeringConsoleProps {
   variant: 'overlay' | 'inline';
@@ -15,6 +17,8 @@ interface EngineeringConsoleProps {
 
 export function EngineeringConsole({ variant, motionEnabled, onSelectExhibit }: EngineeringConsoleProps) {
   const [state, dispatch] = useReducer(engineeringConsoleReducer, initialEngineeringConsoleState);
+  const { t } = useTranslation();
+  const terminals = getEngineeringTerminals(useLocale());
 
   return (
     <section
@@ -25,13 +29,13 @@ export function EngineeringConsole({ variant, motionEnabled, onSelectExhibit }: 
       <header className="engineering-console__header">
         <div>
           <p className="eyebrow">CAREER EVIDENCE · STATIC DEMO</p>
-          <h2 id={`engineering-console-${variant}`}><Terminal size={18} /> 工程终端</h2>
+          <h2 id={`engineering-console-${variant}`}><Terminal size={18} /> {t('console.title')}</h2>
         </div>
-        <span className="engineering-console__stamp">履历证据 / 静态演示</span>
+        <span className="engineering-console__stamp">{t('console.stamp')}</span>
       </header>
 
-      <div className="engineering-console__modes" role="group" aria-label="工程终端频道">
-        {engineeringTerminals.map((terminal) => {
+      <div className="engineering-console__modes" role="group" aria-label={t('console.channelsAria')}>
+        {terminals.map((terminal) => {
           const isFocused = state.focusedTerminal === terminal.id;
           const isExpanded = state.inlineOpenTerminal === terminal.id;
 
@@ -58,7 +62,7 @@ export function EngineeringConsole({ variant, motionEnabled, onSelectExhibit }: 
       </div>
 
       <div className="engineering-console__deck">
-        {engineeringTerminals.map((terminal) => {
+        {terminals.map((terminal) => {
           const isFocused = state.focusedTerminal === terminal.id;
           const isInlineOpen = state.inlineOpenTerminal === terminal.id;
           const activeCommand = terminal.commands.find(

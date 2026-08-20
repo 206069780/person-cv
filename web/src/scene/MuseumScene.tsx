@@ -39,6 +39,7 @@ interface SceneContentProps extends Omit<MuseumSceneProps, 'onReady' | 'onFallba
 
 function SceneContent(props: SceneContentProps) {
   const { scene, gl } = useThree();
+  void props.locale;
 
   useEffect(() => {
     scene.background = new THREE.Color('#03080c');

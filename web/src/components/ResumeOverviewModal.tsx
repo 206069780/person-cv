@@ -1,7 +1,9 @@
 import { Briefcase, Cpu, Download, Mail, Phone, Sparkles, X } from 'lucide-react';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { resumeData } from '../data/resume-data';
+import { getResumeData } from '../data/resume-data';
+import { useLocale } from '../i18n';
 
 interface ResumeOverviewModalProps {
   isOpen: boolean;
@@ -9,6 +11,10 @@ interface ResumeOverviewModalProps {
 }
 
 export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProps) {
+  const locale = useLocale();
+  const { t } = useTranslation();
+  const resumeData = getResumeData(locale);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -33,7 +39,7 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
     new Set([
       ...resumeData.projects.flatMap((p) => [
         ...(p.stack || []),
-        ...p.topics.flatMap((t) => t.stack || []),
+        ...p.topics.flatMap((topic) => topic.stack || []),
       ]),
     ])
   );
@@ -54,24 +60,24 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
         <header className="resume-overview-card__header">
           <div>
             <p className="eyebrow">CAREER MATRIX & WORK EXPERIENCE</p>
-            <h2 id="overview-modal-title">{resumeData.profile.name} · 核心简历档案</h2>
+            <h2 id="overview-modal-title">{resumeData.profile.name} · {t('overview.titleSuffix')}</h2>
             <p className="overview-sub">{resumeData.profile.title} · {resumeData.profile.experience}</p>
           </div>
           <div className="resume-overview-card__actions">
             <a
               className="text-command text-command--safety"
-              href="/resume/付道品-高级Java开发工程师.pdf"
+              href={t('resume.pdfHref')}
               download
-              title="下载最新 PDF 简历"
+              title={t('overview.downloadTitle')}
             >
-              <Download size={17} /> 下载 PDF
+              <Download size={17} /> {t('overview.download')}
             </a>
             <button
               type="button"
               className="icon-command"
               onClick={onClose}
-              aria-label="关闭档案面板"
-              title="关闭"
+              aria-label={t('overview.close')}
+              title={t('panel.close')}
             >
               <X size={20} />
             </button>
@@ -83,7 +89,7 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
           <section className="overview-section">
             <div className="overview-section__title">
               <Sparkles size={16} />
-              <h3>职业定位</h3>
+              <h3>{t('overview.position')}</h3>
             </div>
             <p className="overview-summary-text">{resumeData.profile.summary}</p>
           </section>
@@ -92,7 +98,7 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
           <section className="overview-section">
             <div className="overview-section__title">
               <Cpu size={16} />
-              <h3>A1 · 核心能力矩阵</h3>
+              <h3>{t('overview.strengths')}</h3>
             </div>
             <div className="overview-strengths-grid">
               {resumeData.strengths.map((item, index) => (
@@ -108,7 +114,7 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
           <section className="overview-section">
             <div className="overview-section__title">
               <Briefcase size={16} />
-              <h3>A2 · 工作经历</h3>
+              <h3>{t('overview.experience')}</h3>
             </div>
             <div className="overview-experience-list">
               {resumeData.experiences.map((exp) => (
@@ -133,7 +139,7 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
           <section className="overview-section">
             <div className="overview-section__title">
               <Sparkles size={16} />
-              <h3>技术域索引</h3>
+              <h3>{t('overview.stack')}</h3>
             </div>
             <div className="overview-stack-cloud">
               {allStack.map((tech) => (
@@ -155,7 +161,7 @@ export function ResumeOverviewModal({ isOpen, onClose }: ResumeOverviewModalProp
               <span>{resumeData.profile.email}</span>
             </div>
             <div className="contact-item">
-              <span>3D 展馆: {resumeData.profile.website}</span>
+              <span>{t('overview.museum')}: {resumeData.profile.website}</span>
             </div>
           </footer>
         </div>

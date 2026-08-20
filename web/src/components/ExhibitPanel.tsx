@@ -1,7 +1,9 @@
 import { AlertTriangle, Boxes, ChevronLeft, ChevronRight, Cpu, Database, Download, Layers, PanelRightClose, Route, ShieldCheck, Sparkles, Target, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { getModelRepresentation } from '../data/model-representations';
-import { getProject, getTopic, resumeData } from '../data/resume-data';
+import { getProject, getResumeData, getTopic } from '../data/resume-data';
+import { useLocale } from '../i18n';
 
 interface ExhibitPanelProps {
   exhibitId: string;
@@ -11,9 +13,12 @@ interface ExhibitPanelProps {
 }
 
 export function ExhibitPanel({ exhibitId, collapsed = false, onToggleCollapse, onClose }: ExhibitPanelProps) {
-  const topic = getTopic(exhibitId);
-  const project = resumeData.projects.find((item) => item.topics.some((entry) => entry.id === exhibitId)) ?? getProject(exhibitId);
-  const model = getModelRepresentation(exhibitId);
+  const locale = useLocale();
+  const { t } = useTranslation();
+  const resumeData = getResumeData(locale);
+  const topic = getTopic(exhibitId, locale);
+  const project = resumeData.projects.find((item) => item.topics.some((entry) => entry.id === exhibitId)) ?? getProject(exhibitId, locale);
+  const model = getModelRepresentation(exhibitId, locale);
 
   if (!topic || !project) return null;
 
@@ -25,11 +30,11 @@ export function ExhibitPanel({ exhibitId, collapsed = false, onToggleCollapse, o
           type="button"
           className="exhibit-panel__expand-pill"
           onClick={onToggleCollapse}
-          title="展开案例与架构详情"
-          aria-label="展开案例与架构详情"
+          title={t('panel.expandTitle')}
+          aria-label={t('panel.expand')}
         >
           <ChevronLeft size={16} />
-          <span>展开案例详情</span>
+          <span>{t('panel.expand')}</span>
         </button>
       )}
 
@@ -48,8 +53,8 @@ export function ExhibitPanel({ exhibitId, collapsed = false, onToggleCollapse, o
             type="button"
             className="exhibit-panel__collapse-toggle"
             onClick={onToggleCollapse}
-            title="收起抽屉，全屏沉浸观察 3D 模型"
-            aria-label="收起抽屉"
+            title={t('panel.collapseTitle')}
+            aria-label={t('panel.collapse')}
           >
             <ChevronRight size={16} />
           </button>
@@ -67,16 +72,16 @@ export function ExhibitPanel({ exhibitId, collapsed = false, onToggleCollapse, o
                 className="icon-command"
                 type="button"
                 onClick={onToggleCollapse}
-                aria-label="收起面板"
-                title="收起面板 (全屏观察 3D 模型)"
+                aria-label={t('panel.collapsePanel')}
+                title={t('panel.collapsePanelTitle')}
               >
                 <PanelRightClose size={18} />
               </button>
             )}
-            <a className="icon-command" href="/resume/付道品-高级Java开发工程师.pdf" download aria-label="下载 PDF 简历" title="下载 PDF">
+            <a className="icon-command" href={t('resume.pdfHref')} download aria-label={t('panel.downloadPdf')} title={t('panel.downloadPdf')}>
               <Download size={19} />
             </a>
-            <button className="icon-command" type="button" onClick={onClose} aria-label="关闭展厅内容" title="关闭">
+            <button className="icon-command" type="button" onClick={onClose} aria-label={t('panel.closeExhibit')} title={t('panel.close')}>
               <X size={20} />
             </button>
           </div>
@@ -94,7 +99,7 @@ export function ExhibitPanel({ exhibitId, collapsed = false, onToggleCollapse, o
               <div className="model-spec__entity">
                 <div className="model-spec__label">
                   <Sparkles size={15} />
-                  <strong>3D 模型代表实际系统架构</strong>
+                  <strong>{t('panel.modelRepresents')}</strong>
                 </div>
                 <p className="model-spec__name">{model.entityName}</p>
                 <p className="model-spec__desc">{model.entityDescription}</p>
@@ -103,7 +108,7 @@ export function ExhibitPanel({ exhibitId, collapsed = false, onToggleCollapse, o
               <div className="model-spec__metaphor">
                 <div className="model-spec__label">
                   <Layers size={15} />
-                  <strong>3D 视觉构件隐喻与架构映射</strong>
+                  <strong>{t('panel.modelMetaphor')}</strong>
                 </div>
                 <div className="model-spec__components">
                   {model.components.map((comp) => (
@@ -128,44 +133,44 @@ export function ExhibitPanel({ exhibitId, collapsed = false, onToggleCollapse, o
             <p>{topic.outcome}</p>
           </section>
           <section className="exhibit-panel__role">
-            <div className="exhibit-panel__section-title"><ShieldCheck size={17} /><h3>本人角色</h3></div>
+            <div className="exhibit-panel__section-title"><ShieldCheck size={17} /><h3>{t('panel.role')}</h3></div>
             <p>{topic.role}</p>
           </section>
           <section>
-            <div className="exhibit-panel__section-title"><Target size={17} /><h3>项目背景</h3></div>
+            <div className="exhibit-panel__section-title"><Target size={17} /><h3>{t('panel.background')}</h3></div>
             <p className="topic-context">{topic.background}</p>
             <div className="background-steps">
               <article>
-                <span>01 / 业务场景</span>
+                <span>{t('panel.business')}</span>
                 <p>{project.businessContext}</p>
               </article>
               <article>
-                <span>02 / 现有痛点</span>
+                <span>{t('panel.pain')}</span>
                 <ul>{project.painPoints.map((item) => <li key={item}>{item}</li>)}</ul>
               </article>
               <article>
-                <span>03 / 建设目标</span>
+                <span>{t('panel.goals')}</span>
                 <ul>{project.buildGoals.map((item) => <li key={item}>{item}</li>)}</ul>
               </article>
             </div>
           </section>
           <section className="exhibit-panel__flow">
-            <div className="exhibit-panel__section-title"><Route size={17} /><h3>业务链路</h3></div>
+            <div className="exhibit-panel__section-title"><Route size={17} /><h3>{t('panel.flow')}</h3></div>
             <div className="flow-nodes">
               {topic.flow.split('→').map((item, index) => <span key={`${item}-${index}`}>{item.trim()}</span>)}
             </div>
-            <p className="boundary-line"><strong>工程边界</strong>{topic.engineeringBoundary}</p>
+            <p className="boundary-line"><strong>{t('panel.boundary')}</strong>{topic.engineeringBoundary}</p>
           </section>
           <section>
-            <div className="exhibit-panel__section-title"><Cpu size={17} /><h3>核心实现</h3></div>
+            <div className="exhibit-panel__section-title"><Cpu size={17} /><h3>{t('panel.implementation')}</h3></div>
             <ul>{topic.implementation.map((item) => <li key={item}>{item}</li>)}</ul>
           </section>
           <section>
-            <div className="exhibit-panel__section-title"><AlertTriangle size={17} /><h3>技术难点</h3></div>
+            <div className="exhibit-panel__section-title"><AlertTriangle size={17} /><h3>{t('panel.challenges')}</h3></div>
             <ul>{topic.challenges.map((item) => <li key={item}>{item}</li>)}</ul>
           </section>
-          <section className="exhibit-stack" aria-label="技术栈">
-            <div className="exhibit-panel__section-title"><Database size={17} /><h3>技术矩阵</h3></div>
+          <section className="exhibit-stack" aria-label={t('panel.stack')}>
+            <div className="exhibit-panel__section-title"><Database size={17} /><h3>{t('panel.stack')}</h3></div>
             {topic.stack.map((item) => <span key={item}>{item}</span>)}
           </section>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface CyberLoadingScreenProps {
   ready: boolean;
@@ -12,15 +13,20 @@ interface LogEntry {
   status: 'pending' | 'active' | 'done';
 }
 
-const BOOT_LOGS: readonly Omit<LogEntry, 'status'>[] = [
-  { id: 'engine', tag: 'KERNEL', text: '初始化 WebGL 2.0 PBR 物理光照与高动态渲染管线' },
-  { id: 'topology', tag: 'AIoT', text: '加载 100,000+ 高并发工业测点分布式拓扑网络' },
-  { id: 'mesh', tag: 'ARCH', text: '构建微服务网格、多租户计算集群与分布式事务中枢' },
-  { id: 'optics', tag: 'OPTICS', text: '编译深钛金反射着色器、等离子双螺旋与高能激光光效' },
-  { id: 'neural', tag: 'SYSTEM', text: '分布式控制中枢在线 · 准备就绪，进入 3D 沉浸式数字展馆' },
-];
-
 export function CyberLoadingScreen({ ready, onFinish }: CyberLoadingScreenProps) {
+  const { t } = useTranslation();
+
+  const bootLogs = useMemo<readonly Omit<LogEntry, 'status'>[]>(
+    () => [
+      { id: 'engine', tag: 'KERNEL', text: t('loading.logs.engine') },
+      { id: 'topology', tag: 'AIoT', text: t('loading.logs.topology') },
+      { id: 'mesh', tag: 'ARCH', text: t('loading.logs.mesh') },
+      { id: 'optics', tag: 'OPTICS', text: t('loading.logs.optics') },
+      { id: 'neural', tag: 'SYSTEM', text: t('loading.logs.neural') },
+    ],
+    [t],
+  );
+
   const [progress, setProgress] = useState(0);
   const [fading, setFading] = useState(false);
   const [warpFlash, setWarpFlash] = useState(false);
@@ -65,7 +71,7 @@ export function CyberLoadingScreen({ ready, onFinish }: CyberLoadingScreenProps)
 
   // 根据进度动态激活的日志
   const visibleLogs = useMemo<LogEntry[]>(() => {
-    return BOOT_LOGS.map((item, idx) => {
+    return bootLogs.map((item, idx) => {
       const threshold = (idx + 1) * 18;
       let status: LogEntry['status'] = 'pending';
       if (progress >= threshold) {
@@ -75,7 +81,7 @@ export function CyberLoadingScreen({ ready, onFinish }: CyberLoadingScreenProps)
       }
       return { ...item, status };
     });
-  }, [progress]);
+  }, [bootLogs, progress]);
 
   // 16 格分段能量指示器
   const segments = useMemo(() => Array.from({ length: 16 }, (_, i) => i), []);
@@ -138,10 +144,10 @@ export function CyberLoadingScreen({ ready, onFinish }: CyberLoadingScreenProps)
         {/* 主标题与当前阶段指示 */}
         <div className="cyber-loading__title-wrap">
           <p className="eyebrow cyber-loading__sub-label">
-            {ready ? '/// SYSTEM ONLINE · ALL CLUSTERS SYNCHRONIZED' : '/// DISTRIBUTED SYSTEM INITIALIZATION'}
+            {ready ? t('loading.subReady') : t('loading.subIdle')}
           </p>
           <h2 className="cyber-loading__main-title">
-            {ready ? '展馆就绪 · 进入场景' : '分布式系统架构 · 数字孪生展馆'}
+            {ready ? t('loading.titleReady') : t('loading.titleIdle')}
           </h2>
         </div>
 

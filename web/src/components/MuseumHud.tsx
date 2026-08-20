@@ -1,7 +1,10 @@
 import { Briefcase, Download, Home, Map, RotateCcw, SkipForward, ZoomIn, ZoomOut } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { resumeData } from '../data/resume-data';
+import { getResumeData } from '../data/resume-data';
+import { useLocale } from '../i18n';
+import { LanguageSwitcher } from '../i18n/LanguageSwitcher';
 import { EXHIBITS } from '../scene/scene-layout';
 import { ResumeOverviewModal } from './ResumeOverviewModal';
 
@@ -21,6 +24,9 @@ export function MuseumHud({
   onSkipIntro,
 }: MuseumHudProps) {
   const [overviewOpen, setOverviewOpen] = useState(false);
+  const locale = useLocale();
+  const { t } = useTranslation();
+  const resumeData = getResumeData(locale);
   const activeIndex = EXHIBITS.findIndex((exhibit) => exhibit.id === activeExhibit);
   const active = activeIndex >= 0 ? EXHIBITS[activeIndex] : null;
 
@@ -30,13 +36,13 @@ export function MuseumHud({
 
   return (
     <div className="museum-hud">
-      <a className="skip-link" href="#project-index">跳到项目索引</a>
+      <a className="skip-link" href="#project-index">{t('hud.skipToIndex')}</a>
 
       <header
         className="museum-hud__identity"
         style={{ cursor: 'pointer' }}
         onClick={() => setOverviewOpen(true)}
-        title="点击查看核心能力与工作经历档案"
+        title={t('hud.identityTitle')}
       >
         <p className="eyebrow">SMART WATER / BACKEND ENGINEERING</p>
         <h1>{resumeData.profile.name}</h1>
@@ -44,42 +50,43 @@ export function MuseumHud({
         <span>{resumeData.profile.experience}</span>
       </header>
 
-      <section className="museum-hud__metric" aria-label="项目规模">
+      <section className="museum-hud__metric" aria-label={t('hud.metricAria')}>
         <span>GLOBAL WATER NETWORK</span>
         <strong>10w+</strong>
-        <p>国内外水站</p>
+        <p>{t('hud.waterStations')}</p>
       </section>
 
       <div className="museum-hud__commands">
         {introActive && (
           <button className="text-command" type="button" onClick={onSkipIntro}>
-            <SkipForward size={18} /> 跳过动画
+            <SkipForward size={18} /> {t('hud.skipIntro')}
           </button>
         )}
         <button
           className="text-command text-command--cyan"
           type="button"
           onClick={() => setOverviewOpen(true)}
-          title="查看核心能力矩阵与工作经历档案"
+          title={t('hud.coreResumeTitle')}
         >
-          <Briefcase size={17} /> 核心履历
+          <Briefcase size={17} /> {t('hud.coreResume')}
         </button>
-        <button className="icon-command" type="button" onClick={onReturnHome} aria-label="返回中央馆" title="返回中央馆">
+        <button className="icon-command" type="button" onClick={onReturnHome} aria-label={t('hud.home')} title={t('hud.home')}>
           <Home size={19} />
         </button>
-        <a className="text-command text-command--safety" href="/resume/付道品-高级Java开发工程师.pdf" download>
+        <LanguageSwitcher />
+        <a className="text-command text-command--safety" href={t('resume.pdfHref')} download>
           <Download size={18} /> PDF
         </a>
       </div>
 
       {/* 视野缩放与视角控制组 */}
-      <div className="museum-hud__zoom-controls" aria-label="视野缩放控制">
+      <div className="museum-hud__zoom-controls" aria-label={t('hud.zoomAria')}>
         <button
           type="button"
           className="icon-command zoom-btn"
           onClick={triggerZoomIn}
-          title="放大视野 (快捷键: +)"
-          aria-label="放大视野"
+          title={t('hud.zoomInTitle')}
+          aria-label={t('hud.zoomIn')}
         >
           <ZoomIn size={17} />
         </button>
@@ -87,8 +94,8 @@ export function MuseumHud({
           type="button"
           className="icon-command zoom-btn"
           onClick={triggerZoomOut}
-          title="缩小视野 (快捷键: -)"
-          aria-label="缩小视野"
+          title={t('hud.zoomOutTitle')}
+          aria-label={t('hud.zoomOut')}
         >
           <ZoomOut size={17} />
         </button>
@@ -96,8 +103,8 @@ export function MuseumHud({
           type="button"
           className="icon-command zoom-btn"
           onClick={triggerZoomReset}
-          title="复位视野 (快捷键: R / ESC)"
-          aria-label="复位视野"
+          title={t('hud.zoomResetTitle')}
+          aria-label={t('hud.zoomReset')}
         >
           <RotateCcw size={16} />
         </button>
@@ -106,16 +113,14 @@ export function MuseumHud({
       <div className="museum-hud__status" aria-hidden="true">
         <span className="live-dot" />
         <span>
-          {active
-            ? '左键 360° 空间旋转 · 滚轮或 [+/-] 缩放视野 · 点击其他展位切换'
-            : 'WASD 漫游 · 滚轮或 [+/-] 缩放视野 · 点击展位对焦'}
+          {active ? t('hud.statusActive') : t('hud.statusIdle')}
         </span>
       </div>
 
-      <nav className="project-index" id="project-index" aria-label="项目索引">
+      <nav className="project-index" id="project-index" aria-label={t('hud.indexAria')}>
         <div className="project-index__title">
           <Map size={17} />
-          <span>{active ? `${String(activeIndex + 1).padStart(2, '0')} / ${active.shortLabel}` : '展馆索引'}</span>
+          <span>{active ? `${String(activeIndex + 1).padStart(2, '0')} / ${active.shortLabel}` : t('hud.index')}</span>
         </div>
         <div className="project-index__items">
           {EXHIBITS.map((exhibit, index) => (
@@ -127,7 +132,7 @@ export function MuseumHud({
               aria-current={activeExhibit === exhibit.id ? 'location' : undefined}
             >
               <span>{String(index + 1).padStart(2, '0')}</span>
-              <strong>{exhibit.label}</strong>
+              <strong>{t(`exhibits.${exhibit.id}`)}</strong>
               <i aria-hidden="true"><b /></i>
             </button>
           ))}

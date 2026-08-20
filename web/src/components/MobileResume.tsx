@@ -1,17 +1,23 @@
 import { ChevronDown, Download, Mail, Phone } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { MOBILE_SECTION_ACCENTS } from '../app/mobile-scroll';
-import { resumeData } from '../data/resume-data';
+import { getResumeData } from '../data/resume-data';
+import { useLocale } from '../i18n';
+import { LanguageSwitcher } from '../i18n/LanguageSwitcher';
 import { EngineeringConsole } from './EngineeringConsole';
 import { ScrollProgress } from './ScrollProgress';
 import { ScrollReveal } from './ScrollReveal';
 
 export function MobileResume() {
+  const locale = useLocale();
+  const { t } = useTranslation();
+  const resumeData = getResumeData(locale);
   const allStack = Array.from(
     new Set([
       ...resumeData.projects.flatMap((p) => [
         ...(p.stack || []),
-        ...p.topics.flatMap((t) => t.stack || []),
+        ...p.topics.flatMap((topic) => topic.stack || []),
       ]),
     ])
   );
@@ -30,18 +36,19 @@ export function MobileResume() {
         <p className="mobile-resume__summary">{resumeData.profile.summary}</p>
         <div className="mobile-resume__metric">
           <strong>10w+</strong>
-          <span>国内外水站</span>
+          <span>{t('hud.waterStations')}</span>
         </div>
         <div className="mobile-resume__actions">
-          <a className="primary-command" href="/resume/付道品-高级Java开发工程师.pdf" download>
-            <Download size={18} /> 下载 PDF
+          <a className="primary-command" href={t('resume.pdfHref')} download>
+            <Download size={18} /> {t('mobile.downloadPdf')}
           </a>
-          <a className="icon-command" href={`tel:${resumeData.profile.phone}`} aria-label={`拨打电话 ${resumeData.profile.phone}`}>
+          <a className="icon-command" href={`tel:${resumeData.profile.phone}`} aria-label={t('mobile.call', { phone: resumeData.profile.phone })}>
             <Phone size={19} />
           </a>
-          <a className="icon-command" href={`mailto:${resumeData.profile.email}`} aria-label={`发送邮件至 ${resumeData.profile.email}`}>
+          <a className="icon-command" href={`mailto:${resumeData.profile.email}`} aria-label={t('mobile.mail', { email: resumeData.profile.email })}>
             <Mail size={19} />
           </a>
+          <LanguageSwitcher />
         </div>
         <ChevronDown className="mobile-resume__continuation" size={22} aria-hidden="true" />
       </header>
@@ -54,7 +61,7 @@ export function MobileResume() {
           <div className="mobile-module__rail" aria-hidden="true" />
           <div className="section-heading">
             <span>A1</span>
-            <h2 id="mobile-strengths">核心能力矩阵</h2>
+            <h2 id="mobile-strengths">{t('mobile.strengths')}</h2>
           </div>
           <div className="strengths-grid">
             {resumeData.strengths.map((strength, index) => (
@@ -90,7 +97,7 @@ export function MobileResume() {
           <div className="mobile-module__rail" aria-hidden="true" />
           <div className="section-heading">
             <span>A2</span>
-            <h2 id="mobile-experience">工作经历</h2>
+            <h2 id="mobile-experience">{t('mobile.experience')}</h2>
           </div>
           <div className="experience-list">
             {resumeData.experiences.map((experience, experienceIndex) => (
@@ -141,13 +148,13 @@ export function MobileResume() {
               <p className="project-lead">{project.summary}</p>
               <div className="mobile-background">
                 <ScrollReveal variant="item">
-                  <article><span>业务场景</span><p>{project.businessContext}</p></article>
+                  <article><span>{t('mobile.businessContext')}</span><p>{project.businessContext}</p></article>
                 </ScrollReveal>
                 <ScrollReveal delay={60} variant="item">
-                  <article><span>现有痛点</span><ul>{project.painPoints.map((item) => <li key={item}>{item}</li>)}</ul></article>
+                  <article><span>{t('mobile.painPoints')}</span><ul>{project.painPoints.map((item) => <li key={item}>{item}</li>)}</ul></article>
                 </ScrollReveal>
                 <ScrollReveal delay={120} variant="item">
-                  <article><span>建设目标</span><ul>{project.buildGoals.map((item) => <li key={item}>{item}</li>)}</ul></article>
+                  <article><span>{t('mobile.buildGoals')}</span><ul>{project.buildGoals.map((item) => <li key={item}>{item}</li>)}</ul></article>
                 </ScrollReveal>
               </div>
               <div className="topic-list">
@@ -158,15 +165,15 @@ export function MobileResume() {
                     variant="item"
                   >
                     <article className="topic-row">
-                      <p className="topic-row__index">模块 {String(topicIndex + 1).padStart(2, '0')}  ·  {topic.id.toUpperCase()}</p>
+                      <p className="topic-row__index">{t('mobile.module')} {String(topicIndex + 1).padStart(2, '0')}  ·  {topic.id.toUpperCase()}</p>
                       <h3>{topic.title}</h3>
                       <p>{topic.role}</p>
-                      <p className="topic-row__flow"><strong>业务链路</strong>{topic.flow}</p>
-                      <p className="topic-row__flow"><strong>工程边界</strong>{topic.engineeringBoundary}</p>
+                      <p className="topic-row__flow"><strong>{t('mobile.flow')}</strong>{topic.flow}</p>
+                      <p className="topic-row__flow"><strong>{t('mobile.boundary')}</strong>{topic.engineeringBoundary}</p>
                       <ul>
                         {topic.implementation.map((item) => <li key={item}>{item}</li>)}
                       </ul>
-                      <p className="topic-row__outcome"><strong>落地结果</strong>{topic.outcome}</p>
+                      <p className="topic-row__outcome"><strong>{t('mobile.outcome')}</strong>{topic.outcome}</p>
                       <div className="stack-line">{topic.stack.join(' / ')}</div>
                     </article>
                   </ScrollReveal>
@@ -185,7 +192,7 @@ export function MobileResume() {
           <div className="mobile-module__rail" aria-hidden="true" />
           <div className="section-heading">
             <span>STK</span>
-            <h2 id="mobile-stack">技术域索引</h2>
+            <h2 id="mobile-stack">{t('mobile.stackIndex')}</h2>
           </div>
           <div className="stack-cloud">
             {allStack.map((item) => (

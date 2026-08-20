@@ -6,6 +6,7 @@ import { ExhibitPanel } from './components/ExhibitPanel';
 import { MobileNotice } from './components/MobileNotice';
 import { MobileResume } from './components/MobileResume';
 import { MuseumHud } from './components/MuseumHud';
+import { useLocale } from './i18n';
 
 const loadMuseumScene = () => import('./scene/MuseumScene');
 const MuseumScene = lazy(() => loadMuseumScene().then((module) => ({ default: module.MuseumScene })));
@@ -22,6 +23,7 @@ if (typeof window !== 'undefined' && initialMode() !== 'fallback') {
 }
 
 export default function App() {
+  const locale = useLocale();
   const [mode, setMode] = useState<ExperienceMode>(initialMode);
   const [mobileNoticeOpen, setMobileNoticeOpen] = useState(() => mode === 'fallback' && window.innerWidth < 768);
   const [loading, setLoading] = useState(mode !== 'fallback');
@@ -83,6 +85,7 @@ export default function App() {
           activeExhibit={activeExhibit}
           panelOpen={isPanelOpen}
           introActive={introActive}
+          locale={locale}
           motionEnabled={motionEnabled}
           onIntroComplete={finishIntro}
           onReady={handleSceneReady}
