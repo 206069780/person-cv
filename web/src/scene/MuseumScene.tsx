@@ -5,12 +5,12 @@ import * as THREE from 'three';
 import { IntegratedCameraController } from './camera/IntegratedCameraController';
 import { DataStreams } from './environment/DataStreams';
 import { FloorSystem } from './environment/FloorSystem';
+import { NeonWalls } from './environment/NeonWalls';
 import { StructuralFrames } from './environment/StructuralFrames';
 import { ExhibitHotspots } from './ExhibitHotspots';
 import { IndustrialAssets } from './exhibits/IndustrialAssets';
 import { IntroSequence } from './IntroSequence';
 import { ModelHologramTags } from './ModelHologramTag';
-import { NeonWalls } from './NeonWalls';
 import { EXHIBITS } from './scene-layout';
 import type { MuseumSceneProps } from './scene-types';
 

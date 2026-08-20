@@ -34,4 +34,12 @@ describe('scene module boundaries', () => {
       './environment/DataStreams.tsx',
     ])).toEqual([]);
   });
+
+  it('keeps wall rendering and texture generators in focused modules', () => {
+    expect(missingModules([
+      './environment/NeonWalls.tsx',
+      './textures/profile-hologram-texture.ts',
+      './textures/billboard-texture.ts',
+    ])).toEqual([]);
+  });
 });
