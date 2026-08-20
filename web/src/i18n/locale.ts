@@ -1,10 +1,17 @@
 export type Locale = 'zh' | 'en';
 
+const ALIASES: Record<string, Locale> = {
+  zh: 'zh',
+  'zh-cn': 'zh',
+  'zh-hans': 'zh',
+  en: 'en',
+  'en-us': 'en',
+  'en-gb': 'en',
+};
+
 export function normalizeLocale(value: string | null | undefined): Locale | null {
   if (!value) return null;
-  const base = value.trim().toLowerCase().split('-')[0];
-  if (base === 'zh' || base === 'en') return base;
-  return null;
+  return ALIASES[value.trim().toLowerCase()] ?? null;
 }
 
 export function resolveLocale(search: string, stored: string | null): Locale {

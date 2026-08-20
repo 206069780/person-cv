@@ -10,6 +10,9 @@ describe('locale resolution', () => {
     expect(normalizeLocale('en')).toBe('en');
     expect(normalizeLocale('en-US')).toBe('en');
     expect(normalizeLocale('en-GB')).toBe('en');
+    expect(normalizeLocale('zh-TW')).toBeNull();
+    expect(normalizeLocale('zh-HK')).toBeNull();
+    expect(normalizeLocale('en-AU')).toBeNull();
     expect(normalizeLocale('fr')).toBeNull();
     expect(normalizeLocale('')).toBeNull();
     expect(normalizeLocale(null)).toBeNull();
