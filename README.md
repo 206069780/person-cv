@@ -14,7 +14,8 @@
 | `付道品-高级Java开发工程师.docx` | 可编辑 Word 版本 |
 | `web/` | 数字孪生简历展馆源码、构建产物与部署配置 |
 | `web/public/` | 静态资源（PDF、域名验证文件等），构建时复制到站点根目录 |
-| `web/src/data/resume-data.json` | 简历单一数据源 |
+| `web/src/data/resume-data.zh.json` | 中文履历事实源 |
+| `web/src/data/resume-data.en.json` | 英文履历事实源 |
 | `tools/generate_resume.py` | 从 JSON 同源生成 DOCX/PDF |
 | `scripts/deploy.sh` | Linux/macOS 一键 Docker 部署 |
 | `scripts/deploy.ps1` | Windows 一键 Docker 部署 |
@@ -37,7 +38,7 @@ npm run dev
 
 桌面端提供工业数字孪生 3D 展馆（WASD/鼠标探索、展项热点），覆盖设备、协议、GIS/DMA、OA/HR、Agent、WeLink 与森格水厂链路；核心项目规模统一为国内外 `10w+` 水站。手机端先提示使用电脑端获取最佳体验，确认后进入完整纵向简历；WebGL 不可用时自动降级为纵向简历。
 
-PDF 下载地址：`/resume/付道品-高级Java开发工程师.pdf`
+PDF 下载：中文 `/resume/付道品-高级Java开发工程师.pdf`，英文 `/resume/Daopin-Fu-Senior-Java-Engineer.pdf`
 
 ## Docker 部署
 
@@ -126,13 +127,13 @@ npm run build
 
 ## 重新生成 PDF / Word
 
-修改 `web/src/data/resume-data.json` 后：
+修改 `web/src/data/resume-data.zh.json` 或 `resume-data.en.json` 后：
 
 ```powershell
 python tools/generate_resume.py
 ```
 
-会同步更新根目录下的 `.pdf` 与 `.docx`，并将 PDF 复制到 `web/public/resume/` 供站点下载。
+默认生成中英两套。需要单语时用 `--lang zh` 或 `--lang en`。会同步更新根目录下的 `.pdf` 与 `.docx`，并将 PDF 复制到 `web/public/resume/` 供站点下载。
 
 ## 开源协议
 

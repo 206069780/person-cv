@@ -83,6 +83,22 @@
         100% { transform: translateX(250%); }
       }
     </style>
+    <script>
+      (function () {
+        var params = new URLSearchParams(location.search);
+        var raw = params.get('lang') || (function () {
+          try { return localStorage.getItem('i18nextLng'); } catch (e) { return null; }
+        })();
+        var base = raw ? String(raw).toLowerCase().split('-')[0] : 'zh';
+        if (base !== 'en') return;
+        document.documentElement.lang = 'en';
+        document.title = 'Daopin Fu | Senior Java Engineer';
+        var desc = document.querySelector('meta[name="description"]');
+        if (desc) desc.setAttribute('content', 'Daopin Fu, Senior Java Engineer. Smart water, Java microservices, AIoT/GIS, and Agent engineering.');
+        var title = document.querySelector('.init-title');
+        if (title) title.textContent = 'Initializing museum assets...';
+      })();
+    </script>
   </head>
   <body>
     <div id="root">
