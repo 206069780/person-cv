@@ -7,7 +7,7 @@ export function LanguageSwitcher() {
   const { t } = useTranslation();
 
   return (
-    <div className="language-switcher" role="group" aria-label={t('language.switchToEn')}>
+    <div className="language-switcher" role="group" aria-label={t('language.groupLabel')}>
       <button
         type="button"
         className={locale === 'zh' ? 'text-command text-command--cyan' : 'text-command'}

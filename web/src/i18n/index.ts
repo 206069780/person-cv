@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { useTranslation } from 'react-i18next';
 
-import { type Locale, normalizeLocale, resolveLocale, syncUrl } from './locale';
+import { type Locale, normalizeLocale, persistLocale, resolveLocale, syncUrl } from './locale';
 import enUi from './locales/en/ui.json';
 import zhUi from './locales/zh/ui.json';
 
@@ -32,6 +32,7 @@ export function applyDocumentMeta(locale: Locale) {
 
 export async function changeAppLanguage(next: Locale) {
   await i18n.changeLanguage(next);
+  persistLocale(next, typeof window === 'undefined' ? null : window.localStorage);
   const url = new URL(window.location.href);
   url.search = syncUrl(next, url.search);
   window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeLocale, resolveLocale, syncUrl } from './locale';
+import { normalizeLocale, persistLocale, resolveLocale, syncUrl } from './locale';
 
 describe('locale resolution', () => {
   it('normalizes language tags to zh or en', () => {
@@ -33,5 +33,28 @@ describe('locale resolution', () => {
     expect(syncUrl('en', '')).toBe('?lang=en');
     expect(syncUrl('zh', '?lang=en&mode=fallback')).toBe('?mode=fallback');
     expect(syncUrl('zh', '?lang=en')).toBe('');
+  });
+
+  it('persists locale under i18nextLng when storage is provided', () => {
+    const store: Record<string, string> = {};
+    const storage = {
+      setItem(k: string, v: string) {
+        store[k] = v;
+      },
+    };
+    persistLocale('en', storage);
+    expect(store['i18nextLng']).toBe('en');
+    persistLocale('zh', storage);
+    expect(store['i18nextLng']).toBe('zh');
+  });
+
+  it('ignores storage failures and null storage', () => {
+    const failing = {
+      setItem() {
+        throw new Error('quota');
+      },
+    };
+    expect(() => persistLocale('en', failing)).not.toThrow();
+    expect(() => persistLocale('en', null)).not.toThrow();
   });
 });

@@ -29,3 +29,11 @@ export function syncUrl(locale: Locale, search: string): string {
   const next = params.toString();
   return next ? `?${next}` : '';
 }
+
+export function persistLocale(locale: Locale, storage: { setItem(k: string, v: string): void } | null) {
+  try {
+    storage?.setItem('i18nextLng', locale);
+  } catch {
+    /* ignore quota / private mode */
+  }
+}

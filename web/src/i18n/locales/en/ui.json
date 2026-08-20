@@ -4,7 +4,7 @@
     "description": "Daopin Fu, Senior Java Engineer. Smart water, Java microservices, AIoT/GIS, and Agent engineering."
   },
   "boot": { "initTitle": "Initializing museum assets..." },
-  "language": { "zh": "中", "en": "EN", "switchToEn": "Switch to English", "switchToZh": "Switch to Chinese" },
+  "language": { "zh": "中", "en": "EN", "groupLabel": "Language", "switchToEn": "Switch to English", "switchToZh": "Switch to Chinese" },
   "resume": {
     "pdfHref": "/resume/Daopin-Fu-Senior-Java-Engineer.pdf"
   },
