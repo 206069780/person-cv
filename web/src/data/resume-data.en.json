@@ -350,12 +350,13 @@
           "flow": "Sensor → Kafka → WebSocket; Faults → Sliding debounce → SMS/WeChat",
           "engineeringBoundary": "Owns the realtime path from field ingest and long-lived push through alarm debounce and dispatch.",
           "implementation": [
-            "Netty/WebSocket session management, heartbeats, and exponential reconnect with snapshot catch-up.",
+            "Netty/WebSocket sessions, heartbeats, and exponential reconnect with snapshot catch-up.",
             "Kafka decouples dense time series; Redis caches latest state for dashboards.",
             "Redis sliding windows aggregate jitter alarms and route SMS, WeChat, and email by severity.",
-            "Remote-control commands carry sequence, signature, and a distributed lock; timeout rolls back so pump/valve commands cannot replay.",
-            "Heartbeats and incremental catch-up restore dashboards after jitter.",
-            "Gateway cluster routes sessions in Redis so reconnects land on the node that holds the snapshot."
+            "Remote-control uses sequence, signature, and lock; timeout rolls back to block pump/valve replay.",
+            "Heartbeats and catch-up restore dashboards after jitter.",
+            "Redis routes reconnects to the gateway node holding the session snapshot.",
+            "Version alarm templates by device type and threshold so field edits do not break the push channel."
           ],
           "challenges": [
             "Dense bursts become alarm storms; debounce, dedupe, and batch the push.",
