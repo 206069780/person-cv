@@ -26,6 +26,7 @@ export const pulseSphereGeo = new THREE.SphereGeometry(0.065, 8, 8);
 export const baseUplightConeGeo = new THREE.ConeGeometry(0.16, 0.85, 12, 1, true);
 export const baseUndercarriageRingGeo = new THREE.RingGeometry(2.65, 2.78, 8);
 export const ambientMoteGeo = new THREE.SphereGeometry(0.032, 6, 6);
+export const gisPillarBaseDiscGeo = new THREE.RingGeometry(0.14, 0.22, 16);
 
 export const pillarScanRingGeo = new THREE.TorusGeometry(0.24, 0.022, 6, 28);
 export const pillarApexFlareGeo = new THREE.RingGeometry(0.06, 0.3, 20);

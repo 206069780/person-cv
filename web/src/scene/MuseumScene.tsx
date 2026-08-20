@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 import { ExhibitHotspots } from './ExhibitHotspots';
-import { IndustrialAssets } from './IndustrialAssets';
+import { IndustrialAssets } from './exhibits/IndustrialAssets';
 import { IntroSequence } from './IntroSequence';
 import { ModelHologramTags } from './ModelHologramTag';
 import { NeonWalls } from './NeonWalls';
