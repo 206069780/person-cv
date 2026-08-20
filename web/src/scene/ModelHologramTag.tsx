@@ -1,12 +1,22 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 import { getModelRepresentation, ModelRepresentation } from '../data/model-representations';
+import type { Locale } from '../i18n/locale';
+import { i18n } from '../i18n';
 import { EXHIBITS, ExhibitLayout } from './scene-layout';
 
+export interface HologramTagCopy {
+  ready: string;
+  entityPrefix: string;
+  click: string;
+  inspecting: string;
+  inspectHint: string;
+}
+
 // 预生成未选中时的高清全息标牌 CanvasTexture（1024x320 极清采样、大字号高对比、始终正对摄像机）
-function createCompactTagTexture(model: ModelRepresentation): THREE.CanvasTexture {
+function createCompactTagTexture(model: ModelRepresentation, copy: HologramTagCopy): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
   canvas.height = 320;
@@ -65,7 +75,7 @@ function createCompactTagTexture(model: ModelRepresentation): THREE.CanvasTextur
   ctx.textAlign = 'right';
   ctx.font = 'bold 20px "IBM Plex Mono", "Noto Sans SC", sans-serif';
   ctx.fillStyle = 'rgba(40, 215, 229, 0.88)';
-  ctx.fillText('● 3D 孪生就绪 · 待聚焦', canvas.width - 32, 58);
+  ctx.fillText(copy.ready, canvas.width - 32, 58);
 
   // 7. 分隔线
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
@@ -84,13 +94,13 @@ function createCompactTagTexture(model: ModelRepresentation): THREE.CanvasTextur
   // 9. 代表实际业务系统
   ctx.font = '22px "Noto Sans SC", "PingFang SC", sans-serif';
   ctx.fillStyle = '#c5d8e2';
-  const entityShort = model.entityName.length > 28 ? `${model.entityName.slice(0, 27)}...` : model.entityName;
-  ctx.fillText(`代表业务: ${entityShort}`, 28, 206);
+  const entityShort = model.entityName.length > 42 ? `${model.entityName.slice(0, 41)}...` : model.entityName;
+  ctx.fillText(`${copy.entityPrefix}${entityShort}`, 28, 206);
 
   // 10. 点击提示
   ctx.font = 'bold 20px "IBM Plex Mono", "Noto Sans SC", sans-serif';
   ctx.fillStyle = model.accentColor;
-  ctx.fillText('▶ 点击对焦观察 3D 模型架构', 28, 268);
+  ctx.fillText(copy.click, 28, 268);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -100,7 +110,7 @@ function createCompactTagTexture(model: ModelRepresentation): THREE.CanvasTextur
 }
 
 // 预生成选中时的高清全息标牌 CanvasTexture（大字号、高对比、始终正对摄像机）
-function createInspectingTagTexture(model: ModelRepresentation): THREE.CanvasTexture {
+function createInspectingTagTexture(model: ModelRepresentation, copy: HologramTagCopy): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
   canvas.height = 280;
@@ -127,7 +137,7 @@ function createInspectingTagTexture(model: ModelRepresentation): THREE.CanvasTex
   ctx.font = 'bold 22px "IBM Plex Mono", Consolas, monospace';
   ctx.fillStyle = '#ff6b3d';
   ctx.textAlign = 'right';
-  ctx.fillText('● 正在对焦观察中', canvas.width - 28, 54);
+  ctx.fillText(copy.inspecting, canvas.width - 28, 54);
 
   // 分隔线
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
@@ -146,13 +156,13 @@ function createInspectingTagTexture(model: ModelRepresentation): THREE.CanvasTex
   // 代表业务系统
   ctx.font = '22px "Noto Sans SC", "PingFang SC", sans-serif';
   ctx.fillStyle = '#c5d8e2';
-  const entityShort = model.entityName.length > 28 ? `${model.entityName.slice(0, 27)}...` : model.entityName;
-  ctx.fillText(`代表业务: ${entityShort}`, 28, 198);
+  const entityShort = model.entityName.length > 42 ? `${model.entityName.slice(0, 41)}...` : model.entityName;
+  ctx.fillText(`${copy.entityPrefix}${entityShort}`, 28, 198);
 
   // 交互引导
   ctx.font = 'bold 20px "IBM Plex Mono", "Noto Sans SC", sans-serif';
   ctx.fillStyle = '#ff6b3d';
-  ctx.fillText('⚡ 鼠标拖拽 360° 旋转 · 滚轮缩放 · 右侧查看案例详情', 28, 246);
+  ctx.fillText(copy.inspectHint, 28, 246);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -176,18 +186,42 @@ interface SingleHologramTagProps {
   exhibit: ExhibitLayout;
   isActive: boolean;
   motionEnabled: boolean;
+  locale: Locale;
   onSelectExhibit: (id: string) => void;
 }
 
-function SingleHologramTag({ exhibit, isActive, motionEnabled, onSelectExhibit }: SingleHologramTagProps) {
-  const model = getModelRepresentation(exhibit.id);
+function SingleHologramTag({ exhibit, isActive, motionEnabled, locale, onSelectExhibit }: SingleHologramTagProps) {
+  const model = getModelRepresentation(exhibit.id, locale);
   const tagGroupRef = useRef<THREE.Group>(null);
   const reticleRef = useRef<THREE.Group>(null);
   const camera = useThree((state) => state.camera);
 
-  // 纹理缓存
-  const compactTexture = useMemo(() => (model ? createCompactTagTexture(model) : null), [model]);
-  const inspectingTexture = useMemo(() => (model ? createInspectingTagTexture(model) : null), [model]);
+  const copy = useMemo<HologramTagCopy>(() => {
+    const t = i18n.getFixedT(locale);
+    return {
+      ready: t('scene.tag.ready'),
+      entityPrefix: t('scene.tag.entityPrefix'),
+      click: t('scene.tag.click'),
+      inspecting: t('scene.tag.inspecting'),
+      inspectHint: t('scene.tag.inspectHint'),
+    };
+  }, [locale]);
+
+  // 纹理缓存：随 model 与 locale 变化重建
+  const compactTexture = useMemo(() => (model ? createCompactTagTexture(model, copy) : null), [model, copy]);
+  const inspectingTexture = useMemo(() => (model ? createInspectingTagTexture(model, copy) : null), [model, copy]);
+
+  useEffect(() => {
+    return () => {
+      compactTexture?.dispose();
+    };
+  }, [compactTexture]);
+
+  useEffect(() => {
+    return () => {
+      inspectingTexture?.dispose();
+    };
+  }, [inspectingTexture]);
 
   useFrame(({ clock }, delta) => {
     if (!tagGroupRef.current) return;
@@ -331,10 +365,12 @@ function SingleHologramTag({ exhibit, isActive, motionEnabled, onSelectExhibit }
 export function ModelHologramTags({
   activeExhibit,
   motionEnabled,
+  locale,
   onSelectExhibit,
 }: {
   activeExhibit: string | null;
   motionEnabled: boolean;
+  locale: Locale;
   onSelectExhibit: (id: string) => void;
 }) {
   return (
@@ -345,6 +381,7 @@ export function ModelHologramTags({
             exhibit={exhibit}
             isActive={activeExhibit === exhibit.id}
             motionEnabled={motionEnabled}
+            locale={locale}
             onSelectExhibit={onSelectExhibit}
           />
         </group>

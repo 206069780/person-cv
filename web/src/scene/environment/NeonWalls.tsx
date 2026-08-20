@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-import { resumeData } from '../../data/resume-data';
+import { getResumeData } from '../../data/resume-data';
+import type { Locale } from '../../i18n/locale';
+import { i18n } from '../../i18n';
 import { createBillboardTexture } from '../textures/billboard-texture';
 import { createProfileHologramCanvas } from '../textures/profile-hologram-texture';
 
@@ -32,58 +34,71 @@ const portalPillarGeo = new THREE.BoxGeometry(0.5, 8.2, 0.5);
 const portalBeamGeo = new THREE.BoxGeometry(13, 0.4, 0.5);
 const portalStripGeo = new THREE.BoxGeometry(12.6, 0.08, 0.52);
 
-export function NeonWalls({ motionEnabled }: { motionEnabled: boolean }) {
+export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; locale: Locale }) {
   const mainScreenMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const scanLineRef = useRef<THREE.Mesh>(null);
   const leftLightRef = useRef<THREE.MeshBasicMaterial>(null);
   const rightLightRef = useRef<THREE.MeshBasicMaterial>(null);
 
-  // 尝试加载用户简历封面图并合成全息主看板
+  const t = useMemo(() => i18n.getFixedT(locale), [locale]);
+  const resume = useMemo(() => getResumeData(locale), [locale]);
+
+  // 异步加载用户简历封面图（仅加载一次，locale 切换时复用）
+  const [coverImage, setCoverImage] = useState<HTMLImageElement | null>(null);
   useEffect(() => {
     const img = new Image();
-    let texture: THREE.CanvasTexture | null = null;
     img.crossOrigin = 'anonymous';
     img.src = '/resume-cover.png';
-
-    const renderCanvas = (imageObj?: HTMLImageElement | null) => {
-      const canvas = createProfileHologramCanvas({
-        name: resumeData.profile.name,
-        title: resumeData.profile.title,
-        experience: resumeData.profile.experience,
-      }, imageObj);
-      const nextTexture = new THREE.CanvasTexture(canvas);
-      nextTexture.minFilter = THREE.LinearFilter;
-      nextTexture.magFilter = THREE.LinearFilter;
-      nextTexture.needsUpdate = true;
-      texture?.dispose();
-      texture = nextTexture;
-      if (mainScreenMatRef.current) {
-        mainScreenMatRef.current.map = texture;
-        mainScreenMatRef.current.needsUpdate = true;
-      }
-    };
-
-    img.onload = () => renderCanvas(img);
-    img.onerror = () => renderCanvas(null);
-
-    renderCanvas(null);
-
+    const onload = () => setCoverImage(img);
+    const onerror = () => setCoverImage(null);
+    img.onload = onload;
+    img.onerror = onerror;
     return () => {
       img.onload = null;
       img.onerror = null;
-      texture?.dispose();
     };
   }, []);
 
-  // 侧边看板贴图 (静态缓存)
+  // 主屏全息看板 canvas 纹理：随 locale 与封面图重绘
+  const mainScreenTexture = useMemo(() => {
+    const canvas = createProfileHologramCanvas({
+      name: resume.profile.name,
+      title: resume.profile.title,
+      experience: resume.profile.experience,
+      coreValues: t('scene.hologram.coreValues'),
+      metrics: [
+        { label: 'GLOBAL WATER NETWORK', value: '100,000+', desc: t('scene.hologram.metricWater'), color: '#28d7e5' },
+        { label: 'WELINK UNIFIED SEARCH', value: '10,000,000+', desc: t('scene.hologram.metricSearch'), color: '#ff6b3d' },
+        { label: 'HIGH-FREQUENCY GATEWAY', value: '10,000+ TPS', desc: t('scene.hologram.metricGateway'), color: '#34d399' },
+        { label: 'AGENT ORCHESTRATION', value: '99.95%', desc: t('scene.hologram.metricAgent'), color: '#c084fc' },
+      ],
+    }, coverImage);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
+  }, [t, resume, coverImage]);
+
+  useEffect(() => {
+    if (mainScreenMatRef.current) {
+      mainScreenMatRef.current.map = mainScreenTexture;
+      mainScreenMatRef.current.needsUpdate = true;
+    }
+    return () => {
+      mainScreenTexture.dispose();
+    };
+  }, [mainScreenTexture]);
+
+  // 侧边看板贴图：随 locale 重绘，副标题走 i18n
   const billboardTextures = useMemo(() => ({
-    west1: createBillboardTexture({ title: '⚡ HIGH CONCURRENCY CORE', subtitle: '亿级高并发实时调度架构', tags: ['Netty 4.1', 'Spring Cloud', 'Kafka', 'Redis'], accent: CYAN }),
-    west2: createBillboardTexture({ title: '🌐 10W+ AIoT WATER NETWORK', subtitle: '国内外智慧水站空间拓扑', tags: ['PostGIS 3D', 'MQTT / Modbus', 'TDengine', 'BFS'], accent: EMERALD }),
-    west3: createBillboardTexture({ title: '🚀 DISTRIBUTED ARCHITECTURE', subtitle: '全链路分布式高可用治理', tags: ['Rate Limiter', 'TTL Context', 'Sentinel'], accent: SAFETY }),
-    east1: createBillboardTexture({ title: '🤖 AI AGENT & WORKFLOW', subtitle: '生产级企业智能体编排中台', tags: ['Spring AI', 'LangChain', 'Docker Sandbox'], accent: PURPLE }),
-    east2: createBillboardTexture({ title: '🌊 FLINK & SPARK DATA LAKE', subtitle: '双路实时/离线数据湖治理', tags: ['Flink Streaming', 'Spark Batch', 'ACID Lake'], accent: CYAN }),
-    east3: createBillboardTexture({ title: '🔍 10M+ UNIFIED SEARCH', subtitle: '华为云 WeLink 千万级搜索', tags: ['Elasticsearch 8', 'Dynamic Scoring', 'Routing'], accent: GOLD }),
-  }), []);
+    west1: createBillboardTexture({ title: '⚡ HIGH CONCURRENCY CORE', subtitle: t('scene.billboards.west1'), tags: ['Netty 4.1', 'Spring Cloud', 'Kafka', 'Redis'], accent: CYAN }),
+    west2: createBillboardTexture({ title: '🌐 10W+ AIoT WATER NETWORK', subtitle: t('scene.billboards.west2'), tags: ['PostGIS 3D', 'MQTT / Modbus', 'TDengine', 'BFS'], accent: EMERALD }),
+    west3: createBillboardTexture({ title: '🚀 DISTRIBUTED ARCHITECTURE', subtitle: t('scene.billboards.west3'), tags: ['Rate Limiter', 'TTL Context', 'Sentinel'], accent: SAFETY }),
+    east1: createBillboardTexture({ title: '🤖 AI AGENT & WORKFLOW', subtitle: t('scene.billboards.east1'), tags: ['Spring AI', 'LangChain', 'Docker Sandbox'], accent: PURPLE }),
+    east2: createBillboardTexture({ title: '🌊 FLINK & SPARK DATA LAKE', subtitle: t('scene.billboards.east2'), tags: ['Flink Streaming', 'Spark Batch', 'ACID Lake'], accent: CYAN }),
+    east3: createBillboardTexture({ title: '🔍 10M+ UNIFIED SEARCH', subtitle: t('scene.billboards.east3'), tags: ['Elasticsearch 8', 'Dynamic Scoring', 'Routing'], accent: GOLD }),
+  }), [t]);
 
   useEffect(() => {
     const textures = Object.values(billboardTextures);

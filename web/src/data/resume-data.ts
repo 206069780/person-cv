@@ -66,8 +66,6 @@ export function getResumeData(locale: Locale): ResumeData {
   return catalogs[locale];
 }
 
-export const resumeData = getResumeData('zh');
-
 export function getTopic(topicId: string, locale: Locale = 'zh'): Topic | undefined {
   return getResumeData(locale).projects.flatMap((project) => project.topics).find((topic) => topic.id === topicId);
 }

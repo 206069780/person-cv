@@ -1,7 +1,16 @@
+export interface ProfileHologramMetric {
+  label: string;
+  value: string;
+  desc: string;
+  color: string;
+}
+
 export interface ProfileHologramContent {
   name: string;
   title: string;
   experience: string;
+  coreValues: string;
+  metrics: ProfileHologramMetric[];
 }
 
 /**
@@ -155,7 +164,7 @@ export function createProfileHologramCanvas(
 
   ctx.fillStyle = '#83a8b4';
   ctx.font = '12px "IBM Plex Mono", Consolas, sans-serif';
-  ctx.fillText('CORE VALUES: 高并发 · AIoT 空间计算 · 双路数据湖 · 智能体微服务中台', infoX, infoY + 60);
+  ctx.fillText(content.coreValues, infoX, infoY + 60);
 
   // 分割装饰光带
   ctx.fillStyle = '#28d7e5';
@@ -164,12 +173,7 @@ export function createProfileHologramCanvas(
   ctx.fillRect(infoX, infoY + 72, 120, 3);
 
   // 4 个核心架构指标卡（矩阵排布）
-  const metrics = [
-    { label: 'GLOBAL WATER NETWORK', value: '100,000+', desc: '国内外水站高并发 AIoT 接入 · 毫秒调度', color: '#28d7e5' },
-    { label: 'WELINK UNIFIED SEARCH', value: '10,000,000+', desc: '华为云千亿级文档搜索 · 动态个性化打分', color: '#ff6b3d' },
-    { label: 'HIGH-FREQUENCY GATEWAY', value: '10,000+ TPS', desc: 'Netty/WebSocket 长连接网关 · 告警风暴治理', color: '#34d399' },
-    { label: 'AGENT ORCHESTRATION', value: '99.95%', desc: 'LangChain/Spring AI 智能体编排 · 沙箱执行', color: '#c084fc' },
-  ];
+  const metrics = content.metrics;
 
   metrics.forEach((m, idx) => {
     const col = idx % 2;

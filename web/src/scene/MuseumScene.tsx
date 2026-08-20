@@ -39,7 +39,6 @@ interface SceneContentProps extends Omit<MuseumSceneProps, 'onReady' | 'onFallba
 
 function SceneContent(props: SceneContentProps) {
   const { scene, gl } = useThree();
-  void props.locale;
 
   useEffect(() => {
     scene.background = new THREE.Color('#03080c');
@@ -85,12 +84,12 @@ function SceneContent(props: SceneContentProps) {
       <StructuralFrames motionEnabled={props.motionEnabled} />
 
       {/* 赛博霓虹四周墙面 */}
-      <NeonWalls motionEnabled={props.motionEnabled} />
+      <NeonWalls motionEnabled={props.motionEnabled} locale={props.locale} />
 
       {/* 数据流与展品模型 */}
       <DataStreams motionEnabled={props.motionEnabled} focused={props.activeExhibit !== null} />
       <IndustrialAssets activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
-      <ModelHologramTags activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
+      <ModelHologramTags activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} locale={props.locale} onSelectExhibit={props.onSelectExhibit} />
       <ExhibitHotspots activeExhibit={props.activeExhibit} motionEnabled={props.motionEnabled} onSelectExhibit={props.onSelectExhibit} />
       <IntroSequence active={props.introActive} onComplete={props.onIntroComplete} />
       <IntegratedCameraController
