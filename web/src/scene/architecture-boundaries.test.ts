@@ -25,4 +25,13 @@ describe('scene module boundaries', () => {
 
     expect(sharedSource).not.toMatch(/from\s+['"][^'"]*\/zones(?:\/|['"])/);
   });
+
+  it('keeps camera and environment systems in focused modules', () => {
+    expect(missingModules([
+      './camera/IntegratedCameraController.tsx',
+      './environment/FloorSystem.tsx',
+      './environment/StructuralFrames.tsx',
+      './environment/DataStreams.tsx',
+    ])).toEqual([]);
+  });
 });
