@@ -1,0 +1,139 @@
+{
+  "meta": {
+    "title": "付道品 | 高级 Java 开发工程师",
+    "description": "付道品，高级 Java 开发工程师，智慧水务、Java 微服务、AIoT/GIS 与 Agent 工程化项目经历。"
+  },
+  "boot": { "initTitle": "初始化展馆资源..." },
+  "language": { "zh": "中", "en": "EN", "switchToEn": "切换到英文", "switchToZh": "切换到中文" },
+  "resume": {
+    "pdfHref": "/resume/付道品-高级Java开发工程师.pdf"
+  },
+  "hud": {
+    "skipToIndex": "跳到项目索引",
+    "identityTitle": "点击查看核心能力与工作经历档案",
+    "metricAria": "项目规模",
+    "waterStations": "国内外水站",
+    "skipIntro": "跳过动画",
+    "coreResume": "核心履历",
+    "coreResumeTitle": "查看核心能力矩阵与工作经历档案",
+    "home": "返回中央馆",
+    "zoomAria": "视野缩放控制",
+    "zoomIn": "放大视野",
+    "zoomInTitle": "放大视野 (快捷键: +)",
+    "zoomOut": "缩小视野",
+    "zoomOutTitle": "缩小视野 (快捷键: -)",
+    "zoomReset": "复位视野",
+    "zoomResetTitle": "复位视野 (快捷键: R / ESC)",
+    "statusActive": "左键 360° 空间旋转 · 滚轮或 [+/-] 缩放视野 · 点击其他展位切换",
+    "statusIdle": "WASD 漫游 · 滚轮或 [+/-] 缩放视野 · 点击展位对焦",
+    "index": "展馆索引",
+    "indexAria": "项目索引"
+  },
+  "loading": {
+    "subIdle": "/// DISTRIBUTED SYSTEM INITIALIZATION",
+    "subReady": "/// SYSTEM ONLINE · ALL CLUSTERS SYNCHRONIZED",
+    "titleIdle": "分布式系统架构 · 数字孪生展馆",
+    "titleReady": "展馆就绪 · 进入场景",
+    "logs": {
+      "engine": "初始化 WebGL 2.0 PBR 物理光照与高动态渲染管线",
+      "topology": "加载 100,000+ 高并发工业测点分布式拓扑网络",
+      "mesh": "构建微服务网格、多租户计算集群与分布式事务中枢",
+      "optics": "编译深钛金反射着色器、等离子双螺旋与高能激光光效",
+      "neural": "分布式控制中枢在线 · 准备就绪，进入 3D 沉浸式数字展馆"
+    }
+  },
+  "mobileNotice": {
+    "title": "建议使用电脑端浏览，以获得完整 3D 展馆体验",
+    "body": "手机端继续后将呈现内容完整的纵向简历，包括项目背景、工程链路、职责边界与落地结果。",
+    "continue": "继续查看简历",
+    "close": "关闭提示"
+  },
+  "mobile": {
+    "downloadPdf": "下载 PDF",
+    "call": "拨打电话 {{phone}}",
+    "mail": "发送邮件至 {{email}}",
+    "strengths": "核心能力矩阵",
+    "experience": "工作经历",
+    "businessContext": "业务场景",
+    "painPoints": "现有痛点",
+    "buildGoals": "建设目标",
+    "module": "模块",
+    "flow": "业务链路",
+    "boundary": "工程边界",
+    "outcome": "落地结果",
+    "stackIndex": "技术域索引"
+  },
+  "panel": {
+    "expand": "展开案例详情",
+    "expandTitle": "展开案例与架构详情",
+    "collapse": "收起抽屉",
+    "collapseTitle": "收起抽屉，全屏沉浸观察 3D 模型",
+    "collapsePanel": "收起面板",
+    "collapsePanelTitle": "收起面板 (全屏观察 3D 模型)",
+    "downloadPdf": "下载 PDF 简历",
+    "close": "关闭",
+    "closeExhibit": "关闭展厅内容",
+    "modelRepresents": "3D 模型代表实际系统架构",
+    "modelMetaphor": "3D 视觉构件隐喻与架构映射",
+    "role": "本人角色",
+    "background": "项目背景",
+    "business": "01 / 业务场景",
+    "pain": "02 / 现有痛点",
+    "goals": "03 / 建设目标",
+    "flow": "业务链路",
+    "boundary": "工程边界",
+    "implementation": "核心实现",
+    "challenges": "技术难点",
+    "stack": "技术矩阵"
+  },
+  "overview": {
+    "titleSuffix": "核心简历档案",
+    "download": "下载 PDF",
+    "downloadTitle": "下载最新 PDF 简历",
+    "close": "关闭档案面板",
+    "position": "职业定位",
+    "strengths": "A1 · 核心能力矩阵",
+    "experience": "A2 · 工作经历",
+    "stack": "技术域索引",
+    "museum": "3D 展馆"
+  },
+  "console": {
+    "title": "工程终端",
+    "stamp": "履历证据 / 静态演示",
+    "channelsAria": "工程终端频道"
+  },
+  "exhibits": {
+    "litree-overview": "微服务与数据底座",
+    "litree-aiot": "AIoT 与空间拓扑",
+    "litree-agent": "水务智能体",
+    "oa-hr": "立升 OA / HR",
+    "welink-search": "WeLink 统一搜索",
+    "welink-data": "WeLink 双路数据湖",
+    "senge-gateway": "森格实时通信网关",
+    "senge-platform": "森格 0-1 平台架构"
+  },
+  "scene": {
+    "billboards": {
+      "west1": "亿级高并发实时调度架构",
+      "west2": "国内外智慧水站空间拓扑",
+      "west3": "全链路分布式高可用治理",
+      "east1": "生产级企业智能体编排中台",
+      "east2": "双路实时/离线数据湖治理",
+      "east3": "华为云 WeLink 千万级搜索"
+    },
+    "hologram": {
+      "coreValues": "CORE VALUES: 高并发 · AIoT 空间计算 · 双路数据湖 · 智能体微服务中台",
+      "metricWater": "国内外水站高并发 AIoT 接入 · 毫秒调度",
+      "metricSearch": "华为云千亿级文档搜索 · 动态个性化打分",
+      "metricGateway": "Netty/WebSocket 长连接网关 · 告警风暴治理",
+      "metricAgent": "LangChain/Spring AI 智能体编排 · 沙箱执行"
+    },
+    "tag": {
+      "ready": "● 3D 孪生就绪 · 待聚焦",
+      "entityPrefix": "代表业务: ",
+      "click": "▶ 点击对焦观察 3D 模型架构",
+      "inspecting": "● 正在对焦观察中",
+      "inspectHint": "⚡ 鼠标拖拽 360° 旋转 · 滚轮缩放 · 右侧查看案例详情"
+    }
+  }
+}

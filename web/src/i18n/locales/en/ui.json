@@ -1,0 +1,139 @@
+{
+  "meta": {
+    "title": "Daopin Fu | Senior Java Engineer",
+    "description": "Daopin Fu, Senior Java Engineer. Smart water, Java microservices, AIoT/GIS, and Agent engineering."
+  },
+  "boot": { "initTitle": "Initializing museum assets..." },
+  "language": { "zh": "中", "en": "EN", "switchToEn": "Switch to English", "switchToZh": "Switch to Chinese" },
+  "resume": {
+    "pdfHref": "/resume/Daopin-Fu-Senior-Java-Engineer.pdf"
+  },
+  "hud": {
+    "skipToIndex": "Skip to project index",
+    "identityTitle": "Open core skills and work history",
+    "metricAria": "Project scale",
+    "waterStations": "Water stations worldwide",
+    "skipIntro": "Skip intro",
+    "coreResume": "Resume",
+    "coreResumeTitle": "View competency matrix and work history",
+    "home": "Return to plaza",
+    "zoomAria": "Viewport zoom",
+    "zoomIn": "Zoom in",
+    "zoomInTitle": "Zoom in (shortcut: +)",
+    "zoomOut": "Zoom out",
+    "zoomOutTitle": "Zoom out (shortcut: -)",
+    "zoomReset": "Reset view",
+    "zoomResetTitle": "Reset view (shortcut: R / ESC)",
+    "statusActive": "Left-drag to orbit 360° · wheel or [+/-] to zoom · click another exhibit to switch",
+    "statusIdle": "WASD to roam · wheel or [+/-] to zoom · click an exhibit to focus",
+    "index": "Museum index",
+    "indexAria": "Project index"
+  },
+  "loading": {
+    "subIdle": "/// DISTRIBUTED SYSTEM INITIALIZATION",
+    "subReady": "/// SYSTEM ONLINE · ALL CLUSTERS SYNCHRONIZED",
+    "titleIdle": "Distributed systems · digital twin museum",
+    "titleReady": "Museum ready · entering scene",
+    "logs": {
+      "engine": "Initializing WebGL 2.0 PBR lighting and HDR pipeline",
+      "topology": "Loading 100,000+ industrial telemetry topology",
+      "mesh": "Building microservice mesh, multi-tenant clusters, and distributed transaction core",
+      "optics": "Compiling titanium shaders, plasma helices, and laser effects",
+      "neural": "Control plane online · entering the 3D museum"
+    }
+  },
+  "mobileNotice": {
+    "title": "Use a desktop browser for the full 3D museum",
+    "body": "Continue on mobile to read the complete vertical resume, including project context, engineering flow, ownership boundaries, and outcomes.",
+    "continue": "Continue to resume",
+    "close": "Dismiss notice"
+  },
+  "mobile": {
+    "downloadPdf": "Download PDF",
+    "call": "Call {{phone}}",
+    "mail": "Email {{email}}",
+    "strengths": "Core competency matrix",
+    "experience": "Work experience",
+    "businessContext": "Business context",
+    "painPoints": "Pain points",
+    "buildGoals": "Build goals",
+    "module": "Module",
+    "flow": "Flow",
+    "boundary": "Engineering boundary",
+    "outcome": "Outcome",
+    "stackIndex": "Technology index"
+  },
+  "panel": {
+    "expand": "Expand case details",
+    "expandTitle": "Expand case and architecture details",
+    "collapse": "Collapse drawer",
+    "collapseTitle": "Collapse drawer for a full-screen 3D view",
+    "collapsePanel": "Collapse panel",
+    "collapsePanelTitle": "Collapse panel (full-screen 3D view)",
+    "downloadPdf": "Download PDF resume",
+    "close": "Close",
+    "closeExhibit": "Close exhibit details",
+    "modelRepresents": "The 3D model represents the live system",
+    "modelMetaphor": "Visual components mapped to architecture",
+    "role": "Role",
+    "background": "Background",
+    "business": "01 / Context",
+    "pain": "02 / Pain points",
+    "goals": "03 / Goals",
+    "flow": "Flow",
+    "boundary": "Engineering boundary",
+    "implementation": "Implementation",
+    "challenges": "Challenges",
+    "stack": "Stack"
+  },
+  "overview": {
+    "titleSuffix": "Career dossier",
+    "download": "Download PDF",
+    "downloadTitle": "Download the latest PDF resume",
+    "close": "Close dossier",
+    "position": "Positioning",
+    "strengths": "A1 · Core competency matrix",
+    "experience": "A2 · Work experience",
+    "stack": "Technology index",
+    "museum": "3D museum"
+  },
+  "console": {
+    "title": "Engineering console",
+    "stamp": "Career evidence / static demo",
+    "channelsAria": "Engineering console channels"
+  },
+  "exhibits": {
+    "litree-overview": "Microservices & Data Foundation",
+    "litree-aiot": "AIoT & Spatial Topology",
+    "litree-agent": "Water Data Agent",
+    "oa-hr": "Litree OA / HR",
+    "welink-search": "WeLink Unified Search",
+    "welink-data": "WeLink Dual-Path Data Lake",
+    "senge-gateway": "Senge Realtime Gateway",
+    "senge-platform": "Senge 0-to-1 Platform"
+  },
+  "scene": {
+    "billboards": {
+      "west1": "Billion-scale realtime scheduling fabric",
+      "west2": "Spatial topology for water stations worldwide",
+      "west3": "End-to-end distributed availability",
+      "east1": "Production agent orchestration platform",
+      "east2": "Dual-path realtime / offline lake governance",
+      "east3": "Huawei Cloud WeLink 10M+ search"
+    },
+    "hologram": {
+      "coreValues": "CORE VALUES: High concurrency · AIoT spatial compute · Dual-path lake · Agent microservices",
+      "metricWater": "High-concurrency AIoT ingest for water stations worldwide",
+      "metricSearch": "Huawei Cloud search with dynamic personalized scoring",
+      "metricGateway": "Netty/WebSocket long-lived gateway · alarm-storm control",
+      "metricAgent": "LangChain/Spring AI orchestration · sandboxed execution"
+    },
+    "tag": {
+      "ready": "● 3D twin ready · click to focus",
+      "entityPrefix": "Represents: ",
+      "click": "▶ Click to inspect the 3D architecture",
+      "inspecting": "● Inspecting",
+      "inspectHint": "⚡ Drag to orbit 360° · scroll to zoom · details on the right"
+    }
+  }
+}
