@@ -4,6 +4,7 @@ import { EXHIBITS } from '../scene/scene-layout';
 import {
   engineeringConsoleReducer,
   engineeringTerminals,
+  getEngineeringTerminals,
   initialEngineeringConsoleState,
 } from './engineering-console';
 
@@ -19,7 +20,7 @@ describe('engineering console', () => {
   });
 
   it('keeps confirmed facts and explicit ownership boundaries', () => {
-    const text = JSON.stringify(engineeringTerminals);
+    const text = JSON.stringify(getEngineeringTerminals('zh'));
 
     expect(text).toContain('10w+');
     expect(text).toContain('项目覆盖口径');
@@ -30,6 +31,16 @@ describe('engineering console', () => {
     expect(text).toContain('AgentScope Java 2.0');
     expect(text).not.toMatch(/QPS|并发量|项目金额|团队人数|性能提升\s*\d+%|SYSTEM ONLINE/);
     expect(text).not.toContain('团队多协议');
+  });
+
+  it('keeps English terminals on the same exhibit targets', () => {
+    const en = getEngineeringTerminals('en');
+    const exhibitIds = new Set(EXHIBITS.map((item) => item.id));
+    const commands = en.flatMap((item) => item.commands);
+    expect(commands.every((item) => exhibitIds.has(item.exhibitId))).toBe(true);
+    expect(JSON.stringify(en)).toContain('10w+');
+    expect(JSON.stringify(en)).toContain('AgentScope Java 2.0');
+    expect(JSON.stringify(en)).toContain('UsrCloud');
   });
 
   it('switches focus, command and inline expansion predictably', () => {

@@ -1,3 +1,5 @@
+import type { Locale } from '../i18n/locale';
+
 export type TerminalId = 'java' | 'aiot' | 'agent';
 export type TerminalAccent = 'signal' | 'safety' | 'cyber';
 export type TerminalLineTone = 'default' | 'signal' | 'safety' | 'muted';
@@ -25,7 +27,7 @@ export interface EngineeringTerminal {
   commands: readonly EngineeringCommand[];
 }
 
-export const engineeringTerminals: readonly EngineeringTerminal[] = [
+const zhEngineeringTerminals: readonly EngineeringTerminal[] = [
   {
     id: 'java',
     index: '01',
@@ -153,6 +155,145 @@ export const engineeringTerminals: readonly EngineeringTerminal[] = [
   },
 ];
 
+const enEngineeringTerminals: readonly EngineeringTerminal[] = [
+  {
+    id: 'java',
+    index: '01',
+    title: 'Java Service Core',
+    shortTitle: 'JAVA',
+    accent: 'signal',
+    commands: [
+      {
+        id: 'java-litree-overview',
+        label: 'Litree Overview',
+        command: 'resume project litree --overview',
+        exhibitId: 'litree-overview',
+        lines: [
+          { label: 'PROJECT', value: 'Litree Smart Water Cloud', tone: 'signal' },
+          { label: 'ROLE', value: 'Litree Water Purification Technology · Senior Java Engineer · Oct 2023 – Present' },
+          { label: 'SCALE', value: 'Covers 10w+ water stations worldwide (project scope)', tone: 'safety' },
+          { label: 'STACK', value: 'Java 21 · Spring Boot 3 · Spring Cloud · Nacos · OpenFeign' },
+          { label: 'FLOW', value: 'OA master data -> project spaces & stations -> gateways & devices -> thing model -> monitor / alarm / analytics' },
+          { label: 'BOUNDARY', value: 'Owns device ledger, multi-protocol ingest, GIS/DMA, and Agent engineering', tone: 'muted' },
+        ],
+      },
+      {
+        id: 'java-oa-hr',
+        label: 'OA / HR',
+        command: 'resume system oa-hr --trace',
+        exhibitId: 'oa-hr',
+        lines: [
+          { label: 'SYSTEM', value: 'Litree OA / HR business system (independent of smart water)', tone: 'signal' },
+          { label: 'SCOPE', value: 'Attendance scheduling and monthly close, full performance review, HR life cycle, and cross-system master-data sync' },
+          { label: 'FLOW', value: 'Org/HR -> hire/transfer/leave -> shift attendance -> multi-level performance review -> station permission linkage' },
+          { label: 'RULES', value: 'Flexible cross-day shifts / leave offset engine / KPI weighting / approval state machine / OAuth2 SSO' },
+          { label: 'SYNC', value: 'Quartz schedule -> xtUserId in-memory dedupe -> PostgreSQL batch upsert -> permissions take effect immediately' },
+          { label: 'BOUNDARY', value: 'Both attendance/performance complex rules and highly available data sync, ensuring business closure and permission consistency', tone: 'muted' },
+        ],
+      },
+      {
+        id: 'java-welink',
+        label: 'Huawei WeLink',
+        command: 'resume project welink --pipeline',
+        exhibitId: 'welink-search',
+        lines: [
+          { label: 'PROJECT', value: 'Huawei WeLink · Xiaowei Search', tone: 'signal' },
+          { label: 'SCOPE', value: 'Search people, groups, chat history, user profiles, and affinity rules' },
+          { label: 'REALTIME', value: 'Kafka / Flink realtime data ingest' },
+          { label: 'OFFLINE', value: 'Hadoop / Hive / Spark historical backfill and missing-link repair' },
+          { label: 'INDEX', value: 'Unified contract synced to Elasticsearch to power integrated search' },
+          { label: 'DELIVERY', value: 'Design docs, QC / Review / Committer, release review, and production delivery' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'aiot',
+    index: '02',
+    title: 'AIoT Protocol Link',
+    shortTitle: 'AIoT',
+    accent: 'safety',
+    commands: [
+      {
+        id: 'aiot-ownership',
+        label: 'Ownership Boundary',
+        command: 'resume aiot inspect --ownership',
+        exhibitId: 'litree-aiot',
+        lines: [
+          { label: 'CONTEXT', value: 'Multi-vendor communication, device identifiers, and data structures need unified modeling' },
+          { label: 'SCOPE', value: 'UsrCloud / MQTT / Modbus TCP/RTU / TCP/UDP meters / FanYi / Maituo / Gukon OPC/HTTP', tone: 'signal' },
+          { label: 'PERSONAL', value: 'Multi-protocol ingest component: connection config / periodic pull or report / data transform / Redis state / thing-model mapping', tone: 'signal' },
+          { label: 'MODEL', value: 'Product metadata -> thing-model properties and events -> device monitoring and alarms' },
+          { label: 'EDGE', value: 'Auth, routing, field mapping, reconnect retry, fault isolation, sticky-packet framing, and register mapping' },
+          { label: 'BOUNDARY', value: 'The above protocol ingest and thing-model unification are owned by me; the ingest layer is decoupled from business identifiers', tone: 'muted' },
+        ],
+      },
+      {
+        id: 'aiot-pipeline',
+        label: 'Ingest Pipeline',
+        command: 'resume aiot trace --pipeline',
+        exhibitId: 'litree-aiot',
+        lines: [
+          { label: 'FLOW', value: 'Vendor platform / field protocol -> ingest component -> unified device identifier -> product thing model', tone: 'signal' },
+          { label: 'CONFIG', value: 'Nacos manages connection config, organized by tenant and product' },
+          { label: 'SYNC', value: 'Quartz periodic pull and active reports both enter the data transform pipeline' },
+          { label: 'STATE', value: 'Redis maintains ingest state and necessary sync context' },
+          { label: 'PLATFORM', value: 'UsrCloud / MQTT / Modbus / TCP-UDP meters / FanYi / Maituo / Gukon OPC-HTTP -> unified thing model' },
+          { label: 'RESULT', value: 'Multi-protocol devices onboarded onto the Litree IoT data path; ingest and thing-model unification done by me' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'agent',
+    index: '03',
+    title: 'Agent Engineering Lab',
+    shortTitle: 'AGENT',
+    accent: 'cyber',
+    commands: [
+      {
+        id: 'agent-runtime',
+        label: 'Agent Runtime',
+        command: 'resume agent trace --evidence',
+        exhibitId: 'litree-agent',
+        lines: [
+          { label: 'PROJECT', value: 'Litree water data agent and Agent engineering', tone: 'signal' },
+          { label: 'SCOPE', value: 'Drive AgentScope Java 2.0 secondary development and Litree adaptation', tone: 'safety' },
+          { label: 'RUNTIME', value: 'HarnessAgent / ReActAgent / Model / Toolkit / Memory / Session / Workspace' },
+          { label: 'TOOLS', value: 'Stations, devices, thing models, alarms, tickets, GIS, stats queries -> Tool / MCP' },
+          { label: 'GRAPH', value: 'Intent recognition -> Schema recall -> NL2SQL -> Planner -> Python -> HITL -> report' },
+          { label: 'SAFETY', value: 'Tenant and session isolation · allow / human approval / deny · sandbox · audit', tone: 'muted' },
+        ],
+      },
+      {
+        id: 'agent-ai-coding',
+        label: 'AI Coding',
+        command: 'resume ai-coding inspect --workflow',
+        exhibitId: 'litree-agent',
+        lines: [
+          { label: 'CODING', value: 'Codex / Claude Code / Cursor / Trae cover requirements, implementation, testing, review, and docs', tone: 'signal' },
+          { label: 'RULES', value: 'AGENTS.md fixes project boundaries; Skills package reusable R&D workflows' },
+          { label: 'TASK', value: '00-workbench -> .ai -> 02-AI output, forming a trackable three-state task directory' },
+          { label: 'AGENTS', value: 'Plan / Subagents / Review break complex tasks into reviewable delivery units' },
+          { label: 'DELIVERY', value: 'Combine GitLab CI with human review, keeping verification evidence and release decision boundaries' },
+          { label: 'BOUNDARY', value: 'Backed by a real water Agent project, not framed as simple tool usage', tone: 'muted' },
+        ],
+      },
+    ],
+  },
+];
+
+const terminalCatalogs: Record<Locale, readonly EngineeringTerminal[]> = {
+  zh: zhEngineeringTerminals,
+  en: enEngineeringTerminals,
+};
+
+export const engineeringTerminals: readonly EngineeringTerminal[] = zhEngineeringTerminals;
+
+export function getEngineeringTerminals(locale: Locale = 'zh'): readonly EngineeringTerminal[] {
+  return terminalCatalogs[locale];
+}
+
 export interface EngineeringConsoleState {
   focusedTerminal: TerminalId;
   inlineOpenTerminal: TerminalId | null;
@@ -191,7 +332,7 @@ export function engineeringConsoleReducer(
     };
   }
 
-  const terminal = engineeringTerminals.find((item) => item.id === action.terminalId);
+  const terminal = getEngineeringTerminals('zh').find((item) => item.id === action.terminalId);
   if (!terminal?.commands.some((command) => command.id === action.commandId)) return state;
 
   return {
