@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -181,6 +181,33 @@ const reticleTopPlateWireGeo = new THREE.PlaneGeometry(2.14, 0.62);
 
 const panelCompactGeo = new THREE.PlaneGeometry(2.1, 0.65);
 const panelCompactWireGeo = new THREE.PlaneGeometry(2.14, 0.69);
+const tagLeadLineGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.45, 6);
+
+const CROSS_ANGLES = [0, Math.PI / 2, Math.PI, Math.PI * 1.5] as const;
+
+// 纹理全局单例缓存（基于 order + locale + title 唯一键）
+const _compactTextureCache = new Map<string, THREE.CanvasTexture>();
+const _inspectingTextureCache = new Map<string, THREE.CanvasTexture>();
+
+function getCachedCompactTexture(model: ModelRepresentation, copy: HologramTagCopy, locale: Locale): THREE.CanvasTexture {
+  const key = `${model.order}_${model.shortLabel}_${locale}_${copy.ready}_${copy.click}`;
+  let tex = _compactTextureCache.get(key);
+  if (!tex) {
+    tex = createCompactTagTexture(model, copy);
+    _compactTextureCache.set(key, tex);
+  }
+  return tex;
+}
+
+function getCachedInspectingTexture(model: ModelRepresentation, copy: HologramTagCopy, locale: Locale): THREE.CanvasTexture {
+  const key = `${model.order}_${model.shortLabel}_${locale}_${copy.inspecting}_${copy.inspectHint}`;
+  let tex = _inspectingTextureCache.get(key);
+  if (!tex) {
+    tex = createInspectingTagTexture(model, copy);
+    _inspectingTextureCache.set(key, tex);
+  }
+  return tex;
+}
 
 interface SingleHologramTagProps {
   exhibit: ExhibitLayout;
@@ -190,7 +217,7 @@ interface SingleHologramTagProps {
   onSelectExhibit: (id: string) => void;
 }
 
-function SingleHologramTag({ exhibit, isActive, motionEnabled, locale, onSelectExhibit }: SingleHologramTagProps) {
+function SingleHologramTagComponent({ exhibit, isActive, motionEnabled, locale, onSelectExhibit }: SingleHologramTagProps) {
   const model = getModelRepresentation(exhibit.id, locale);
   const tagGroupRef = useRef<THREE.Group>(null);
   const reticleRef = useRef<THREE.Group>(null);
@@ -207,21 +234,9 @@ function SingleHologramTag({ exhibit, isActive, motionEnabled, locale, onSelectE
     };
   }, [locale]);
 
-  // 纹理缓存：随 model 与 locale 变化重建
-  const compactTexture = useMemo(() => (model ? createCompactTagTexture(model, copy) : null), [model, copy]);
-  const inspectingTexture = useMemo(() => (model ? createInspectingTagTexture(model, copy) : null), [model, copy]);
-
-  useEffect(() => {
-    return () => {
-      compactTexture?.dispose();
-    };
-  }, [compactTexture]);
-
-  useEffect(() => {
-    return () => {
-      inspectingTexture?.dispose();
-    };
-  }, [inspectingTexture]);
+  // 纹理缓存池获取：避免重复构造/销毁
+  const compactTexture = useMemo(() => (model ? getCachedCompactTexture(model, copy, locale) : null), [model, copy, locale]);
+  const inspectingTexture = useMemo(() => (model ? getCachedInspectingTexture(model, copy, locale) : null), [model, copy, locale]);
 
   useFrame(({ clock }, delta) => {
     if (!tagGroupRef.current) return;
@@ -304,7 +319,7 @@ function SingleHologramTag({ exhibit, isActive, motionEnabled, locale, onSelectE
                 <meshBasicMaterial color="#ffffff" toneMapped={false} transparent opacity={0.6} depthTest={false} depthWrite={false} />
               </mesh>
               {/* 4向十字准星 */}
-              {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((angle, idx) => (
+              {CROSS_ANGLES.map((angle, idx) => (
                 <mesh key={idx} position={[Math.cos(angle) * 0.72, Math.sin(angle) * 0.72, 0]} rotation={[0, 0, angle]} geometry={reticleCrossGeo}>
                   <meshBasicMaterial color={model.accentColor} toneMapped={false} depthTest={false} depthWrite={false} />
                 </mesh>
@@ -351,8 +366,7 @@ function SingleHologramTag({ exhibit, isActive, motionEnabled, locale, onSelectE
               />
             </mesh>
             {/* 底部高科技引线连通至模型顶部 */}
-            <mesh position={[0, -0.55, 0]}>
-              <cylinderGeometry args={[0.008, 0.008, 0.45, 6]} />
+            <mesh position={[0, -0.55, 0]} geometry={tagLeadLineGeo}>
               <meshBasicMaterial color={model.accentColor} toneMapped={false} transparent opacity={0.7} depthTest={false} depthWrite={false} />
             </mesh>
           </group>
@@ -362,7 +376,9 @@ function SingleHologramTag({ exhibit, isActive, motionEnabled, locale, onSelectE
   );
 }
 
-export function ModelHologramTags({
+const SingleHologramTag = React.memo(SingleHologramTagComponent);
+
+function ModelHologramTagsComponent({
   activeExhibit,
   motionEnabled,
   locale,
@@ -389,4 +405,7 @@ export function ModelHologramTags({
     </>
   );
 }
+
+export const ModelHologramTags = React.memo(ModelHologramTagsComponent);
+
 

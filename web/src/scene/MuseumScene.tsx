@@ -1,4 +1,4 @@
-import { Component, ReactNode, useEffect } from 'react';
+import React, { Component, ReactNode, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -37,7 +37,7 @@ class SceneBoundary extends Component<BoundaryProps, { failed: boolean }> {
 
 interface SceneContentProps extends Omit<MuseumSceneProps, 'onReady' | 'onFallback'> {}
 
-function SceneContent(props: SceneContentProps) {
+function SceneContentComponent(props: SceneContentProps) {
   const { scene, gl } = useThree();
 
   useEffect(() => {
@@ -60,6 +60,12 @@ function SceneContent(props: SceneContentProps) {
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0001}
+        shadow-camera-near={1}
+        shadow-camera-far={45}
+        shadow-camera-left={-18}
+        shadow-camera-right={18}
+        shadow-camera-top={18}
+        shadow-camera-bottom={-18}
       />
       {/* 左右侧翼强轮廓补光 */}
       <pointLight position={[-12, 5.0, 4]} color="#ff6b3d" intensity={16} distance={18} decay={2} />
@@ -103,6 +109,8 @@ function SceneContent(props: SceneContentProps) {
   );
 }
 
+const SceneContent = React.memo(SceneContentComponent);
+
 export function MuseumScene(props: MuseumSceneProps) {
   return (
     <SceneBoundary onError={props.onFallback}>
@@ -110,7 +118,12 @@ export function MuseumScene(props: MuseumSceneProps) {
         className="museum-canvas"
         camera={{ position: [0, 3.4, 32], fov: 58, near: 0.1, far: 110 }}
         dpr={[1, 1.25]}
-        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+        gl={{
+          antialias: true,
+          alpha: false,
+          stencil: false,
+          powerPreference: 'high-performance',
+        }}
         shadows
         onCreated={({ gl, scene, camera }) => {
           gl.domElement.addEventListener('webglcontextlost', props.onFallback, { once: true });
@@ -127,3 +140,4 @@ export function MuseumScene(props: MuseumSceneProps) {
     </SceneBoundary>
   );
 }
+

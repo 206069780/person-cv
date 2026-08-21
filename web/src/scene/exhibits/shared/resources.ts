@@ -109,3 +109,29 @@ export const matAcrylicPurple = new THREE.MeshStandardMaterial({
   emissive: new THREE.Color(PURPLE),
   emissiveIntensity: 0.25,
 });
+
+// 通用色值单例材质缓存池（用于消除 Zone 中微型组件的内联材质分配）
+const _basicMatCache = new Map<string, THREE.MeshBasicMaterial>();
+
+export function getCachedBasicMaterial(color: string, options?: { transparent?: boolean; opacity?: number; wireframe?: boolean; side?: THREE.Side }): THREE.MeshBasicMaterial {
+  const transparent = options?.transparent ?? false;
+  const opacity = options?.opacity ?? 1.0;
+  const wireframe = options?.wireframe ?? false;
+  const side = options?.side ?? THREE.FrontSide;
+  const key = `${color}_${transparent}_${opacity}_${wireframe}_${side}`;
+
+  let mat = _basicMatCache.get(key);
+  if (!mat) {
+    mat = new THREE.MeshBasicMaterial({
+      color,
+      toneMapped: false,
+      transparent,
+      opacity,
+      wireframe,
+      side,
+    });
+    _basicMatCache.set(key, mat);
+  }
+  return mat;
+}
+

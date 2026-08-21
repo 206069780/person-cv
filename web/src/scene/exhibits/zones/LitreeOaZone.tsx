@@ -1,5 +1,4 @@
-import { useRef } from 'react';
-import type React from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -9,11 +8,9 @@ import { ZoneAtmosphericMotes } from '../shared/ZoneAtmosphericMotes';
 import { ZoneBase } from '../shared/ZoneBase';
 import {
   COLOR_STEEL_DARK,
-  COLOR_STEEL_LIGHT,
-  COLOR_STEEL_MID,
   CYAN,
+  getCachedBasicMaterial,
   GOLD,
-  matChromeBright,
   matTitaniumDark,
   SIGNAL,
 } from '../shared/resources';
@@ -30,13 +27,41 @@ const oaHubSubPlinthGeo = new THREE.CylinderGeometry(0.68, 0.95, 0.22, 8);
 const oaHubSocketDiscGeo = new THREE.RingGeometry(0.55, 0.88, 24);
 const oaHubGroundAuraGeo = new THREE.RingGeometry(1.15, 1.35, 32);
 
+const OA_EDGE_POSITIONS: readonly [number, number, number][] = [
+  [-0.45, 0, -0.45],
+  [-0.45, 0, 0.45],
+  [0.45, 0, -0.45],
+  [0.45, 0, 0.45],
+];
+
+const OA_PORT_CONFIGS = [
+  { pos: [0.68, 0, 0] as const, color: GOLD },
+  { pos: [-0.68, 0, 0] as const, color: CYAN },
+  { pos: [0, 0, 0.68] as const, color: GOLD },
+  { pos: [0, 0, -0.68] as const, color: CYAN },
+];
+
 // ==========================================
 // 4. Litree OA / HR 独立业务中台 (OA Zone)
 // ==========================================
-export function LitreeOaZone({ intensity, motionEnabled }: ExhibitVisualProps): React.JSX.Element {
+function LitreeOaZoneComponent({ intensity, motionEnabled }: ExhibitVisualProps): React.JSX.Element {
   const hubRef = useRef<THREE.Group>(null);
   const ring1Ref = useRef<THREE.Mesh>(null);
   const ring2Ref = useRef<THREE.Mesh>(null);
+
+  const materials = useMemo(() => {
+    return {
+      hubCore: new THREE.MeshStandardMaterial({ color: COLOR_STEEL_DARK, metalness: 0.9, emissive: SIGNAL, emissiveIntensity: 1.6 * intensity }),
+      hubWire: getCachedBasicMaterial(SIGNAL, { wireframe: true, transparent: true, opacity: +(0.55 + intensity * 0.45).toFixed(2) }),
+      hubEdge: getCachedBasicMaterial(SIGNAL, { transparent: true, opacity: +(0.85 + intensity * 0.15).toFixed(2) }),
+      socketDisc: getCachedBasicMaterial(SIGNAL, { transparent: true, opacity: +(0.75 + intensity * 0.25).toFixed(2) }),
+      groundAura: getCachedBasicMaterial(GOLD, { wireframe: true, transparent: true, opacity: +(0.35 + intensity * 0.35).toFixed(2) }),
+      ring1: getCachedBasicMaterial(GOLD, { transparent: true, opacity: +(0.7 + intensity * 0.3).toFixed(2) }),
+      ring2: getCachedBasicMaterial(SIGNAL, { transparent: true, opacity: +(0.65 + intensity * 0.35).toFixed(2) }),
+      portGold: getCachedBasicMaterial(GOLD),
+      portCyan: getCachedBasicMaterial(CYAN),
+    };
+  }, [intensity]);
 
   useFrame((_, delta) => {
     if (!motionEnabled) return;
@@ -54,53 +79,27 @@ export function LitreeOaZone({ intensity, motionEnabled }: ExhibitVisualProps): 
       {/* 1. 地表极简流线型能量承托底盘与脉冲光环 */}
       <group position={[0, 0, 0]}>
         <mesh position={[0, 0.32, 0]} geometry={oaHubSubPlinthGeo} material={matTitaniumDark} />
-        <mesh position={[0, 0.44, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={oaHubSocketDiscGeo}>
-          <meshBasicMaterial color={SIGNAL} toneMapped={false} transparent opacity={0.75 + intensity * 0.25} />
-        </mesh>
-        <mesh position={[0, 0.028, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={oaHubGroundAuraGeo}>
-          <meshBasicMaterial color={GOLD} wireframe toneMapped={false} transparent opacity={0.35 + intensity * 0.35} />
-        </mesh>
+        <mesh position={[0, 0.44, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={oaHubSocketDiscGeo} material={materials.socketDisc} />
+        <mesh position={[0, 0.028, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={oaHubGroundAuraGeo} material={materials.groundAura} />
       </group>
 
-      {/* 2. 中央核心状态机中枢模型（主视觉焦点，开阔无遮挡） */}
+      {/* 2. 中央核心状态机中枢模型 */}
       <group ref={hubRef} position={[0, 1.48, 0]}>
-        {/* 外层钛合金机体 */}
         <mesh geometry={oaHubMainBoxGeo} material={matTitaniumDark} />
-        {/* 外层霓虹边线加强 */}
-        {[-0.45, 0.45].flatMap((cx) => [-0.45, 0.45].map((cz) => (
-          <mesh key={`hub-edge-${cx}-${cz}`} position={[cx, 0, cz]} geometry={oaHubEdgeNeonGeo}>
-            <meshBasicMaterial color={SIGNAL} toneMapped={false} transparent opacity={0.85 + intensity * 0.15} />
-          </mesh>
-        )))}
-        {/* 外层全息线框 */}
-        <mesh geometry={oaHubWireframeGeo}>
-          <meshBasicMaterial color={SIGNAL} wireframe toneMapped={false} transparent opacity={0.55 + intensity * 0.45} />
-        </mesh>
-        {/* 内部高亮发光内胆（状态机规则引擎） */}
-        <mesh geometry={oaHubInnerCoreGeo}>
-          <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.9} emissive={SIGNAL} emissiveIntensity={1.6 * intensity} />
-        </mesh>
-        {/* 四向数据交互节点晶体（考勤 / 绩效 / 组织 / 认证） */}
-        {[
-          [0.68, 0, 0],
-          [-0.68, 0, 0],
-          [0, 0, 0.68],
-          [0, 0, -0.68],
-        ].map(([px, py, pz], pIdx) => (
-          <mesh key={pIdx} position={[px, py, pz]} geometry={oaDataPortNodeGeo}>
-            <meshBasicMaterial color={pIdx % 2 === 0 ? GOLD : CYAN} toneMapped={false} />
-          </mesh>
+        {OA_EDGE_POSITIONS.map((pos, idx) => (
+          <mesh key={idx} position={pos} geometry={oaHubEdgeNeonGeo} material={materials.hubEdge} />
+        ))}
+        <mesh geometry={oaHubWireframeGeo} material={materials.hubWire} />
+        <mesh geometry={oaHubInnerCoreGeo} material={materials.hubCore} />
+        {OA_PORT_CONFIGS.map((port, idx) => (
+          <mesh key={idx} position={port.pos} geometry={oaDataPortNodeGeo} material={port.color === GOLD ? materials.portGold : materials.portCyan} />
         ))}
       </group>
 
       {/* 3. 双层状态流转与权限联动星环 */}
       <group position={[0, 1.48, 0]}>
-        <mesh ref={ring1Ref} rotation={[Math.PI / 2, 0, 0]} geometry={oaStateRing1Geo}>
-          <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.7 + intensity * 0.3} />
-        </mesh>
-        <mesh ref={ring2Ref} rotation={[Math.PI / 3, Math.PI / 4, 0]} geometry={oaStateRing2Geo}>
-          <meshBasicMaterial color={SIGNAL} toneMapped={false} transparent opacity={0.65 + intensity * 0.35} />
-        </mesh>
+        <mesh ref={ring1Ref} rotation={[Math.PI / 2, 0, 0]} geometry={oaStateRing1Geo} material={materials.ring1} />
+        <mesh ref={ring2Ref} rotation={[Math.PI / 3, Math.PI / 4, 0]} geometry={oaStateRing2Geo} material={materials.ring2} />
       </group>
 
       <pointLight position={[0, 1.55, 0]} color={SIGNAL} intensity={7 + intensity * 14} distance={9} decay={2} />
@@ -109,3 +108,6 @@ export function LitreeOaZone({ intensity, motionEnabled }: ExhibitVisualProps): 
     </group>
   );
 }
+
+export const LitreeOaZone = React.memo(LitreeOaZoneComponent);
+

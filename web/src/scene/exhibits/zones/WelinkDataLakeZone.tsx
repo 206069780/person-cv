@@ -1,5 +1,4 @@
-import { useRef } from 'react';
-import type React from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -10,6 +9,7 @@ import { ZoneBase } from '../shared/ZoneBase';
 import {
   COLOR_STEEL_DARK,
   CYAN,
+  getCachedBasicMaterial,
   matAcrylicCyan,
   matAcrylicOrange,
   matChromeBright,
@@ -25,19 +25,34 @@ const lakeHelixCoilGeo = new THREE.TorusGeometry(0.42, 0.032, 6, 32);
 const lakeCapHeavyGeo = new THREE.CylinderGeometry(0.62, 0.62, 0.18, 24);
 const lakeCapRingGeo = new THREE.TorusGeometry(0.58, 0.025, 6, 24);
 const lakeReactorBaseRingGeo = new THREE.RingGeometry(0.48, 0.62, 24);
-const lakeReactorPillarRailGeo = new THREE.CylinderGeometry(0.02, 0.02, 2.1, 8);
 const lakeBridgeTrussGeo = new THREE.BoxGeometry(1.42, 0.22, 0.36);
-const lakeBridgeRailGeo = new THREE.BoxGeometry(1.44, 0.03, 0.03);
 const lakeAcidPrismGeo = new THREE.OctahedronGeometry(0.3, 0);
 const lakeFlowRingGeo = new THREE.TorusGeometry(0.75, 0.028, 8, 36);
+
+const COIL_Y_POSITIONS = [-0.65, -0.22, 0.22, 0.65] as const;
 
 // ==========================================
 // 6. WeLink 双路数据湖管道与版本一致性治理 (Lake Zone)
 // ==========================================
-export function WelinkDataLakeZone({ intensity, motionEnabled }: ExhibitVisualProps): React.JSX.Element {
+function WelinkDataLakeZoneComponent({ intensity, motionEnabled }: ExhibitVisualProps): React.JSX.Element {
   const helixLeftRef = useRef<THREE.Group>(null);
   const helixRightRef = useRef<THREE.Group>(null);
   const crystalRef = useRef<THREE.Mesh>(null);
+
+  const materials = useMemo(() => {
+    return {
+      plasmaCyan: new THREE.MeshStandardMaterial({ color: COLOR_STEEL_DARK, metalness: 0.9, emissive: CYAN, emissiveIntensity: 0.95 * intensity }),
+      plasmaSafety: new THREE.MeshStandardMaterial({ color: COLOR_STEEL_DARK, metalness: 0.9, emissive: SAFETY, emissiveIntensity: 0.95 * intensity }),
+      baseRingCyan: getCachedBasicMaterial(CYAN, { transparent: true, opacity: 0.8 }),
+      baseRingSafety: getCachedBasicMaterial(SAFETY, { transparent: true, opacity: 0.8 }),
+      coilCyan: getCachedBasicMaterial(CYAN, { wireframe: true, transparent: true, opacity: +(0.75 + intensity * 0.25).toFixed(2) }),
+      coilSafety: getCachedBasicMaterial(SAFETY, { wireframe: true, transparent: true, opacity: +(0.75 + intensity * 0.25).toFixed(2) }),
+      capRingCyan: getCachedBasicMaterial(CYAN),
+      capRingSafety: getCachedBasicMaterial(SAFETY),
+      flowRingCyan: getCachedBasicMaterial(CYAN),
+      flowRingSafety: getCachedBasicMaterial(SAFETY),
+    };
+  }, [intensity]);
 
   useFrame((_, delta) => {
     if (!motionEnabled) return;
@@ -55,57 +70,34 @@ export function WelinkDataLakeZone({ intensity, motionEnabled }: ExhibitVisualPr
       <ZoneBase intensity={intensity} accent={CYAN} motionEnabled={motionEnabled} />
       <ZoneAtmosphericMotes accent={CYAN} intensity={intensity} motionEnabled={motionEnabled} count={16} />
 
-      {/* 左柱：Flink 实时流式管道反应柱（透明防护管 + 内部双螺旋 + 柱底光晕环 + 顶部高亮环） */}
+      {/* 左柱：Flink 实时流式管道反应柱 */}
       <group position={[-1.05, 0.24, 0]}>
         <mesh position={[0, 1.05, 0]} castShadow geometry={lakeReactorTubeGeo} material={matAcrylicCyan} />
-        <mesh position={[0, 1.05, 0]} geometry={lakeInnerPlasmaGeo}>
-          <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.9} emissive={CYAN} emissiveIntensity={0.95 * intensity} />
-        </mesh>
-        {/* 柱脚地表发光环 */}
-        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={lakeReactorBaseRingGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.8} />
-        </mesh>
-        {/* 内部旋转流动线圈 */}
+        <mesh position={[0, 1.05, 0]} geometry={lakeInnerPlasmaGeo} material={materials.plasmaCyan} />
+        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={lakeReactorBaseRingGeo} material={materials.baseRingCyan} />
         <group ref={helixLeftRef} position={[0, 1.05, 0]}>
-          {[-0.65, -0.22, 0.22, 0.65].map((y, cIdx) => (
-            <mesh key={cIdx} position={[0, y, 0]} geometry={lakeHelixCoilGeo}>
-              <meshBasicMaterial color={CYAN} wireframe toneMapped={false} transparent opacity={0.75 + intensity * 0.25} />
-            </mesh>
+          {COIL_Y_POSITIONS.map((y, cIdx) => (
+            <mesh key={cIdx} position={[0, y, 0]} geometry={lakeHelixCoilGeo} material={materials.coilCyan} />
           ))}
         </group>
         <mesh position={[0, 2.12, 0]} geometry={lakeCapHeavyGeo} material={matChromeBright} />
-        <mesh position={[0, 2.22, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeCapRingGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} />
-        </mesh>
-        <mesh position={[0, 1.05, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeFlowRingGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} />
-        </mesh>
+        <mesh position={[0, 2.22, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeCapRingGeo} material={materials.capRingCyan} />
+        <mesh position={[0, 1.05, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeFlowRingGeo} material={materials.flowRingCyan} />
       </group>
 
-      {/* 右柱：Spark 批处理离线计算反应柱（活力橙双螺旋 + 柱底光晕环） */}
+      {/* 右柱：Spark 批处理离线计算反应柱 */}
       <group position={[1.05, 0.24, 0]}>
         <mesh position={[0, 1.05, 0]} castShadow geometry={lakeReactorTubeGeo} material={matAcrylicOrange} />
-        <mesh position={[0, 1.05, 0]} geometry={lakeInnerPlasmaGeo}>
-          <meshStandardMaterial color={COLOR_STEEL_DARK} metalness={0.9} emissive={SAFETY} emissiveIntensity={0.95 * intensity} />
-        </mesh>
-        {/* 柱脚地表发光环 */}
-        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={lakeReactorBaseRingGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.8} />
-        </mesh>
+        <mesh position={[0, 1.05, 0]} geometry={lakeInnerPlasmaGeo} material={materials.plasmaSafety} />
+        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={lakeReactorBaseRingGeo} material={materials.baseRingSafety} />
         <group ref={helixRightRef} position={[0, 1.05, 0]}>
-          {[-0.65, -0.22, 0.22, 0.65].map((y, cIdx) => (
-            <mesh key={cIdx} position={[0, y, 0]} geometry={lakeHelixCoilGeo}>
-              <meshBasicMaterial color={SAFETY} wireframe toneMapped={false} transparent opacity={0.75 + intensity * 0.25} />
-            </mesh>
+          {COIL_Y_POSITIONS.map((y, cIdx) => (
+            <mesh key={cIdx} position={[0, y, 0]} geometry={lakeHelixCoilGeo} material={materials.coilSafety} />
           ))}
         </group>
         <mesh position={[0, 2.12, 0]} geometry={lakeCapHeavyGeo} material={matChromeBright} />
-        <mesh position={[0, 2.22, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeCapRingGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} />
-        </mesh>
-        <mesh position={[0, 1.05, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeFlowRingGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} />
-        </mesh>
+        <mesh position={[0, 2.22, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeCapRingGeo} material={materials.capRingSafety} />
+        <mesh position={[0, 1.05, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={lakeFlowRingGeo} material={materials.flowRingSafety} />
       </group>
 
       {/* 中央 ACID 版本治理协调桥与锁晶体 */}
@@ -120,3 +112,6 @@ export function WelinkDataLakeZone({ intensity, motionEnabled }: ExhibitVisualPr
     </group>
   );
 }
+
+export const WelinkDataLakeZone = React.memo(WelinkDataLakeZoneComponent);
+

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 import { EXHIBITS } from '../scene-layout';
@@ -46,14 +46,100 @@ const crossRailMat = new THREE.MeshBasicMaterial({ color: '#ff6b3d', toneMapped:
 const floorGridMatCyan = new THREE.MeshBasicMaterial({ color: '#28d7e5', toneMapped: false, transparent: true, opacity: 0.4 });
 const floorGridMatOrange = new THREE.MeshBasicMaterial({ color: '#ff6b3d', toneMapped: false, transparent: true, opacity: 0.35 });
 
+const borderMatCyan = new THREE.MeshBasicMaterial({ color: '#28d7e5', toneMapped: false });
+const borderMatPurple = new THREE.MeshBasicMaterial({ color: '#c084fc', toneMapped: false });
+const borderMatOrange = new THREE.MeshBasicMaterial({ color: '#ff6b3d', toneMapped: false });
+
+const trackMatCyan = new THREE.MeshBasicMaterial({ color: '#28d7e5', toneMapped: false, transparent: true, opacity: 0.8 });
+const trackMatSafety = new THREE.MeshBasicMaterial({ color: '#ff6b3d', toneMapped: false, transparent: true, opacity: 0.8 });
+const trackMatCyber = new THREE.MeshBasicMaterial({ color: '#c084fc', toneMapped: false, transparent: true, opacity: 0.8 });
+
+// 预计算 7 根通往展台的直通光轨数据与共享几何体
+const EXHIBIT_TRACKS = EXHIBITS.map((exhibit) => {
+  const [ex, , ez] = exhibit.position;
+  const dx = ex;
+  const dz = ez - 2;
+  const len = Math.hypot(dx, dz);
+  const angle = -Math.atan2(dz, dx);
+  return {
+    id: exhibit.id,
+    position: [dx / 2, 0.032, 2 + dz / 2] as const,
+    rotation: [0, angle, 0] as const,
+    geometry: new THREE.BoxGeometry(len, 0.018, 0.05),
+    material: exhibit.accent === 'safety' ? trackMatSafety : exhibit.accent === 'cyber' ? trackMatCyber : trackMatCyan,
+  };
+});
+
+const RAILS_X = Array.from({ length: 11 }, (_, index) => -10 + index * 2);
+const SIDE_RAILS_X = RAILS_X.filter((x) => x !== 0);
+const CROSS_RAILS_Z = Array.from({ length: 17 }, (_, index) => -14 + index * 2);
+const GRID_LONGS = [-14, -7, 7, 14];
+const GRID_CROSSES = [-16, -10, -2, 6, 14, 20];
+
 /**
- * 展馆地表系统：镜面反光钛金地面 + 赛博霓虹导引光轨与网格矩阵
+ * 展馆地表系统：镜面反光钛金地面 + 赛博霓虹导引光轨与网格矩阵（高性能批处理版）
  */
-export function FloorSystem(): React.JSX.Element {
-  const rails = useMemo(() => Array.from({ length: 11 }, (_, index) => -10 + index * 2), []);
-  const crossRails = useMemo(() => Array.from({ length: 17 }, (_, index) => -14 + index * 2), []);
-  const gridLongs = useMemo(() => [-14, -7, 7, 14], []);
-  const gridCrosses = useMemo(() => [-16, -10, -2, 6, 14, 20], []);
+function FloorSystemComponent(): React.JSX.Element {
+  const sideRailsRef = useRef<THREE.InstancedMesh>(null);
+  const crossRailsRef = useRef<THREE.InstancedMesh>(null);
+  const gridLongCyanRef = useRef<THREE.InstancedMesh>(null);
+  const gridLongOrangeRef = useRef<THREE.InstancedMesh>(null);
+  const gridCrossCyanRef = useRef<THREE.InstancedMesh>(null);
+  const gridCrossOrangeRef = useRef<THREE.InstancedMesh>(null);
+
+  useEffect(() => {
+    const dummy = new THREE.Object3D();
+
+    // 1. 10 根侧翼导轨
+    if (sideRailsRef.current) {
+      SIDE_RAILS_X.forEach((x, i) => {
+        dummy.position.set(x, 0.015, 2);
+        dummy.updateMatrix();
+        sideRailsRef.current?.setMatrixAt(i, dummy.matrix);
+      });
+      sideRailsRef.current.instanceMatrix.needsUpdate = true;
+    }
+
+    // 2. 17 根横向导轨
+    if (crossRailsRef.current) {
+      CROSS_RAILS_Z.forEach((z, i) => {
+        dummy.position.set(0, 0.016, z);
+        dummy.updateMatrix();
+        crossRailsRef.current?.setMatrixAt(i, dummy.matrix);
+      });
+      crossRailsRef.current.instanceMatrix.needsUpdate = true;
+    }
+
+    // 3. 地表长网格线
+    let cLong = 0;
+    let oLong = 0;
+    GRID_LONGS.forEach((x, idx) => {
+      dummy.position.set(x, 0.022, 1);
+      dummy.updateMatrix();
+      if (idx % 2 === 0) {
+        gridLongCyanRef.current?.setMatrixAt(cLong++, dummy.matrix);
+      } else {
+        gridLongOrangeRef.current?.setMatrixAt(oLong++, dummy.matrix);
+      }
+    });
+    if (gridLongCyanRef.current) gridLongCyanRef.current.instanceMatrix.needsUpdate = true;
+    if (gridLongOrangeRef.current) gridLongOrangeRef.current.instanceMatrix.needsUpdate = true;
+
+    // 4. 地表横网格线
+    let cCross = 0;
+    let oCross = 0;
+    GRID_CROSSES.forEach((z, idx) => {
+      dummy.position.set(0, 0.024, z);
+      dummy.updateMatrix();
+      if (idx % 2 === 0) {
+        gridCrossCyanRef.current?.setMatrixAt(cCross++, dummy.matrix);
+      } else {
+        gridCrossOrangeRef.current?.setMatrixAt(oCross++, dummy.matrix);
+      }
+    });
+    if (gridCrossCyanRef.current) gridCrossCyanRef.current.instanceMatrix.needsUpdate = true;
+    if (gridCrossOrangeRef.current) gridCrossOrangeRef.current.instanceMatrix.needsUpdate = true;
+  }, []);
 
   return (
     <group>
@@ -70,77 +156,32 @@ export function FloorSystem(): React.JSX.Element {
       <mesh position={[-0.38, 0.075, 2]} geometry={mainTrackNeonGeo} material={trackNeonMat} />
       <mesh position={[0.38, 0.075, 2]} geometry={mainTrackNeonGeo} material={trackNeonMat} />
 
-      {/* 4. 放射状地面引导轨道 */}
-      {rails.map((x) => (
-        <mesh
-          key={`x-${x}`}
-          position={[x, 0.015, 2]}
-          geometry={railGeo}
-          material={x === 0 ? railCenterMat : railSideMat}
-        />
-      ))}
-      {crossRails.map((z) => (
-        <mesh
-          key={`z-${z}`}
-          position={[0, 0.016, z]}
-          geometry={crossRailGeo}
-          material={crossRailMat}
-        />
-      ))}
+      {/* 4. 放射状地面引导轨道 (实例化批处理) */}
+      <mesh position={[0, 0.015, 2]} geometry={railGeo} material={railCenterMat} />
+      <instancedMesh ref={sideRailsRef} args={[railGeo, railSideMat, SIDE_RAILS_X.length]} />
+      <instancedMesh ref={crossRailsRef} args={[crossRailGeo, crossRailMat, CROSS_RAILS_Z.length]} />
 
-      {/* 5. 地表大跨度赛博霓虹网格嵌条 */}
-      {gridLongs.map((x, idx) => (
-        <mesh
-          key={`gl-${x}`}
-          position={[x, 0.022, 1]}
-          geometry={floorGridLineLongGeo}
-          material={idx % 2 === 0 ? floorGridMatCyan : floorGridMatOrange}
-        />
-      ))}
-      {gridCrosses.map((z, idx) => (
-        <mesh
-          key={`gc-${z}`}
-          position={[0, 0.024, z]}
-          geometry={floorGridLineCrossGeo}
-          material={idx % 2 === 0 ? floorGridMatCyan : floorGridMatOrange}
-        />
-      ))}
+      {/* 5. 地表大跨度赛博霓虹网格嵌条 (实例化批处理) */}
+      <instancedMesh ref={gridLongCyanRef} args={[floorGridLineLongGeo, floorGridMatCyan, 2]} />
+      <instancedMesh ref={gridLongOrangeRef} args={[floorGridLineLongGeo, floorGridMatOrange, 2]} />
+      <instancedMesh ref={gridCrossCyanRef} args={[floorGridLineCrossGeo, floorGridMatCyan, 3]} />
+      <instancedMesh ref={gridCrossOrangeRef} args={[floorGridLineCrossGeo, floorGridMatOrange, 3]} />
 
       {/* 6. 展馆外轮廓地面霓虹封边框 */}
-      <mesh position={[-16.8, 0.03, 1]} geometry={floorBorderLongGeo}>
-        <meshBasicMaterial color="#28d7e5" toneMapped={false} />
-      </mesh>
-      <mesh position={[16.8, 0.03, 1]} geometry={floorBorderLongGeo}>
-        <meshBasicMaterial color="#c084fc" toneMapped={false} />
-      </mesh>
-      <mesh position={[0, 0.03, -17.8]} geometry={floorBorderCrossGeo}>
-        <meshBasicMaterial color="#28d7e5" toneMapped={false} />
-      </mesh>
-      <mesh position={[0, 0.03, 20.8]} geometry={floorBorderCrossGeo}>
-        <meshBasicMaterial color="#ff6b3d" toneMapped={false} />
-      </mesh>
+      <mesh position={[-16.8, 0.03, 1]} geometry={floorBorderLongGeo} material={borderMatCyan} />
+      <mesh position={[16.8, 0.03, 1]} geometry={floorBorderLongGeo} material={borderMatPurple} />
+      <mesh position={[0, 0.03, -17.8]} geometry={floorBorderCrossGeo} material={borderMatCyan} />
+      <mesh position={[0, 0.03, 20.8]} geometry={floorBorderCrossGeo} material={borderMatOrange} />
 
-      {/* 7. 地面通往 7 个展台的直通光轨 */}
-      {EXHIBITS.map((exhibit) => {
-        const [ex, , ez] = exhibit.position;
-        const dx = ex;
-        const dz = ez - 2;
-        const len = Math.hypot(dx, dz);
-        const angle = -Math.atan2(dz, dx);
-        return (
-          <group key={exhibit.id} position={[dx / 2, 0.032, 2 + dz / 2]} rotation={[0, angle, 0]}>
-            <mesh>
-              <boxGeometry args={[len, 0.018, 0.05]} />
-              <meshBasicMaterial
-                color={exhibit.accent === 'safety' ? '#ff6b3d' : exhibit.accent === 'cyber' ? '#c084fc' : '#28d7e5'}
-                toneMapped={false}
-                transparent
-                opacity={0.8}
-              />
-            </mesh>
-          </group>
-        );
-      })}
+      {/* 7. 地面通往 7 个展台的直通光轨 (预计算几何体与共享材质) */}
+      {EXHIBIT_TRACKS.map((track) => (
+        <group key={track.id} position={track.position} rotation={track.rotation}>
+          <mesh geometry={track.geometry} material={track.material} />
+        </group>
+      ))}
     </group>
   );
 }
+
+export const FloorSystem = React.memo(FloorSystemComponent);
+

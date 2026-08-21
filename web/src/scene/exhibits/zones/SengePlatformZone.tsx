@@ -1,5 +1,4 @@
-import { useRef } from 'react';
-import type React from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -11,6 +10,7 @@ import {
   COLOR_STEEL_LIGHT,
   COLOR_STEEL_MID,
   CYAN,
+  getCachedBasicMaterial,
   matChromeBright,
   matSteelLight,
   SAFETY,
@@ -20,22 +20,42 @@ import {
 // 08 - Senge Platform (0-1 平台架构与容器化)
 const platformK8sPodGeo = new THREE.BoxGeometry(0.98, 0.48, 0.82);
 const platformPodFrameOuterGeo = new THREE.BoxGeometry(1.02, 0.06, 0.86);
-const platformPodCornerTrimGeo = new THREE.BoxGeometry(0.03, 0.48, 0.03);
+const platformPodGlowGeo = new THREE.PlaneGeometry(0.92, 0.62);
 const platformPipeMainGeo = new THREE.CylinderGeometry(0.095, 0.095, 2.35, 16);
 const platformPipeFlangeGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.07, 16);
-const platformPipeSealRingGeo = new THREE.TorusGeometry(0.152, 0.015, 6, 24);
 const platformValveWheelGeo = new THREE.TorusGeometry(0.19, 0.042, 8, 24);
 const platformDualRing1Geo = new THREE.TorusGeometry(1.65, 0.032, 8, 56);
 const platformDualRing2Geo = new THREE.TorusGeometry(1.42, 0.026, 8, 48);
 const platformTelemetryScreenGeo = new THREE.PlaneGeometry(0.68, 0.44);
 
+const PLATFORM_POD_CONFIGS = [
+  { pos: [-0.85, 0.35, -0.42] as const, color: COLOR_STEEL_MID, frameColor: SIGNAL },
+  { pos: [0.85, 0.35, -0.42] as const, color: '#182730', frameColor: SIGNAL },
+  { pos: [0, 0.88, 0.42] as const, color: COLOR_STEEL_LIGHT, frameColor: SAFETY },
+];
+
 // ==========================================
 // 8. 森格智慧水务平台 0-1 架构底座与容器化交付 (Platform Zone)
 // ==========================================
-export function SengePlatformZone({ intensity, motionEnabled }: ExhibitVisualProps): React.JSX.Element {
+function SengePlatformZoneComponent({ intensity, motionEnabled }: ExhibitVisualProps): React.JSX.Element {
   const ring1Ref = useRef<THREE.Mesh>(null);
   const ring2Ref = useRef<THREE.Mesh>(null);
   const valveRef = useRef<THREE.Mesh>(null);
+
+  const materials = useMemo(() => {
+    return {
+      podMatMid: new THREE.MeshStandardMaterial({ color: COLOR_STEEL_MID, metalness: 0.94, roughness: 0.16, emissive: SIGNAL, emissiveIntensity: 0.32 * intensity }),
+      podMatDark: new THREE.MeshStandardMaterial({ color: '#182730', metalness: 0.94, roughness: 0.16, emissive: SIGNAL, emissiveIntensity: 0.32 * intensity }),
+      podMatLight: new THREE.MeshStandardMaterial({ color: COLOR_STEEL_LIGHT, metalness: 0.94, roughness: 0.16, emissive: SIGNAL, emissiveIntensity: 0.32 * intensity }),
+      podFrameSignal: getCachedBasicMaterial(SIGNAL, { transparent: true, opacity: +(0.75 + intensity * 0.25).toFixed(2) }),
+      podFrameSafety: getCachedBasicMaterial(SAFETY, { transparent: true, opacity: +(0.75 + intensity * 0.25).toFixed(2) }),
+      podGlow: getCachedBasicMaterial(SIGNAL, { transparent: true, opacity: 0.5 }),
+      valve: new THREE.MeshStandardMaterial({ color: SAFETY, metalness: 0.92, emissive: SAFETY, emissiveIntensity: 0.65 * intensity }),
+      ring1: getCachedBasicMaterial(SIGNAL, { wireframe: true, transparent: true, opacity: +(0.55 + intensity * 0.45).toFixed(2) }),
+      ring2: getCachedBasicMaterial(CYAN, { wireframe: true, transparent: true, opacity: +(0.45 + intensity * 0.45).toFixed(2) }),
+      telemetry: getCachedBasicMaterial(CYAN, { wireframe: true, transparent: true, opacity: +(0.55 + intensity * 0.45).toFixed(2) }),
+    };
+  }, [intensity]);
 
   useFrame((_, delta) => {
     if (!motionEnabled) return;
@@ -50,24 +70,16 @@ export function SengePlatformZone({ intensity, motionEnabled }: ExhibitVisualPro
       <ZoneBase intensity={intensity} accent={SIGNAL} motionEnabled={motionEnabled} />
       <ZoneAtmosphericMotes accent={SIGNAL} intensity={intensity} motionEnabled={motionEnabled} count={16} />
 
-      {/* 3层阶梯式云原生容器 Pod 集群模块（设备中台 / 告警引擎 / 运维中枢 + 发光边框与机柜底圈） */}
-      {[
-        [-0.85, 0.35, -0.42, COLOR_STEEL_MID],
-        [0.85, 0.35, -0.42, '#182730'],
-        [0, 0.88, 0.42, COLOR_STEEL_LIGHT],
-      ].map(([x, y, z, color], idx) => (
-        <group key={idx} position={[x as number, y as number, z as number]}>
-          <mesh castShadow geometry={platformK8sPodGeo}>
-            <meshStandardMaterial color={color as string} metalness={0.94} roughness={0.16} emissive={SIGNAL} emissiveIntensity={0.32 * intensity} />
-          </mesh>
-          <mesh position={[0, 0.25, 0]} geometry={platformPodFrameOuterGeo}>
-            <meshBasicMaterial color={idx === 2 ? SAFETY : SIGNAL} toneMapped={false} transparent opacity={0.75 + intensity * 0.25} />
-          </mesh>
-          {/* Pod 模块底部发光轮廓 */}
-          <mesh position={[0, -0.23, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.92, 0.62]} />
-            <meshBasicMaterial color={SIGNAL} toneMapped={false} transparent opacity={0.5} />
-          </mesh>
+      {/* 3层阶梯式云原生容器 Pod 集群模块 */}
+      {PLATFORM_POD_CONFIGS.map((pod, idx) => (
+        <group key={idx} position={pod.pos}>
+          <mesh
+            castShadow
+            geometry={platformK8sPodGeo}
+            material={idx === 0 ? materials.podMatMid : idx === 1 ? materials.podMatDark : materials.podMatLight}
+          />
+          <mesh position={[0, 0.25, 0]} geometry={platformPodFrameOuterGeo} material={pod.frameColor === SAFETY ? materials.podFrameSafety : materials.podFrameSignal} />
+          <mesh position={[0, -0.23, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={platformPodGlowGeo} material={materials.podGlow} />
         </group>
       ))}
 
@@ -77,26 +89,18 @@ export function SengePlatformZone({ intensity, motionEnabled }: ExhibitVisualPro
         {[-0.65, 0.65].map((px) => (
           <mesh key={px} position={[px, 0, 0]} rotation={[0, 0, Math.PI / 2]} geometry={platformPipeFlangeGeo} material={matSteelLight} />
         ))}
-        <mesh ref={valveRef} position={[0, 0, 0]} rotation={[0, Math.PI / 2, 0]} geometry={platformValveWheelGeo}>
-          <meshStandardMaterial color={SAFETY} metalness={0.92} emissive={SAFETY} emissiveIntensity={0.65 * intensity} />
-        </mesh>
+        <mesh ref={valveRef} position={[0, 0, 0]} rotation={[0, Math.PI / 2, 0]} geometry={platformValveWheelGeo} material={materials.valve} />
       </group>
 
       {/* 顶部服务网格双交错旋转负载均衡光环 */}
       <group position={[0, 1.68, 0]}>
-        <mesh ref={ring1Ref} rotation={[Math.PI / 2, 0, 0]} geometry={platformDualRing1Geo}>
-          <meshBasicMaterial color={SIGNAL} wireframe toneMapped={false} transparent opacity={0.55 + intensity * 0.45} />
-        </mesh>
-        <mesh ref={ring2Ref} rotation={[Math.PI / 2.2, 0.3, 0]} geometry={platformDualRing2Geo}>
-          <meshBasicMaterial color={CYAN} wireframe toneMapped={false} transparent opacity={0.45 + intensity * 0.45} />
-        </mesh>
+        <mesh ref={ring1Ref} rotation={[Math.PI / 2, 0, 0]} geometry={platformDualRing1Geo} material={materials.ring1} />
+        <mesh ref={ring2Ref} rotation={[Math.PI / 2.2, 0.3, 0]} geometry={platformDualRing2Geo} material={materials.ring2} />
       </group>
 
       {/* 双向全息遥测态势监控看板 */}
       {[-0.98, 0.98].map((x, idx) => (
-        <mesh key={idx} position={[x, 1.35, 0.78]} rotation={[-0.2, idx === 0 ? 0.35 : -0.35, 0]} geometry={platformTelemetryScreenGeo}>
-          <meshBasicMaterial color={CYAN} wireframe toneMapped={false} transparent opacity={0.55 + intensity * 0.45} />
-        </mesh>
+        <mesh key={idx} position={[x, 1.35, 0.78]} rotation={[-0.2, idx === 0 ? 0.35 : -0.35, 0]} geometry={platformTelemetryScreenGeo} material={materials.telemetry} />
       ))}
 
       <pointLight position={[0, 1.72, 0]} color={SIGNAL} intensity={5 + intensity * 11} distance={9} decay={2} />
@@ -105,3 +109,6 @@ export function SengePlatformZone({ intensity, motionEnabled }: ExhibitVisualPro
     </group>
   );
 }
+
+export const SengePlatformZone = React.memo(SengePlatformZoneComponent);
+

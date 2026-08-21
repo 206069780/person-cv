@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -33,8 +33,53 @@ const pillarLightGeo = new THREE.CylinderGeometry(0.09, 0.09, 10.5, 12);
 const portalPillarGeo = new THREE.BoxGeometry(0.5, 8.2, 0.5);
 const portalBeamGeo = new THREE.BoxGeometry(13, 0.4, 0.5);
 const portalStripGeo = new THREE.BoxGeometry(12.6, 0.08, 0.52);
+const scanLineGeo = new THREE.BoxGeometry(10.7, 0.05, 0.01);
 
-export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; locale: Locale }) {
+// 共享材质池
+const matWallStandard = new THREE.MeshStandardMaterial({ color: STEEL_DARK, metalness: 0.92, roughness: 0.35 });
+const matMainScreenFrame = new THREE.MeshStandardMaterial({ color: STEEL_PANEL, metalness: 0.94, roughness: 0.2, emissive: CYAN, emissiveIntensity: 0.12 });
+const matScreenBezelCyan = new THREE.MeshBasicMaterial({ color: CYAN, toneMapped: false });
+const matScreenBezelSafety = new THREE.MeshBasicMaterial({ color: SAFETY, toneMapped: false });
+const matScanLine = new THREE.MeshBasicMaterial({ color: CYAN, toneMapped: false, transparent: true, opacity: 0.8 });
+
+const matNeonNorthCyan = new THREE.MeshBasicMaterial({ color: CYAN, toneMapped: false, transparent: true, opacity: 0.9 });
+const matNeonNorthPurple = new THREE.MeshBasicMaterial({ color: PURPLE, toneMapped: false, transparent: true, opacity: 0.8 });
+const matNeonNorthSafety = new THREE.MeshBasicMaterial({ color: SAFETY, toneMapped: false, transparent: true, opacity: 0.85 });
+const matNeonNorthEmerald = new THREE.MeshBasicMaterial({ color: EMERALD, toneMapped: false, transparent: true, opacity: 0.7 });
+
+const matNeonSideCyan = new THREE.MeshBasicMaterial({ color: CYAN, toneMapped: false, transparent: true, opacity: 0.9 });
+const matNeonSideEmerald = new THREE.MeshBasicMaterial({ color: EMERALD, toneMapped: false, transparent: true, opacity: 0.75 });
+const matNeonSideSafety = new THREE.MeshBasicMaterial({ color: SAFETY, toneMapped: false, transparent: true, opacity: 0.8 });
+const matNeonSideCyanDim = new THREE.MeshBasicMaterial({ color: CYAN, toneMapped: false, transparent: true, opacity: 0.7 });
+const matNeonSidePurple = new THREE.MeshBasicMaterial({ color: PURPLE, toneMapped: false, transparent: true, opacity: 0.9 });
+const matNeonSideGold = new THREE.MeshBasicMaterial({ color: GOLD, toneMapped: false, transparent: true, opacity: 0.75 });
+const matNeonSideGoldBright = new THREE.MeshBasicMaterial({ color: GOLD, toneMapped: false, transparent: true, opacity: 0.8 });
+const matNeonSidePurpleDim = new THREE.MeshBasicMaterial({ color: PURPLE, toneMapped: false, transparent: true, opacity: 0.7 });
+
+const matWallSeamCyan = new THREE.MeshBasicMaterial({ color: CYAN, toneMapped: false, transparent: true, opacity: 0.6 });
+const matWallSeamPurple = new THREE.MeshBasicMaterial({ color: PURPLE, toneMapped: false, transparent: true, opacity: 0.6 });
+
+const matBillboardGlowCyan = new THREE.MeshBasicMaterial({ color: CYAN, toneMapped: false, transparent: true, opacity: 0.25 });
+const matBillboardGlowEmerald = new THREE.MeshBasicMaterial({ color: EMERALD, toneMapped: false, transparent: true, opacity: 0.25 });
+const matBillboardGlowSafety = new THREE.MeshBasicMaterial({ color: SAFETY, toneMapped: false, transparent: true, opacity: 0.25 });
+const matBillboardGlowPurple = new THREE.MeshBasicMaterial({ color: PURPLE, toneMapped: false, transparent: true, opacity: 0.25 });
+const matBillboardGlowGold = new THREE.MeshBasicMaterial({ color: GOLD, toneMapped: false, transparent: true, opacity: 0.25 });
+
+const matBillboardFrameCyan = new THREE.MeshStandardMaterial({ color: STEEL_PANEL, metalness: 0.9, emissive: CYAN, emissiveIntensity: 0.25 });
+const matBillboardFrameEmerald = new THREE.MeshStandardMaterial({ color: STEEL_PANEL, metalness: 0.9, emissive: EMERALD, emissiveIntensity: 0.25 });
+const matBillboardFrameSafety = new THREE.MeshStandardMaterial({ color: STEEL_PANEL, metalness: 0.9, emissive: SAFETY, emissiveIntensity: 0.25 });
+const matBillboardFramePurple = new THREE.MeshStandardMaterial({ color: STEEL_PANEL, metalness: 0.9, emissive: PURPLE, emissiveIntensity: 0.25 });
+const matBillboardFrameGold = new THREE.MeshStandardMaterial({ color: STEEL_PANEL, metalness: 0.9, emissive: GOLD, emissiveIntensity: 0.25 });
+
+const matPortalPillarCyan = new THREE.MeshStandardMaterial({ color: STEEL_DARK, metalness: 0.92, emissive: CYAN, emissiveIntensity: 0.25 });
+const matPortalPillarSafety = new THREE.MeshStandardMaterial({ color: STEEL_DARK, metalness: 0.92, emissive: SAFETY, emissiveIntensity: 0.25 });
+const matPortalBeam = new THREE.MeshStandardMaterial({ color: STEEL_DARK, metalness: 0.92 });
+const matPortalStripCyan = new THREE.MeshBasicMaterial({ color: CYAN, toneMapped: false });
+const matPortalStripSafety = new THREE.MeshBasicMaterial({ color: SAFETY, toneMapped: false });
+
+const WALL_SEAM_ZS = [-14, -4, 4, 14, 22] as const;
+
+function NeonWallsComponent({ motionEnabled, locale }: { motionEnabled: boolean; locale: Locale }) {
   const mainScreenMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const scanLineRef = useRef<THREE.Mesh>(null);
   const leftLightRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -123,48 +168,29 @@ export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; l
   return (
     <group>
       {/* 1. 北侧远景主墙面 (z = -17.8) */}
-      <mesh position={[0, 5.8, -17.8]} receiveShadow geometry={wallNorthGeo}>
-        <meshStandardMaterial color={STEEL_DARK} metalness={0.92} roughness={0.35} />
-      </mesh>
+      <mesh position={[0, 5.8, -17.8]} receiveShadow geometry={wallNorthGeo} material={matWallStandard} />
 
       {/* 2. 西侧左墙面 (x = -16.8) */}
-      <mesh position={[-16.8, 5.8, 3]} rotation={[0, Math.PI / 2, 0]} receiveShadow geometry={wallSideGeo}>
-        <meshStandardMaterial color={STEEL_DARK} metalness={0.92} roughness={0.35} />
-      </mesh>
+      <mesh position={[-16.8, 5.8, 3]} rotation={[0, Math.PI / 2, 0]} receiveShadow geometry={wallSideGeo} material={matWallStandard} />
 
       {/* 3. 东侧右墙面 (x = 16.8) */}
-      <mesh position={[16.8, 5.8, 3]} rotation={[0, -Math.PI / 2, 0]} receiveShadow geometry={wallSideGeo}>
-        <meshStandardMaterial color={STEEL_DARK} metalness={0.92} roughness={0.35} />
-      </mesh>
+      <mesh position={[16.8, 5.8, 3]} rotation={[0, -Math.PI / 2, 0]} receiveShadow geometry={wallSideGeo} material={matWallStandard} />
 
       {/* 4. 北墙中央：巨幅赛博全息主大屏 (x=0, y=4.6, z=-17.2) */}
       <group position={[0, 4.6, -17.2]}>
-        <mesh geometry={mainScreenFrameGeo}>
-          <meshStandardMaterial color={STEEL_PANEL} metalness={0.94} roughness={0.2} emissive={CYAN} emissiveIntensity={0.12} />
-        </mesh>
+        <mesh geometry={mainScreenFrameGeo} material={matMainScreenFrame} />
         {/* 屏幕多重霓虹封边 */}
-        <mesh position={[0, 3.2, 0.12]} geometry={screenBezelGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} />
-        </mesh>
-        <mesh position={[0, -3.2, 0.12]} geometry={screenBezelGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} />
-        </mesh>
-        <mesh position={[-5.6, 0, 0.12]} rotation={[0, 0, Math.PI / 2]} geometry={screenBezelGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} />
-        </mesh>
-        <mesh position={[5.6, 0, 0.12]} rotation={[0, 0, Math.PI / 2]} geometry={screenBezelGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} />
-        </mesh>
+        <mesh position={[0, 3.2, 0.12]} geometry={screenBezelGeo} material={matScreenBezelCyan} />
+        <mesh position={[0, -3.2, 0.12]} geometry={screenBezelGeo} material={matScreenBezelSafety} />
+        <mesh position={[-5.6, 0, 0.12]} rotation={[0, 0, Math.PI / 2]} geometry={screenBezelGeo} material={matScreenBezelCyan} />
+        <mesh position={[5.6, 0, 0.12]} rotation={[0, 0, Math.PI / 2]} geometry={screenBezelGeo} material={matScreenBezelSafety} />
 
         {/* 主显示屏面 */}
         <mesh position={[0, 0, 0.16]} geometry={mainScreenPanelGeo}>
           <meshBasicMaterial ref={mainScreenMatRef} toneMapped={false} />
         </mesh>
         {/* 动态激光扫描线 */}
-        <mesh ref={scanLineRef} position={[0, 0, 0.19]}>
-          <boxGeometry args={[10.7, 0.05, 0.01]} />
-          <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.8} />
-        </mesh>
+        <mesh ref={scanLineRef} position={[0, 0, 0.19]} geometry={scanLineGeo} material={matScanLine} />
 
         {/* 垂直激光能量光柱 */}
         <mesh position={[-5.8, 0, 0.18]} geometry={pillarLightGeo}>
@@ -179,50 +205,28 @@ export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; l
       </group>
 
       {/* 5. 北墙多层全景霓虹带 (Multi-tier North Neon Lines) */}
-      <mesh position={[0, 11.2, -17.6]} geometry={neonTubeHorizGeo}>
-        <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.9} />
-      </mesh>
-      <mesh position={[0, 9.4, -17.6]} geometry={neonTubeHorizGeo}>
-        <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.8} />
-      </mesh>
-      <mesh position={[0, 0.45, -17.6]} geometry={neonTubeHorizGeo}>
-        <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.85} />
-      </mesh>
-      <mesh position={[0, 0.15, -17.6]} geometry={neonTubeHorizGeo}>
-        <meshBasicMaterial color={EMERALD} toneMapped={false} transparent opacity={0.7} />
-      </mesh>
+      <mesh position={[0, 11.2, -17.6]} geometry={neonTubeHorizGeo} material={matNeonNorthCyan} />
+      <mesh position={[0, 9.4, -17.6]} geometry={neonTubeHorizGeo} material={matNeonNorthPurple} />
+      <mesh position={[0, 0.45, -17.6]} geometry={neonTubeHorizGeo} material={matNeonNorthSafety} />
+      <mesh position={[0, 0.15, -17.6]} geometry={neonTubeHorizGeo} material={matNeonNorthEmerald} />
 
       {/* 6. 西墙（左侧）霓虹灯阵列与立体发光广告牌 */}
       <group position={[-16.4, 4.2, 0]}>
         {/* 顶部/底部/中部贯穿式霓虹灯管 */}
-        <mesh position={[0, 6.8, 3]} rotation={[0, Math.PI / 2, 0]} geometry={neonTubeSideGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.9} />
-        </mesh>
-        <mesh position={[0, 5.2, 3]} rotation={[0, Math.PI / 2, 0]} geometry={neonTubeSideGeo}>
-          <meshBasicMaterial color={EMERALD} toneMapped={false} transparent opacity={0.75} />
-        </mesh>
-        <mesh position={[0, -3.7, 3]} rotation={[0, Math.PI / 2, 0]} geometry={neonTubeSideGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.8} />
-        </mesh>
-        <mesh position={[0, -4.0, 3]} rotation={[0, Math.PI / 2, 0]} geometry={neonTubeSideGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.7} />
-        </mesh>
+        <mesh position={[0, 6.8, 3]} rotation={[0, Math.PI / 2, 0]} geometry={neonTubeSideGeo} material={matNeonSideCyan} />
+        <mesh position={[0, 5.2, 3]} rotation={[0, Math.PI / 2, 0]} geometry={neonTubeSideGeo} material={matNeonSideEmerald} />
+        <mesh position={[0, -3.7, 3]} rotation={[0, Math.PI / 2, 0]} geometry={neonTubeSideGeo} material={matNeonSideSafety} />
+        <mesh position={[0, -4.0, 3]} rotation={[0, Math.PI / 2, 0]} geometry={neonTubeSideGeo} material={matNeonSideCyanDim} />
 
         {/* 墙面垂直发光分割缝 */}
-        {[-14, -4, 4, 14, 22].map((z) => (
-          <mesh key={z} position={[0.02, 1.6, z]} geometry={wallSeamGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.6} />
-          </mesh>
+        {WALL_SEAM_ZS.map((z) => (
+          <mesh key={z} position={[0.02, 1.6, z]} geometry={wallSeamGeo} material={matWallSeamCyan} />
         ))}
 
         {/* 看板 1: 高并发架构 */}
         <group position={[0, 0.6, -8]} rotation={[0, Math.PI / 2, 0]}>
-          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.25} />
-          </mesh>
-          <mesh geometry={billboardFrameGeo}>
-            <meshStandardMaterial color={STEEL_PANEL} metalness={0.9} emissive={CYAN} emissiveIntensity={0.25} />
-          </mesh>
+          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo} material={matBillboardGlowCyan} />
+          <mesh geometry={billboardFrameGeo} material={matBillboardFrameCyan} />
           <mesh position={[0, 0, 0.11]} geometry={billboardPlaneGeo}>
             <meshBasicMaterial map={billboardTextures.west1} toneMapped={false} />
           </mesh>
@@ -230,12 +234,8 @@ export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; l
 
         {/* 看板 2: AIoT 空间水网 */}
         <group position={[0, 0.6, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo}>
-            <meshBasicMaterial color={EMERALD} toneMapped={false} transparent opacity={0.25} />
-          </mesh>
-          <mesh geometry={billboardFrameGeo}>
-            <meshStandardMaterial color={STEEL_PANEL} metalness={0.9} emissive={EMERALD} emissiveIntensity={0.25} />
-          </mesh>
+          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo} material={matBillboardGlowEmerald} />
+          <mesh geometry={billboardFrameGeo} material={matBillboardFrameEmerald} />
           <mesh position={[0, 0, 0.11]} geometry={billboardPlaneGeo}>
             <meshBasicMaterial map={billboardTextures.west2} toneMapped={false} />
           </mesh>
@@ -243,12 +243,8 @@ export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; l
 
         {/* 看板 3: 分布式治理 */}
         <group position={[0, 0.6, 8]} rotation={[0, Math.PI / 2, 0]}>
-          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo}>
-            <meshBasicMaterial color={SAFETY} toneMapped={false} transparent opacity={0.25} />
-          </mesh>
-          <mesh geometry={billboardFrameGeo}>
-            <meshStandardMaterial color={STEEL_PANEL} metalness={0.9} emissive={SAFETY} emissiveIntensity={0.25} />
-          </mesh>
+          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo} material={matBillboardGlowSafety} />
+          <mesh geometry={billboardFrameGeo} material={matBillboardFrameSafety} />
           <mesh position={[0, 0, 0.11]} geometry={billboardPlaneGeo}>
             <meshBasicMaterial map={billboardTextures.west3} toneMapped={false} />
           </mesh>
@@ -258,34 +254,20 @@ export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; l
       {/* 7. 东墙（右侧）霓虹灯阵列与立体发光广告牌 */}
       <group position={[16.4, 4.2, 0]}>
         {/* 顶部/底部/中部贯穿式霓虹灯管 */}
-        <mesh position={[0, 6.8, 3]} rotation={[0, -Math.PI / 2, 0]} geometry={neonTubeSideGeo}>
-          <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.9} />
-        </mesh>
-        <mesh position={[0, 5.2, 3]} rotation={[0, -Math.PI / 2, 0]} geometry={neonTubeSideGeo}>
-          <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.75} />
-        </mesh>
-        <mesh position={[0, -3.7, 3]} rotation={[0, -Math.PI / 2, 0]} geometry={neonTubeSideGeo}>
-          <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.8} />
-        </mesh>
-        <mesh position={[0, -4.0, 3]} rotation={[0, -Math.PI / 2, 0]} geometry={neonTubeSideGeo}>
-          <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.7} />
-        </mesh>
+        <mesh position={[0, 6.8, 3]} rotation={[0, -Math.PI / 2, 0]} geometry={neonTubeSideGeo} material={matNeonSidePurple} />
+        <mesh position={[0, 5.2, 3]} rotation={[0, -Math.PI / 2, 0]} geometry={neonTubeSideGeo} material={matNeonSideGold} />
+        <mesh position={[0, -3.7, 3]} rotation={[0, -Math.PI / 2, 0]} geometry={neonTubeSideGeo} material={matNeonSideGoldBright} />
+        <mesh position={[0, -4.0, 3]} rotation={[0, -Math.PI / 2, 0]} geometry={neonTubeSideGeo} material={matNeonSidePurpleDim} />
 
         {/* 墙面垂直发光分割缝 */}
-        {[-14, -4, 4, 14, 22].map((z) => (
-          <mesh key={z} position={[-0.02, 1.6, z]} geometry={wallSeamGeo}>
-            <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.6} />
-          </mesh>
+        {WALL_SEAM_ZS.map((z) => (
+          <mesh key={z} position={[-0.02, 1.6, z]} geometry={wallSeamGeo} material={matWallSeamPurple} />
         ))}
 
         {/* 看板 1: AI Agent 智能体 */}
         <group position={[0, 0.6, -8]} rotation={[0, -Math.PI / 2, 0]}>
-          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo}>
-            <meshBasicMaterial color={PURPLE} toneMapped={false} transparent opacity={0.25} />
-          </mesh>
-          <mesh geometry={billboardFrameGeo}>
-            <meshStandardMaterial color={STEEL_PANEL} metalness={0.9} emissive={PURPLE} emissiveIntensity={0.25} />
-          </mesh>
+          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo} material={matBillboardGlowPurple} />
+          <mesh geometry={billboardFrameGeo} material={matBillboardFramePurple} />
           <mesh position={[0, 0, 0.11]} geometry={billboardPlaneGeo}>
             <meshBasicMaterial map={billboardTextures.east1} toneMapped={false} />
           </mesh>
@@ -293,12 +275,8 @@ export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; l
 
         {/* 看板 2: 双路数据湖 */}
         <group position={[0, 0.6, 0]} rotation={[0, -Math.PI / 2, 0]}>
-          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo}>
-            <meshBasicMaterial color={CYAN} toneMapped={false} transparent opacity={0.25} />
-          </mesh>
-          <mesh geometry={billboardFrameGeo}>
-            <meshStandardMaterial color={STEEL_PANEL} metalness={0.9} emissive={CYAN} emissiveIntensity={0.25} />
-          </mesh>
+          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo} material={matBillboardGlowCyan} />
+          <mesh geometry={billboardFrameGeo} material={matBillboardFrameCyan} />
           <mesh position={[0, 0, 0.11]} geometry={billboardPlaneGeo}>
             <meshBasicMaterial map={billboardTextures.east2} toneMapped={false} />
           </mesh>
@@ -306,12 +284,8 @@ export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; l
 
         {/* 看板 3: WeLink 统一搜索 */}
         <group position={[0, 0.6, 8]} rotation={[0, -Math.PI / 2, 0]}>
-          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo}>
-            <meshBasicMaterial color={GOLD} toneMapped={false} transparent opacity={0.25} />
-          </mesh>
-          <mesh geometry={billboardFrameGeo}>
-            <meshStandardMaterial color={STEEL_PANEL} metalness={0.9} emissive={GOLD} emissiveIntensity={0.25} />
-          </mesh>
+          <mesh position={[0, 0, -0.02]} geometry={billboardGlowGeo} material={matBillboardGlowGold} />
+          <mesh geometry={billboardFrameGeo} material={matBillboardFrameGold} />
           <mesh position={[0, 0, 0.11]} geometry={billboardPlaneGeo}>
             <meshBasicMaterial map={billboardTextures.east3} toneMapped={false} />
           </mesh>
@@ -320,31 +294,20 @@ export function NeonWalls({ motionEnabled, locale }: { motionEnabled: boolean; l
 
       {/* 8. 南侧入口迎宾赛博拱门 (z = 21.5) */}
       <group position={[0, 0, 21.5]}>
-        <mesh position={[-6.2, 4.1, 0]} geometry={portalPillarGeo}>
-          <meshStandardMaterial color={STEEL_DARK} metalness={0.92} emissive={CYAN} emissiveIntensity={0.25} />
-        </mesh>
-        <mesh position={[6.2, 4.1, 0]} geometry={portalPillarGeo}>
-          <meshStandardMaterial color={STEEL_DARK} metalness={0.92} emissive={SAFETY} emissiveIntensity={0.25} />
-        </mesh>
-        <mesh position={[0, 8.0, 0]} geometry={portalBeamGeo}>
-          <meshStandardMaterial color={STEEL_DARK} metalness={0.92} />
-        </mesh>
+        <mesh position={[-6.2, 4.1, 0]} geometry={portalPillarGeo} material={matPortalPillarCyan} />
+        <mesh position={[6.2, 4.1, 0]} geometry={portalPillarGeo} material={matPortalPillarSafety} />
+        <mesh position={[0, 8.0, 0]} geometry={portalBeamGeo} material={matPortalBeam} />
         {/* 门梁双层霓虹光带 */}
-        <mesh position={[0, 7.85, 0]} geometry={portalStripGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} />
-        </mesh>
-        <mesh position={[0, 8.15, 0]} geometry={portalStripGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} />
-        </mesh>
+        <mesh position={[0, 7.85, 0]} geometry={portalStripGeo} material={matPortalStripCyan} />
+        <mesh position={[0, 8.15, 0]} geometry={portalStripGeo} material={matPortalStripSafety} />
         {/* 立柱垂直霓虹管 */}
-        <mesh position={[-6.2, 4.1, 0.28]} geometry={neonTubeVertGeo}>
-          <meshBasicMaterial color={CYAN} toneMapped={false} />
-        </mesh>
-        <mesh position={[6.2, 4.1, 0.28]} geometry={neonTubeVertGeo}>
-          <meshBasicMaterial color={SAFETY} toneMapped={false} />
-        </mesh>
+        <mesh position={[-6.2, 4.1, 0.28]} geometry={neonTubeVertGeo} material={matPortalStripCyan} />
+        <mesh position={[6.2, 4.1, 0.28]} geometry={neonTubeVertGeo} material={matPortalStripSafety} />
         <pointLight position={[0, 4.2, -1.2]} color={CYAN} intensity={14} distance={12} decay={2} />
       </group>
     </group>
   );
 }
+
+export const NeonWalls = React.memo(NeonWallsComponent);
+

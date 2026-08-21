@@ -9,6 +9,7 @@ const _camFinalTarget = new THREE.Vector3();
 const _camMovement = new THREE.Vector3();
 const _camForward = new THREE.Vector3();
 const _camRight = new THREE.Vector3();
+const _camZoomForward = new THREE.Vector3();
 
 interface IntegratedCameraControllerProps {
   activeExhibit: string | null;
@@ -84,8 +85,8 @@ export function IntegratedCameraController({
       if (activeExhibit) {
         orbitRadius.current.target = Math.max(3.2, orbitRadius.current.target - 0.75);
       } else {
-        const forward = new THREE.Vector3(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
-        camera.position.add(forward.multiplyScalar(1.8));
+        _camZoomForward.set(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
+        camera.position.add(_camZoomForward.multiplyScalar(1.8));
       }
     };
 
@@ -94,8 +95,8 @@ export function IntegratedCameraController({
       if (activeExhibit) {
         orbitRadius.current.target = Math.min(18.0, orbitRadius.current.target + 0.75);
       } else {
-        const forward = new THREE.Vector3(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
-        camera.position.sub(forward.multiplyScalar(1.8));
+        _camZoomForward.set(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
+        camera.position.sub(_camZoomForward.multiplyScalar(1.8));
       }
     };
 
@@ -197,9 +198,9 @@ export function IntegratedCameraController({
         );
       } else {
         // 漫游模式下滚轮推进/拉远
-        const forward = new THREE.Vector3(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
+        _camZoomForward.set(-Math.sin(walkYaw.current), 0, -Math.cos(walkYaw.current));
         const moveDist = -event.deltaY * 0.012;
-        camera.position.add(forward.multiplyScalar(moveDist));
+        camera.position.add(_camZoomForward.multiplyScalar(moveDist));
       }
     };
 
