@@ -86,9 +86,12 @@ export function createProfileHologramCanvas(
   ctx.fillRect(pad + 6, pad + 6, canvas.width - (pad + 6) * 2, 26);
   ctx.fillStyle = '#28d7e5';
   ctx.font = 'bold 12px "IBM Plex Mono", Consolas, monospace';
+  ctx.textAlign = 'left';
   ctx.fillText('/// SYS.STATUS: LIVE 24/7 · NEURAL BACKEND ARCHITECTURE DISPLAY · NODE: 0x7F001', 28, 30);
   ctx.fillStyle = '#ff6b3d';
-  ctx.fillText('● 100,000+ WATER STATIONS ONLINE', canvas.width - 260, 30);
+  ctx.textAlign = 'right';
+  ctx.fillText('● 100,000+ WATER STATIONS ONLINE', canvas.width - 28, 30);
+  ctx.textAlign = 'left';
 
   // 左侧：如果有简历封面图，绘制带霓虹框的图片；否则绘制赛博形象/徽标
   const picX = 40;
@@ -152,23 +155,62 @@ export function createProfileHologramCanvas(
   // 右侧核心信息面板
   const infoX = 360;
   const infoY = 65;
+  const maxRight = canvas.width - 40; // 984px
+  const availableWidth = maxRight - infoX; // 624px
 
-  // 姓名与职位主标题
+  // 1. 姓名主标题 (左对齐)
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 38px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.font = 'bold 36px "IBM Plex Mono", "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'left';
   ctx.fillText(content.name, infoX, infoY + 32);
+  const nameWidth = ctx.measureText(content.name).width;
+
+  // 2. 职位科技徽章 (紧随姓名之后，保持动态间距，彻底消除重叠)
+  const badgeX = infoX + nameWidth + 14;
+  const badgeY = infoY + 11;
+  const titleText = content.title.toUpperCase();
+  ctx.font = 'bold 12px "IBM Plex Mono", Consolas, sans-serif';
+  const titleTextWidth = ctx.measureText(titleText).width;
+  const badgeWidth = titleTextWidth + 16;
+  const badgeHeight = 24;
+
+  ctx.fillStyle = 'rgba(40, 215, 229, 0.14)';
+  ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+  ctx.strokeStyle = '#28d7e5';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(badgeX, badgeY, badgeWidth, badgeHeight);
 
   ctx.fillStyle = '#28d7e5';
-  ctx.font = 'bold 18px "IBM Plex Mono", Consolas, sans-serif';
-  ctx.fillText(`${content.title}  |  ${content.experience}`, infoX + 150, infoY + 24);
+  ctx.fillText(titleText, badgeX + 8, badgeY + 16);
 
-  ctx.fillStyle = '#83a8b4';
+  // 3. 工作经验标签 (右对齐，确保与姓名/职位永远不冲突)
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 13px "IBM Plex Mono", Consolas, sans-serif';
+  let expText = content.experience;
+  const minLeftForExp = badgeX + badgeWidth + 12;
+  // 如果剩余空间较紧凑，做智能简洁化处理
+  if (maxRight - ctx.measureText(expText).width < minLeftForExp) {
+    expText = expText.replace(/of Java backend engineering/i, 'Backend Exp.').replace(/Java 后端开发经验/i, '后端经验');
+  }
+  ctx.fillStyle = '#ff9248';
+  ctx.fillText(`⚡ ${expText}`, maxRight, infoY + 28);
+  ctx.textAlign = 'left';
+
+  // 4. 核心架构价值观 (第二行)
+  ctx.fillStyle = '#9fc5d1';
   ctx.font = '12px "IBM Plex Mono", Consolas, sans-serif';
-  ctx.fillText(content.coreValues, infoX, infoY + 60);
+  let coreValuesText = content.coreValues;
+  if (ctx.measureText(coreValuesText).width > availableWidth) {
+    while (coreValuesText.length > 10 && ctx.measureText(coreValuesText + '...').width > availableWidth) {
+      coreValuesText = coreValuesText.slice(0, -1);
+    }
+    coreValuesText += '...';
+  }
+  ctx.fillText(coreValuesText, infoX, infoY + 60);
 
   // 分割装饰光带
   ctx.fillStyle = '#28d7e5';
-  ctx.fillRect(infoX, infoY + 72, 610, 2);
+  ctx.fillRect(infoX, infoY + 72, availableWidth, 2);
   ctx.fillStyle = '#ff6b3d';
   ctx.fillRect(infoX, infoY + 72, 120, 3);
 
@@ -178,9 +220,9 @@ export function createProfileHologramCanvas(
   metrics.forEach((m, idx) => {
     const col = idx % 2;
     const row = Math.floor(idx / 2);
-    const mx = infoX + col * 310;
+    const mx = infoX + col * 314;
     const my = infoY + 90 + row * 95;
-    const mw = 295;
+    const mw = 300;
     const mh = 82;
 
     // 卡片背景
@@ -205,7 +247,15 @@ export function createProfileHologramCanvas(
 
     ctx.fillStyle = '#94b3be';
     ctx.font = '9px "PingFang SC", "Microsoft YaHei", sans-serif';
-    ctx.fillText(m.desc, mx + 12, my + 68);
+    let descText = m.desc;
+    const maxDescW = mw - 24;
+    if (ctx.measureText(descText).width > maxDescW) {
+      while (descText.length > 5 && ctx.measureText(descText + '...').width > maxDescW) {
+        descText = descText.slice(0, -1);
+      }
+      descText += '...';
+    }
+    ctx.fillText(descText, mx + 12, my + 68);
   });
 
   // 底部技术栈霓虹芯片矩阵
